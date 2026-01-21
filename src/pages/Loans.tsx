@@ -8,7 +8,8 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { Plus, Wallet, Fuel, User } from 'lucide-react';
+import { Plus, Wallet, Fuel, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 
 interface Loan {
   id: string;
@@ -24,6 +25,11 @@ export default function Loans() {
   const { user } = useAuth();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
+
+  const toggleExpanded = (loanId: string) => {
+    setExpandedLoanId(expandedLoanId === loanId ? null : loanId);
+  };
 
   useEffect(() => {
     if (user) {
@@ -151,6 +157,34 @@ export default function Loans() {
                   <p className="text-xs text-muted-foreground mt-2 italic">
                     "{loan.reason}"
                   </p>
+                )}
+
+                {loan.status === 'approved' && (
+                  <div className="mt-3 pt-3 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground p-0 h-auto w-full justify-start"
+                      onClick={() => toggleExpanded(loan.id)}
+                    >
+                      {expandedLoanId === loan.id ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-1" />
+                          Hide Repayment History
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-1" />
+                          View Repayment History
+                        </>
+                      )}
+                    </Button>
+                    {expandedLoanId === loan.id && (
+                      <div className="mt-2">
+                        <RepaymentHistory loanId={loan.id} />
+                      </div>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>
