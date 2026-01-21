@@ -18,8 +18,12 @@ import {
   CheckCircle2, 
   XCircle, 
   Loader2,
-  Clock
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog';
+import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 
 interface LoanWithProfile {
   id: string;
@@ -44,6 +48,8 @@ export default function AdminLoans() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [activeTab, setActiveTab] = useState('pending');
+  const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     fetchLoans();
@@ -161,7 +167,19 @@ export default function AdminLoans() {
   const activeLoans = loans.filter(l => l.status === 'approved' && Number(l.outstanding_balance) > 0);
   const historyLoans = loans.filter(l => l.status !== 'pending' && !(l.status === 'approved' && Number(l.outstanding_balance) > 0));
 
-  const renderLoanCard = (loan: LoanWithProfile, showActions: boolean = false) => (
+  const handleRepaymentSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+    fetchLoans();
+  };
+
+  const toggleExpanded = (loanId: string) => {
+    setExpandedLoanId(expandedLoanId === loanId ? null : loanId);
+  };
+
+  const renderLoanCard = (loan: LoanWithProfile, showActions: boolean = false, showRepayment: boolean = false) => {
+    const isExpanded = expandedLoanId === loan.id;
+    
+    return (
     <Card key={loan.id} className="animate-fade-in">
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
@@ -251,9 +269,45 @@ export default function AdminLoans() {
             </Button>
           </div>
         )}
+
+        {showRepayment && loan.status === 'approved' && Number(loan.outstanding_balance) > 0 && (
+          <div className="space-y-3 pt-3 border-t">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground p-0 h-auto"
+                onClick={() => toggleExpanded(loan.id)}
+              >
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Hide History
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    View History
+                  </>
+                )}
+              </Button>
+              <RecordRepaymentDialog
+                loanId={loan.id}
+                outstandingBalance={Number(loan.outstanding_balance)}
+                memberName={loan.profile?.full_name || 'Unknown'}
+                onSuccess={handleRepaymentSuccess}
+                userId={user?.id || ''}
+              />
+            </div>
+            {isExpanded && (
+              <RepaymentHistory loanId={loan.id} refreshTrigger={refreshTrigger} />
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
+  };
 
   return (
     <AppLayout requireAdmin>
@@ -302,7 +356,7 @@ export default function AdminLoans() {
               </CardContent>
             </Card>
           ) : (
-            activeLoans.map(loan => renderLoanCard(loan, false))
+            activeLoans.map(loan => renderLoanCard(loan, false, true))
           )}
         </TabsContent>
 
