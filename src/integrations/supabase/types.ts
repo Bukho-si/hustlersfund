@@ -189,6 +189,33 @@ export type Database = {
           },
         ]
       }
+      loan_settings: {
+        Row: {
+          created_at: string
+          id: string
+          interest_type: string
+          personal_interest_rate_percent: number
+          petrol_interest_rate_percent: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interest_type?: string
+          personal_interest_rate_percent?: number
+          petrol_interest_rate_percent?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interest_type?: string
+          personal_interest_rate_percent?: number
+          petrol_interest_rate_percent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loans: {
         Row: {
           amount: number
@@ -196,13 +223,17 @@ export type Database = {
           approved_by: string | null
           created_at: string
           id: string
+          interest_amount: number | null
+          interest_rate_percent: number | null
           member_user_id: string
           outstanding_balance: number
           reason: string | null
           rejection_reason: string | null
+          repayment_period: string | null
           repayment_plan: string | null
           requested_at: string
           status: Database["public"]["Enums"]["loan_status"]
+          total_repayable: number | null
           type: Database["public"]["Enums"]["loan_type"]
           updated_at: string
         }
@@ -212,13 +243,17 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           id?: string
+          interest_amount?: number | null
+          interest_rate_percent?: number | null
           member_user_id: string
           outstanding_balance: number
           reason?: string | null
           rejection_reason?: string | null
+          repayment_period?: string | null
           repayment_plan?: string | null
           requested_at?: string
           status?: Database["public"]["Enums"]["loan_status"]
+          total_repayable?: number | null
           type: Database["public"]["Enums"]["loan_type"]
           updated_at?: string
         }
@@ -228,13 +263,17 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           id?: string
+          interest_amount?: number | null
+          interest_rate_percent?: number | null
           member_user_id?: string
           outstanding_balance?: number
           reason?: string | null
           rejection_reason?: string | null
+          repayment_period?: string | null
           repayment_plan?: string | null
           requested_at?: string
           status?: Database["public"]["Enums"]["loan_status"]
+          total_repayable?: number | null
           type?: Database["public"]["Enums"]["loan_type"]
           updated_at?: string
         }

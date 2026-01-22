@@ -21,6 +21,7 @@ import AdminMembers from "./pages/admin/AdminMembers";
 import AdminVerify from "./pages/admin/AdminVerify";
 import AdminLoans from "./pages/admin/AdminLoans";
 import AdminEvents from "./pages/admin/AdminEvents";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/verify" element={<AdminVerify />} />
             <Route path="/admin/loans" element={<AdminLoans />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/events" element={<AdminEvents />} />
             
             <Route path="*" element={<NotFound />} />

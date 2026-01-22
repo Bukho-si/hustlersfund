@@ -13,11 +13,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, PETROL_LOAN_MAX, PERSONAL_LOAN_MAX } from '@/lib/constants';
 import { Fuel, User, Loader2, AlertCircle } from 'lucide-react';
+import { InterestCalculator } from '@/components/loans/InterestCalculator';
+import { useLoanSettings } from '@/hooks/useLoanSettings';
 
 export default function LoanRequest() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const { getInterestRate, isLoading: settingsLoading } = useLoanSettings();
   
   const [type, setType] = useState<'petrol' | 'personal'>('petrol');
   const [amount, setAmount] = useState('');
@@ -26,6 +30,7 @@ export default function LoanRequest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const maxAmount = type === 'petrol' ? PETROL_LOAN_MAX : PERSONAL_LOAN_MAX;
+  const interestRate = getInterestRate(type);
   const amountNum = parseFloat(amount) || 0;
   const isValidAmount = amountNum > 0 && amountNum <= maxAmount;
 
@@ -55,6 +60,10 @@ export default function LoanRequest() {
     setIsSubmitting(true);
 
     try {
+      const interestAmount = amountNum * (interestRate / 100);
+      const totalRepayable = amountNum + interestAmount;
+      const repaymentPeriod = type === 'petrol' ? 'WEEKLY' : 'MONTHLY';
+
       const { error } = await supabase
         .from('loans')
         .insert({
@@ -64,7 +73,11 @@ export default function LoanRequest() {
           reason: reason.trim(),
           repayment_plan: repaymentPlan.trim() || null,
           status: 'pending',
-          outstanding_balance: amountNum,
+          outstanding_balance: totalRepayable,
+          interest_rate_percent: interestRate,
+          interest_amount: interestAmount,
+          total_repayable: totalRepayable,
+          repayment_period: repaymentPeriod,
         });
 
       if (error) throw error;
@@ -154,6 +167,15 @@ export default function LoanRequest() {
             )}
           </CardContent>
         </Card>
+
+        {/* Interest Calculator */}
+        {amountNum > 0 && !settingsLoading && (
+          <InterestCalculator
+            amount={amountNum}
+            interestRatePercent={interestRate}
+            loanType={type}
+          />
+        )}
 
         {/* Reason */}
         <Card>
