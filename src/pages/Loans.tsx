@@ -19,6 +19,10 @@ interface Loan {
   requested_at: string;
   status: string;
   outstanding_balance: number;
+  interest_rate_percent: number | null;
+  interest_amount: number | null;
+  total_repayable: number | null;
+  repayment_period: string | null;
 }
 
 export default function Loans() {
@@ -142,11 +146,23 @@ export default function Loans() {
 
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amount requested</span>
+                    <span className="text-muted-foreground">Principal amount</span>
                     <span className="font-medium">{formatCurrency(Number(loan.amount))}</span>
                   </div>
+                  {loan.interest_rate_percent !== null && loan.interest_rate_percent > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
+                        <span className="font-medium text-warning">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total repayable</span>
+                        <span className="font-medium">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
+                      </div>
+                    </>
+                  )}
                   {loan.status === 'approved' && (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between pt-1 border-t mt-1">
                       <span className="text-muted-foreground">Outstanding balance</span>
                       <span className="font-semibold text-accent">{formatCurrency(Number(loan.outstanding_balance))}</span>
                     </div>
