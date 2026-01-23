@@ -13,7 +13,8 @@ import {
   Wallet,
   ChevronRight,
   TrendingUp,
-  Shield
+  Shield,
+  BarChart3
 } from 'lucide-react';
 
 interface AdminStats {
@@ -210,6 +211,16 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 <span className="text-sm font-medium">Emergency Events</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link 
+              to="/admin/reports" 
+              className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Financial Reports</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
