@@ -23,7 +23,6 @@ import AdminLoans from "./pages/admin/AdminLoans";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
-import HowToInstall from "./pages/HowToInstall";
 
 import NotFound from "./pages/NotFound";
 
@@ -46,7 +45,7 @@ const App = () => (
             <Route path="/loans/request" element={<LoanRequest />} />
             <Route path="/emergencies" element={<Emergencies />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/install" element={<HowToInstall />} />
+            
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/members" element={<AdminMembers />} />

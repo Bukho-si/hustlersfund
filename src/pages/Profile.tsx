@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,14 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { InstallButton } from '@/components/pwa/InstallButton';
-import { InstalledBadge } from '@/components/pwa/InstalledBadge';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/constants';
-import { User, Car, Phone, LogOut, Loader2, Save, Download, HelpCircle } from 'lucide-react';
+import { User, Car, Phone, LogOut, Loader2, Save } from 'lucide-react';
 
 interface MemberProfile {
   full_name: string;
@@ -29,7 +25,6 @@ interface MemberProfile {
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const { isInstalled, canInstall } = usePWAInstall();
   
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -238,39 +233,6 @@ export default function Profile() {
             </>
           )}
         </Button>
-
-        {/* App Installation Section */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-                  <span className="text-accent font-extrabold text-lg">H</span>
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Hustlers App</p>
-                  {isInstalled ? (
-                    <InstalledBadge />
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Install on your phone</p>
-                  )}
-                </div>
-              </div>
-              {!isInstalled && canInstall && (
-                <InstallButton variant="compact" />
-              )}
-            </div>
-            {!isInstalled && (
-              <Link 
-                to="/install" 
-                className="mt-3 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <HelpCircle className="h-3 w-3" />
-                How to install
-              </Link>
-            )}
-          </CardContent>
-        </Card>
 
         <Button 
           variant="outline"
