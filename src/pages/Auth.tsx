@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InstallButton } from '@/components/pwa/InstallButton';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Car, Users } from 'lucide-react';
+import { Loader2, Car, Users, HelpCircle } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -148,6 +149,11 @@ export default function Auth() {
           <span>•</span>
           <span>Weekly contributions</span>
         </div>
+
+        {/* Install Button */}
+        <div className="mt-6">
+          <InstallButton variant="footer" />
+        </div>
       </div>
 
       {/* Auth Card */}
@@ -254,6 +260,17 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
+
+          {/* Help Link */}
+          <div className="mt-4 text-center">
+            <Link 
+              to="/install" 
+              className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+            >
+              <HelpCircle className="h-3 w-3" />
+              How to install on your phone
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
