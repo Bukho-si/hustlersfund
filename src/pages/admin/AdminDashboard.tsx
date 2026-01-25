@@ -5,17 +5,28 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
+import { format } from 'date-fns';
 import { 
   Users, 
   FileCheck, 
-  Clock, 
   AlertTriangle, 
   Wallet,
   ChevronRight,
   TrendingUp,
   Shield,
-  BarChart3
+  BarChart3,
+  Calendar,
+  Clock
 } from 'lucide-react';
+
+interface ContributionCycle {
+  id: string;
+  week_start_date: string;
+  week_end_date: string;
+  deadline: string;
+  closes_on: string;
+  is_closed: boolean;
+}
 
 interface AdminStats {
   activeMembers: number;
@@ -33,11 +44,30 @@ export default function AdminDashboard() {
     outstandingEmergencyDues: 0,
     totalLoanBalance: 0,
   });
+  const [currentCycle, setCurrentCycle] = useState<ContributionCycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchCurrentCycle();
   }, []);
+
+  const fetchCurrentCycle = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contribution_cycles')
+        .select('*')
+        .eq('is_closed', false)
+        .order('week_start_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      setCurrentCycle(data);
+    } catch (error) {
+      console.error('Error fetching current cycle:', error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -146,6 +176,43 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Current Contribution Cycle Card */}
+      {currentCycle && (
+        <Card className="mb-4 animate-fade-in border-accent/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-accent-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Active Contribution Cycle</h3>
+                <p className="text-xs text-muted-foreground">Members can submit payments</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-1">Week Period</p>
+                <p className="font-medium text-sm">
+                  {format(new Date(currentCycle.week_start_date), 'MMM d')} – {format(new Date(currentCycle.week_end_date), 'MMM d, yyyy')}
+                </p>
+              </div>
+              <div className="bg-warning/10 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Payment Deadline
+                </p>
+                <p className="font-medium text-sm text-warning">
+                  {format(new Date(currentCycle.deadline), 'EEE, MMM d')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {format(new Date(currentCycle.deadline), 'HH:mm')}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 mb-4">
