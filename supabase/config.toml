@@ -1,1 +1,4 @@
 project_id = "rlvixohowgykhqjaewzh"
+
+[functions.create-contribution-cycle]
+verify_jwt = false
