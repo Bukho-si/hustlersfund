@@ -13,17 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2 } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface Member {
@@ -71,10 +61,6 @@ export default function AdminMembers() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
-  // Delete member state
-  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -288,53 +274,6 @@ export default function AdminMembers() {
     setSelectedMemberIds(new Set());
     setBulkSlotsValue('');
     setBulkStatusValue('');
-  };
-
-  const deleteMember = async () => {
-    if (!user || !memberToDelete) return;
-    
-    setIsDeleting(true);
-    
-    try {
-      // Delete member profile (this will cascade to related records if needed)
-      const { error: profileError } = await supabase
-        .from('member_profiles')
-        .delete()
-        .eq('id', memberToDelete.id);
-      
-      if (profileError) throw profileError;
-      
-      // Delete user role entry
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', memberToDelete.user_id);
-      
-      // Log to audit
-      await supabase.from('audit_log').insert({
-        actor_user_id: user.id,
-        action: 'MEMBER_DELETED',
-        entity_type: 'member_profile',
-        entity_id: memberToDelete.id,
-        metadata_json: { deleted_member_name: memberToDelete.full_name, deleted_user_id: memberToDelete.user_id },
-      });
-      
-      toast({
-        title: 'Member deleted',
-        description: `${memberToDelete.full_name} has been removed from the system`,
-      });
-      
-      setMemberToDelete(null);
-      fetchMembers();
-    } catch (error: any) {
-      toast({
-        title: 'Error deleting member',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const handleBulkSlotsUpdate = async () => {
@@ -893,16 +832,6 @@ export default function AdminMembers() {
                       ) : null}
                     </DialogContent>
                   </Dialog>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => setMemberToDelete(member)}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Delete
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -949,36 +878,6 @@ export default function AdminMembers() {
         Showing {paginatedMembers.length} of {filteredMembers.length} members
         {filteredMembers.length !== members.length && ` (${members.length} total)`}
       </p>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!memberToDelete} onOpenChange={(open) => !open && setMemberToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Member</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{memberToDelete?.full_name}</strong>? 
-              This action cannot be undone and will remove their profile and role from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={deleteMember}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Member'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AppLayout>
   );
 }
