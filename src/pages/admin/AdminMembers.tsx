@@ -55,6 +55,7 @@ export default function AdminMembers() {
   // Bulk selection state
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [bulkSlotsValue, setBulkSlotsValue] = useState<string>('');
+  const [bulkStatusValue, setBulkStatusValue] = useState<string>('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   useEffect(() => {
@@ -260,6 +261,8 @@ export default function AdminMembers() {
   const clearSelection = () => {
     setSelectedMemberIds(new Set());
     setBulkSlotsValue('');
+    setBulkStatusValue('');
+  };
   };
 
   const handleBulkSlotsUpdate = async () => {
@@ -315,6 +318,57 @@ export default function AdminMembers() {
     }
   };
 
+  const handleBulkStatusUpdate = async () => {
+    if (!user || !bulkStatusValue || selectedMemberIds.size === 0) return;
+    
+    const newStatus = bulkStatusValue as 'pending' | 'active' | 'suspended' | 'exited';
+
+    setIsBulkUpdating(true);
+
+    try {
+      const selectedMembers = members.filter(m => selectedMemberIds.has(m.id));
+      
+      for (const member of selectedMembers) {
+        if (member.status === newStatus) continue; // Skip if no change
+
+        const oldStatus = member.status;
+
+        // Update member profile
+        const { error } = await supabase
+          .from('member_profiles')
+          .update({ status: newStatus })
+          .eq('id', member.id);
+
+        if (error) throw error;
+
+        // Log to audit
+        await supabase.from('audit_log').insert({
+          actor_user_id: user.id,
+          action: 'MEMBER_STATUS_CHANGED',
+          entity_type: 'member_profile',
+          entity_id: member.id,
+          metadata_json: { old_status: oldStatus, new_status: newStatus, bulk_update: true },
+        });
+      }
+
+      toast({
+        title: 'Bulk update complete',
+        description: `Updated ${selectedMembers.length} member(s) to ${newStatus}`,
+      });
+
+      clearSelection();
+      fetchMembers();
+    } catch (error: any) {
+      toast({
+        title: 'Bulk update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const updateMemberStatus = async (memberId: string, newStatus: 'pending' | 'active' | 'suspended' | 'exited') => {
     const { error } = await supabase
       .from('member_profiles')
@@ -352,7 +406,7 @@ export default function AdminMembers() {
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Select value={bulkSlotsValue} onValueChange={setBulkSlotsValue}>
                   <SelectTrigger className="h-8 w-[100px] text-xs">
                     <SelectValue placeholder="Set slots" />
@@ -371,12 +425,39 @@ export default function AdminMembers() {
                   onClick={handleBulkSlotsUpdate}
                   disabled={!bulkSlotsValue || isBulkUpdating}
                 >
-                  {isBulkUpdating ? (
+                  {isBulkUpdating && bulkSlotsValue ? (
                     <Loader2 className="h-3 w-3 animate-spin mr-1" />
                   ) : (
                     <Users className="h-3 w-3 mr-1" />
                   )}
                   Update Slots
+                </Button>
+                
+                <div className="w-px h-6 bg-border mx-1" />
+                
+                <Select value={bulkStatusValue} onValueChange={setBulkStatusValue}>
+                  <SelectTrigger className="h-8 w-[110px] text-xs">
+                    <SelectValue placeholder="Set status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                    <SelectItem value="exited">Exited</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={handleBulkStatusUpdate}
+                  disabled={!bulkStatusValue || isBulkUpdating}
+                >
+                  {isBulkUpdating && bulkStatusValue ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : (
+                    <Users className="h-3 w-3 mr-1" />
+                  )}
+                  Update Status
                 </Button>
               </div>
             </div>
