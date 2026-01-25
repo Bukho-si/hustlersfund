@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { 
   Table, 
   TableBody, 
@@ -11,7 +12,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/constants';
-import { Search } from 'lucide-react';
+import { Search, Users } from 'lucide-react';
 import type { MemberBalance } from '@/hooks/useFinancialReports';
 
 interface MemberBalancesTableProps {
@@ -66,6 +67,7 @@ export function MemberBalancesTable({ balances, isLoading }: MemberBalancesTable
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs">Member</TableHead>
+                <TableHead className="text-xs text-center">Slots</TableHead>
                 <TableHead className="text-xs text-right">Contributions</TableHead>
                 <TableHead className="text-xs text-right">Loans</TableHead>
                 <TableHead className="text-xs text-right">Emergency</TableHead>
@@ -77,6 +79,16 @@ export function MemberBalancesTable({ balances, isLoading }: MemberBalancesTable
                 filteredBalances.map((balance) => (
                   <TableRow key={balance.id}>
                     <TableCell className="text-sm font-medium">{balance.fullName}</TableCell>
+                    <TableCell className="text-center">
+                      {balance.membershipSlots > 1 ? (
+                        <Badge variant="outline" className="text-xs">
+                          <Users className="h-3 w-3 mr-1" />
+                          {balance.membershipSlots}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">1</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm text-right text-success">
                       {formatCurrency(balance.totalContributions)}
                     </TableCell>
@@ -95,7 +107,7 @@ export function MemberBalancesTable({ balances, isLoading }: MemberBalancesTable
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     No members found
                   </TableCell>
                 </TableRow>

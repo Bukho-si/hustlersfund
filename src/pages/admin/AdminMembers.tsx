@@ -5,11 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, formatCurrency } from '@/lib/constants';
+import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
 import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -22,6 +24,8 @@ interface Member {
   uber_driver_id: string | null;
   status: string;
   joining_fee_paid: boolean;
+  joining_fee_paid_total: number;
+  membership_slots: number;
   join_date: string;
   isAdmin?: boolean;
 }
@@ -34,6 +38,7 @@ interface MemberDetails {
 }
 
 export default function AdminMembers() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
@@ -41,6 +46,7 @@ export default function AdminMembers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [processingRoleId, setProcessingRoleId] = useState<string | null>(null);
+  const [processingSlotsId, setProcessingSlotsId] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberDetails, setMemberDetails] = useState<MemberDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -164,6 +170,47 @@ export default function AdminMembers() {
     }
   };
 
+  const updateMemberSlots = async (member: Member, newSlots: number) => {
+    if (!user) return;
+    setProcessingSlotsId(member.id);
+
+    try {
+      const oldSlots = member.membership_slots;
+
+      // Update member profile
+      const { error } = await supabase
+        .from('member_profiles')
+        .update({ membership_slots: newSlots })
+        .eq('id', member.id);
+
+      if (error) throw error;
+
+      // Log to audit
+      await supabase.from('audit_log').insert({
+        actor_user_id: user.id,
+        action: 'MEMBERSHIP_SLOTS_CHANGED',
+        entity_type: 'member_profile',
+        entity_id: member.id,
+        metadata_json: { old_slots: oldSlots, new_slots: newSlots },
+      });
+
+      toast({
+        title: 'Slots updated',
+        description: `${member.full_name} now has ${newSlots} slot${newSlots > 1 ? 's' : ''}`,
+      });
+
+      fetchMembers();
+    } catch (error: any) {
+      toast({
+        title: 'Error updating slots',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingSlotsId(null);
+    }
+  };
+
   const filterMembers = () => {
     let filtered = members;
     
@@ -270,12 +317,18 @@ export default function AdminMembers() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold">{member.full_name}</p>
                         {member.isAdmin && (
                           <Badge variant="secondary" className="text-xs bg-accent/20 text-accent border-0">
                             <ShieldCheck className="h-3 w-3 mr-1" />
                             Admin
+                          </Badge>
+                        )}
+                        {member.membership_slots > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            <Users className="h-3 w-3 mr-1" />
+                            {member.membership_slots} slots
                           </Badge>
                         )}
                       </div>
@@ -302,6 +355,20 @@ export default function AdminMembers() {
                   )}
                 </div>
 
+                {/* Joining Fee Progress */}
+                <div className="mb-3">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">Joining Fee</span>
+                    <span className="font-medium">
+                      {formatCurrency(member.joining_fee_paid_total || 0)} / {formatCurrency(getJoiningFeeTotal(member.membership_slots))}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={((member.joining_fee_paid_total || 0) / getJoiningFeeTotal(member.membership_slots)) * 100} 
+                    className="h-1.5" 
+                  />
+                </div>
+
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select 
                     value={member.status} 
@@ -315,6 +382,28 @@ export default function AdminMembers() {
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="suspended">Suspended</SelectItem>
                       <SelectItem value="exited">Exited</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Membership Slots Selector */}
+                  <Select 
+                    value={String(member.membership_slots)} 
+                    onValueChange={(v) => updateMemberSlots(member, parseInt(v))}
+                    disabled={processingSlotsId === member.id}
+                  >
+                    <SelectTrigger className="h-8 text-xs w-[90px]">
+                      {processingSlotsId === member.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <SelectValue />
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 slot</SelectItem>
+                      <SelectItem value="2">2 slots</SelectItem>
+                      <SelectItem value="3">3 slots</SelectItem>
+                      <SelectItem value="4">4 slots</SelectItem>
+                      <SelectItem value="5">5 slots</SelectItem>
                     </SelectContent>
                   </Select>
                   
@@ -352,7 +441,7 @@ export default function AdminMembers() {
                         View
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>{selectedMember?.full_name}</DialogTitle>
                       </DialogHeader>
@@ -380,6 +469,32 @@ export default function AdminMembers() {
                               <p className="text-lg font-semibold text-accent">{formatCurrency(memberDetails.outstandingLoanBalance)}</p>
                             </div>
                           </div>
+
+                          {/* Slot-based limits preview */}
+                          <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                            <p className="text-sm font-medium mb-2 flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              Slot-Based Limits ({member.membership_slots} slots)
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">Weekly due:</span>
+                                <span className="ml-1 font-medium">{formatCurrency(getWeeklySubscription(member.membership_slots))}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Joining fee:</span>
+                                <span className="ml-1 font-medium">{formatCurrency(getJoiningFeeTotal(member.membership_slots))}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Petrol max:</span>
+                                <span className="ml-1 font-medium">{formatCurrency(getPetrolLoanMax(member.membership_slots))}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Personal max:</span>
+                                <span className="ml-1 font-medium">{formatCurrency(getPersonalLoanMax(member.membership_slots))}</span>
+                              </div>
+                            </div>
+                          </div>
                           
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between py-2 border-b">
@@ -395,8 +510,14 @@ export default function AdminMembers() {
                               <span>{member.uber_driver_id || 'Not set'}</span>
                             </div>
                             <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Joining Fee</span>
-                              <span>{member.joining_fee_paid ? '✓ Paid' : '○ Pending'}</span>
+                              <span className="text-muted-foreground">Membership Slots</span>
+                              <span>{member.membership_slots}</span>
+                            </div>
+                            <div className="flex justify-between py-2 border-b">
+                              <span className="text-muted-foreground">Joining Fee Paid</span>
+                              <span>
+                                {formatCurrency(member.joining_fee_paid_total || 0)} / {formatCurrency(getJoiningFeeTotal(member.membership_slots))}
+                              </span>
                             </div>
                             <div className="flex justify-between py-2">
                               <span className="text-muted-foreground">Status</span>
@@ -407,10 +528,6 @@ export default function AdminMembers() {
                       ) : null}
                     </DialogContent>
                   </Dialog>
-                </div>
-
-                <div className="text-xs text-muted-foreground mt-2">
-                  {member.joining_fee_paid ? '✓ Joining fee paid' : '○ Fee pending'}
                 </div>
               </CardContent>
             </Card>

@@ -37,6 +37,8 @@ export interface RecentTransaction {
 export interface MemberBalance {
   id: string;
   fullName: string;
+  membershipSlots: number;
+  joiningFeePaidTotal: number;
   totalContributions: number;
   outstandingLoans: number;
   emergencyDues: number;
@@ -271,7 +273,7 @@ export function useMemberBalances() {
     queryFn: async (): Promise<MemberBalance[]> => {
       const { data: members } = await supabase
         .from('member_profiles')
-        .select('id, user_id, full_name')
+        .select('id, user_id, full_name, membership_slots, joining_fee_paid_total')
         .eq('status', 'active');
 
       if (!members) return [];
@@ -312,6 +314,8 @@ export function useMemberBalances() {
         balances.push({
           id: member.id,
           fullName: member.full_name,
+          membershipSlots: member.membership_slots || 1,
+          joiningFeePaidTotal: member.joining_fee_paid_total || 0,
           totalContributions,
           outstandingLoans,
           emergencyDues,

@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency, getWeeklySubscription, getJoiningFeeRemaining, getJoiningFeeTotal, WEEKLY_SUBSCRIPTION, JOINING_FEE } from '@/lib/constants';
 import { 
   CreditCard, 
   Wallet, 
@@ -15,15 +16,17 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react';
-import { WEEKLY_SUBSCRIPTION, JOINING_FEE, LATE_FINE, CASH_ATM_FEE } from '@/lib/constants';
 
 interface DashboardData {
   profile: {
     full_name: string;
     status: string;
     joining_fee_paid: boolean;
+    membership_slots: number;
+    joining_fee_paid_total: number;
   } | null;
   currentWeekPayment: {
     status: string;
@@ -58,7 +61,7 @@ export default function Dashboard() {
       // Fetch profile
       const { data: profile } = await supabase
         .from('member_profiles')
-        .select('full_name, status, joining_fee_paid')
+        .select('full_name, status, joining_fee_paid, membership_slots, joining_fee_paid_total')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -103,18 +106,43 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate this week's dues
+  // Calculate this week's dues with slot multipliers
   const calculateWeeklyDues = () => {
-    let total = WEEKLY_SUBSCRIPTION;
-    const breakdown: { label: string; amount: number }[] = [
-      { label: 'Weekly subscription', amount: WEEKLY_SUBSCRIPTION },
-    ];
+    const slots = data.profile?.membership_slots || 1;
+    const weeklyAmount = getWeeklySubscription(slots);
+    const joiningFeeRemaining = data.profile 
+      ? getJoiningFeeRemaining(slots, data.profile.joining_fee_paid_total)
+      : 0;
 
-    if (data.profile && !data.profile.joining_fee_paid) {
-      total += JOINING_FEE;
-      breakdown.push({ label: 'Joining fee (once-off)', amount: JOINING_FEE });
+    let total = weeklyAmount;
+    const breakdown: { label: string; amount: number; detail?: string }[] = [];
+    
+    // Weekly subscription with slot breakdown
+    if (slots > 1) {
+      breakdown.push({ 
+        label: 'Weekly subscription', 
+        amount: weeklyAmount,
+        detail: `R${WEEKLY_SUBSCRIPTION} × ${slots}`
+      });
+    } else {
+      breakdown.push({ label: 'Weekly subscription', amount: weeklyAmount });
     }
 
+    // Joining fee if not fully paid
+    if (joiningFeeRemaining > 0) {
+      total += joiningFeeRemaining;
+      if (slots > 1) {
+        breakdown.push({ 
+          label: 'Joining fee (remaining)', 
+          amount: joiningFeeRemaining,
+          detail: `R${JOINING_FEE} × ${slots} total`
+        });
+      } else {
+        breakdown.push({ label: 'Joining fee (once-off)', amount: joiningFeeRemaining });
+      }
+    }
+
+    // Emergency dues (no slot multiplier)
     if (data.emergencyDuesTotal > 0) {
       total += data.emergencyDuesTotal;
       breakdown.push({ label: `Emergency dues (${data.emergencyDuesCount})`, amount: data.emergencyDuesTotal });
@@ -125,6 +153,7 @@ export default function Dashboard() {
 
   const weeklyDues = calculateWeeklyDues();
   const firstName = data.profile?.full_name?.split(' ')[0] || 'Hustler';
+  const slots = data.profile?.membership_slots || 1;
 
   return (
     <AppLayout>
@@ -157,7 +186,15 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-primary-foreground/70 text-xs mb-1">Member Status</p>
-                <StatusBadge status={data.profile.status} variant="member" />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={data.profile.status} variant="member" />
+                  {slots > 1 && (
+                    <Badge variant="outline" className="text-xs border-primary-foreground/30 text-primary-foreground">
+                      <Users className="h-3 w-3 mr-1" />
+                      {slots} slots
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-primary-foreground/70 text-xs mb-1">This Week's Dues</p>
@@ -180,7 +217,12 @@ export default function Dashboard() {
           <div className="space-y-2">
             {weeklyDues.breakdown.map((item, index) => (
               <div key={index} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{item.label}</span>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">{item.label}</span>
+                  {item.detail && (
+                    <span className="text-xs text-muted-foreground/70">{item.detail}</span>
+                  )}
+                </div>
                 <span className="font-medium">{formatCurrency(item.amount)}</span>
               </div>
             ))}

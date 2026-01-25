@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -11,8 +11,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, PETROL_LOAN_MAX, PERSONAL_LOAN_MAX } from '@/lib/constants';
-import { Fuel, User, Loader2, AlertCircle } from 'lucide-react';
+import { formatCurrency, getPetrolLoanMax, getPersonalLoanMax, PETROL_LOAN_MAX, PERSONAL_LOAN_MAX } from '@/lib/constants';
+import { Fuel, User, Loader2, AlertCircle, Users } from 'lucide-react';
 import { InterestCalculator } from '@/components/loans/InterestCalculator';
 import { useLoanSettings } from '@/hooks/useLoanSettings';
 
@@ -28,8 +28,33 @@ export default function LoanRequest() {
   const [reason, setReason] = useState('');
   const [repaymentPlan, setRepaymentPlan] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [membershipSlots, setMembershipSlots] = useState(1);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
-  const maxAmount = type === 'petrol' ? PETROL_LOAN_MAX : PERSONAL_LOAN_MAX;
+  useEffect(() => {
+    if (user) {
+      fetchMembershipSlots();
+    }
+  }, [user]);
+
+  const fetchMembershipSlots = async () => {
+    if (!user) return;
+    
+    const { data: profile } = await supabase
+      .from('member_profiles')
+      .select('membership_slots')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profile) {
+      setMembershipSlots(profile.membership_slots || 1);
+    }
+    setIsLoadingProfile(false);
+  };
+
+  const maxPetrolLoan = getPetrolLoanMax(membershipSlots);
+  const maxPersonalLoan = getPersonalLoanMax(membershipSlots);
+  const maxAmount = type === 'petrol' ? maxPetrolLoan : maxPersonalLoan;
   const interestRate = getInterestRate(type);
   const amountNum = parseFloat(amount) || 0;
   const isValidAmount = amountNum > 0 && amountNum <= maxAmount;
@@ -120,7 +145,12 @@ export default function LoanRequest() {
                   <Fuel className="h-5 w-5 text-warning" />
                   <div>
                     <p className="font-medium">Petrol Loan</p>
-                    <p className="text-xs text-muted-foreground">Max {formatCurrency(PETROL_LOAN_MAX)} per week</p>
+                    <p className="text-xs text-muted-foreground">
+                      Max {formatCurrency(maxPetrolLoan)} per week
+                      {membershipSlots > 1 && (
+                        <span className="ml-1 text-accent">({membershipSlots} slots)</span>
+                      )}
+                    </p>
                   </div>
                 </Label>
               </div>
@@ -130,13 +160,40 @@ export default function LoanRequest() {
                   <User className="h-5 w-5 text-info" />
                   <div>
                     <p className="font-medium">Personal Loan</p>
-                    <p className="text-xs text-muted-foreground">Max {formatCurrency(PERSONAL_LOAN_MAX)} per month</p>
+                    <p className="text-xs text-muted-foreground">
+                      Max {formatCurrency(maxPersonalLoan)} per month
+                      {membershipSlots > 1 && (
+                        <span className="ml-1 text-accent">({membershipSlots} slots)</span>
+                      )}
+                    </p>
                   </div>
                 </Label>
               </div>
             </RadioGroup>
           </CardContent>
         </Card>
+
+        {/* Slot-based limits info */}
+        {membershipSlots > 1 && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-accent" />
+                <span className="font-medium">Your loan limits ({membershipSlots} slots):</span>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div>
+                  <span className="block font-medium text-foreground">Petrol:</span>
+                  R{PETROL_LOAN_MAX} × {membershipSlots} = {formatCurrency(maxPetrolLoan)}
+                </div>
+                <div>
+                  <span className="block font-medium text-foreground">Personal:</span>
+                  R{PERSONAL_LOAN_MAX} × {membershipSlots} = {formatCurrency(maxPersonalLoan)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Amount */}
         <Card>
@@ -216,7 +273,7 @@ export default function LoanRequest() {
         <Button 
           type="submit" 
           className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
-          disabled={isSubmitting || !isValidAmount}
+          disabled={isSubmitting || !isValidAmount || isLoadingProfile}
         >
           {isSubmitting ? (
             <Loader2 className="h-5 w-5 animate-spin" />
