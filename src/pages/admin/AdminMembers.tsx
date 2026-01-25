@@ -263,7 +263,6 @@ export default function AdminMembers() {
     setBulkSlotsValue('');
     setBulkStatusValue('');
   };
-  };
 
   const handleBulkSlotsUpdate = async () => {
     if (!user || !bulkSlotsValue || selectedMemberIds.size === 0) return;
