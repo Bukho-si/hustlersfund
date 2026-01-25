@@ -57,6 +57,10 @@ export default function AdminMembers() {
   const [bulkSlotsValue, setBulkSlotsValue] = useState<string>('');
   const [bulkStatusValue, setBulkStatusValue] = useState<string>('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchMembers();
@@ -64,7 +68,15 @@ export default function AdminMembers() {
 
   useEffect(() => {
     filterMembers();
+    setCurrentPage(1); // Reset to first page when filters change
   }, [members, searchQuery, statusFilter]);
+
+  // Calculate paginated members
+  const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const fetchMembers = async () => {
     const { data: profilesData, error: profilesError } = await supabase
@@ -594,7 +606,7 @@ export default function AdminMembers() {
             </CardContent>
           </Card>
         ) : (
-          filteredMembers.map((member, index) => (
+          paginatedMembers.map((member, index) => (
             <Card 
               key={member.id}
               className={`animate-fade-in transition-colors ${selectedMemberIds.has(member.id) ? 'ring-2 ring-accent bg-accent/5' : ''}`}
@@ -827,8 +839,44 @@ export default function AdminMembers() {
         )}
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <Button
+                key={page}
+                variant={currentPage === page ? 'default' : 'outline'}
+                size="sm"
+                className="w-8 h-8 p-0"
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
       <p className="text-xs text-center text-muted-foreground mt-4">
-        {filteredMembers.length} of {members.length} members
+        Showing {paginatedMembers.length} of {filteredMembers.length} members
+        {filteredMembers.length !== members.length && ` (${members.length} total)`}
       </p>
     </AppLayout>
   );
