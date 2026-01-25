@@ -17,8 +17,19 @@ import {
   Clock,
   CheckCircle2,
   Shield,
-  Users
+  Users,
+  Calendar
 } from 'lucide-react';
+import { format } from 'date-fns';
+
+interface ContributionCycle {
+  id: string;
+  week_start_date: string;
+  week_end_date: string;
+  deadline: string;
+  closes_on: string;
+  is_closed: boolean;
+}
 
 interface DashboardData {
   profile: {
@@ -46,13 +57,32 @@ export default function Dashboard() {
     emergencyDuesCount: 0,
     emergencyDuesTotal: 0,
   });
+  const [currentCycle, setCurrentCycle] = useState<ContributionCycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
+      fetchCurrentCycle();
     }
   }, [user]);
+
+  const fetchCurrentCycle = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contribution_cycles')
+        .select('*')
+        .eq('is_closed', false)
+        .order('week_start_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      setCurrentCycle(data);
+    } catch (error) {
+      console.error('Error fetching current cycle:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -199,6 +229,37 @@ export default function Dashboard() {
               <div className="text-right">
                 <p className="text-primary-foreground/70 text-xs mb-1">This Week's Dues</p>
                 <p className="text-2xl font-bold">{formatCurrency(weeklyDues.total)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Current Contribution Cycle */}
+      {currentCycle && (
+        <Card className="mb-4 animate-fade-in border-accent/30" style={{ animationDelay: '0.05s' }}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-accent" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm">Week {format(new Date(currentCycle.week_start_date), 'MMM d')} – {format(new Date(currentCycle.week_end_date), 'd')}</h3>
+                <p className="text-xs text-muted-foreground">Contribution cycle open</p>
+              </div>
+            </div>
+            <div className="bg-warning/10 rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-warning" />
+                <span className="text-sm font-medium">Payment deadline</span>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-warning">
+                  {format(new Date(currentCycle.deadline), 'EEE, MMM d')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  by {format(new Date(currentCycle.deadline), 'HH:mm')}
+                </p>
               </div>
             </div>
           </CardContent>
