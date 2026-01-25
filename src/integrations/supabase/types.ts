@@ -286,6 +286,8 @@ export type Database = {
           id: string
           join_date: string
           joining_fee_paid: boolean
+          joining_fee_paid_total: number
+          membership_slots: number
           phone: string | null
           status: Database["public"]["Enums"]["member_status"]
           uber_driver_id: string | null
@@ -299,6 +301,8 @@ export type Database = {
           id?: string
           join_date?: string
           joining_fee_paid?: boolean
+          joining_fee_paid_total?: number
+          membership_slots?: number
           phone?: string | null
           status?: Database["public"]["Enums"]["member_status"]
           uber_driver_id?: string | null
@@ -312,6 +316,8 @@ export type Database = {
           id?: string
           join_date?: string
           joining_fee_paid?: boolean
+          joining_fee_paid_total?: number
+          membership_slots?: number
           phone?: string | null
           status?: Database["public"]["Enums"]["member_status"]
           uber_driver_id?: string | null

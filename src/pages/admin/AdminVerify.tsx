@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import { formatCurrency, formatDate, getJoiningFeeTotal } from '@/lib/constants';
 import { 
   FileCheck, 
   Building2, 
@@ -37,6 +37,8 @@ interface PaymentWithProfile {
   notes: string | null;
   profile: {
     full_name: string;
+    membership_slots: number;
+    joining_fee_paid_total: number;
   } | null;
 }
 
@@ -63,12 +65,12 @@ export default function AdminVerify() {
     if (error) {
       console.error('Error fetching payments:', error);
     } else {
-      // Fetch profiles separately
+      // Fetch profiles separately with slots info
       const paymentsWithProfiles = await Promise.all(
         (data || []).map(async (payment) => {
           const { data: profile } = await supabase
             .from('member_profiles')
-            .select('full_name')
+            .select('full_name, membership_slots, joining_fee_paid_total')
             .eq('user_id', payment.member_user_id)
             .maybeSingle();
           return { ...payment, profile };
@@ -84,6 +86,9 @@ export default function AdminVerify() {
     setProcessingId(paymentId);
 
     try {
+      const payment = payments.find(p => p.id === paymentId);
+      if (!payment) throw new Error('Payment not found');
+
       const { error } = await supabase
         .from('payments')
         .update({
@@ -95,12 +100,19 @@ export default function AdminVerify() {
 
       if (error) throw error;
 
-      // Check if this payment includes joining fee and mark it paid
-      const payment = payments.find(p => p.id === paymentId);
-      if (payment && Number(payment.joining_fee_amount) > 0) {
+      // Update joining fee paid total if this payment includes joining fee
+      if (payment && Number(payment.joining_fee_amount) > 0 && payment.profile) {
+        const slots = payment.profile.membership_slots || 1;
+        const currentPaidTotal = payment.profile.joining_fee_paid_total || 0;
+        const newPaidTotal = currentPaidTotal + Number(payment.joining_fee_amount);
+        const joiningFeeTotal = getJoiningFeeTotal(slots);
+        
         await supabase
           .from('member_profiles')
-          .update({ joining_fee_paid: true })
+          .update({ 
+            joining_fee_paid_total: newPaidTotal,
+            joining_fee_paid: newPaidTotal >= joiningFeeTotal 
+          })
           .eq('user_id', payment.member_user_id);
       }
 

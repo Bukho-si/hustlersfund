@@ -17,6 +17,15 @@ export const ACCIDENT_CONTRIBUTION = 50;
 // Timezone
 export const TIMEZONE = 'Africa/Johannesburg';
 
+// Slot-based calculation helpers
+export const getJoiningFeeTotal = (slots: number) => JOINING_FEE * slots;
+export const getWeeklySubscription = (slots: number) => WEEKLY_SUBSCRIPTION * slots;
+export const getPetrolLoanMax = (slots: number) => PETROL_LOAN_MAX * slots;
+export const getPersonalLoanMax = (slots: number) => PERSONAL_LOAN_MAX * slots;
+
+export const getJoiningFeeRemaining = (slots: number, paidTotal: number) =>
+  Math.max(0, getJoiningFeeTotal(slots) - paidTotal);
+
 // Currency formatting
 export const formatCurrency = (amount: number): string => {
   return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

@@ -10,8 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/constants';
-import { WEEKLY_SUBSCRIPTION, JOINING_FEE, CASH_ATM_FEE } from '@/lib/constants';
+import { formatCurrency, getWeeklySubscription, getJoiningFeeRemaining, WEEKLY_SUBSCRIPTION, JOINING_FEE, CASH_ATM_FEE } from '@/lib/constants';
 import { Upload, Building2, Banknote, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function PaymentSubmit() {
@@ -23,7 +22,8 @@ export default function PaymentSubmit() {
   const [notes, setNotes] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [joiningFeePaid, setJoiningFeePaid] = useState(true);
+  const [membershipSlots, setMembershipSlots] = useState(1);
+  const [joiningFeePaidTotal, setJoiningFeePaidTotal] = useState(0);
   const [emergencyDuesTotal, setEmergencyDuesTotal] = useState(0);
 
   useEffect(() => {
@@ -35,15 +35,16 @@ export default function PaymentSubmit() {
   const checkProfileAndDues = async () => {
     if (!user) return;
 
-    // Check if joining fee is paid
+    // Check profile for slots and joining fee
     const { data: profile } = await supabase
       .from('member_profiles')
-      .select('joining_fee_paid')
+      .select('membership_slots, joining_fee_paid_total')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (profile) {
-      setJoiningFeePaid(profile.joining_fee_paid);
+      setMembershipSlots(profile.membership_slots || 1);
+      setJoiningFeePaidTotal(profile.joining_fee_paid_total || 0);
     }
 
     // Get emergency dues
@@ -57,9 +58,9 @@ export default function PaymentSubmit() {
     setEmergencyDuesTotal(total);
   };
 
-  // Calculate totals
-  const baseAmount = WEEKLY_SUBSCRIPTION;
-  const joiningFeeAmount = joiningFeePaid ? 0 : JOINING_FEE;
+  // Calculate totals with slot multipliers
+  const baseAmount = getWeeklySubscription(membershipSlots);
+  const joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
   const cashFeeAmount = method === 'cash_atm' ? CASH_ATM_FEE : 0;
   const totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount + emergencyDuesTotal;
 
@@ -206,12 +207,22 @@ export default function PaymentSubmit() {
             <Label className="text-sm font-medium mb-3 block">Amount Breakdown</Label>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Weekly subscription</span>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Weekly subscription</span>
+                  {membershipSlots > 1 && (
+                    <span className="text-xs text-muted-foreground/70">R{WEEKLY_SUBSCRIPTION} × {membershipSlots} slots</span>
+                  )}
+                </div>
                 <span>{formatCurrency(baseAmount)}</span>
               </div>
-              {!joiningFeePaid && (
+              {joiningFeeAmount > 0 && (
                 <div className="flex justify-between text-accent">
-                  <span>Joining fee (once-off)</span>
+                  <div className="flex flex-col">
+                    <span>Joining fee (remaining)</span>
+                    {membershipSlots > 1 && (
+                      <span className="text-xs text-accent/70">R{JOINING_FEE} × {membershipSlots} total</span>
+                    )}
+                  </div>
                   <span>{formatCurrency(joiningFeeAmount)}</span>
                 </div>
               )}

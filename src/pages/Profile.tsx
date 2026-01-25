@@ -5,12 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/constants';
-import { User, Car, Phone, LogOut, Loader2, Save } from 'lucide-react';
+import { formatDate, formatCurrency, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
+import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard } from 'lucide-react';
 
 interface MemberProfile {
   full_name: string;
@@ -19,6 +21,8 @@ interface MemberProfile {
   uber_driver_id: string | null;
   status: string;
   joining_fee_paid: boolean;
+  joining_fee_paid_total: number;
+  membership_slots: number;
   join_date: string;
 }
 
@@ -115,6 +119,12 @@ export default function Profile() {
     );
   }
 
+  const slots = profile?.membership_slots || 1;
+  const joiningFeeTotal = getJoiningFeeTotal(slots);
+  const joiningFeePaid = profile?.joining_fee_paid_total || 0;
+  const joiningFeeRemaining = getJoiningFeeRemaining(slots, joiningFeePaid);
+  const joiningFeeProgress = (joiningFeePaid / joiningFeeTotal) * 100;
+
   return (
     <AppLayout>
       <PageHeader title="Profile" subtitle="Manage your account" />
@@ -126,11 +136,63 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-primary-foreground/70 text-xs mb-1">Member Status</p>
-                <StatusBadge status={profile.status} variant="member" />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={profile.status} variant="member" />
+                  {slots > 1 && (
+                    <Badge variant="outline" className="text-xs border-primary-foreground/30 text-primary-foreground">
+                      <Users className="h-3 w-3 mr-1" />
+                      {slots} slots
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-primary-foreground/70 text-xs mb-1">Member Since</p>
                 <p className="font-medium">{formatDate(profile.join_date)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Membership & Joining Fee Card */}
+      {profile && (
+        <Card className="mb-4">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b">
+              <div className="h-10 w-10 rounded-full bg-info/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-info" />
+              </div>
+              <div>
+                <p className="font-medium">Membership Details</p>
+                <p className="text-xs text-muted-foreground">Slots and joining fee status</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Membership Slots</span>
+                <Badge variant="secondary">
+                  <Users className="h-3 w-3 mr-1" />
+                  {slots} {slots === 1 ? 'slot' : 'slots'}
+                </Badge>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">Joining Fee Progress</span>
+                  <span className="font-medium">
+                    {formatCurrency(joiningFeePaid)} of {formatCurrency(joiningFeeTotal)}
+                  </span>
+                </div>
+                <Progress value={joiningFeeProgress} className="h-2" />
+                {joiningFeeRemaining > 0 ? (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(joiningFeeRemaining)} remaining
+                  </p>
+                ) : (
+                  <p className="text-xs text-success mt-1">✓ Fully paid</p>
+                )}
               </div>
             </div>
           </CardContent>

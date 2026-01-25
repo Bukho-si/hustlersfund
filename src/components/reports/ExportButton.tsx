@@ -73,9 +73,11 @@ export function ExportButton({
     }
 
     const csvContent = [
-      ['Member', 'Total Contributions', 'Outstanding Loans', 'Emergency Dues', 'Net Position'],
+      ['Member', 'Slots', 'Joining Fee Paid', 'Total Contributions', 'Outstanding Loans', 'Emergency Dues', 'Net Position'],
       ...memberBalances.map(b => [
         `"${b.fullName}"`,
+        b.membershipSlots,
+        b.joiningFeePaidTotal,
         b.totalContributions,
         b.outstandingLoans,
         b.emergencyDues,
