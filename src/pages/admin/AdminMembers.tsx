@@ -8,11 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2 } from 'lucide-react';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface Member {
@@ -50,6 +51,11 @@ export default function AdminMembers() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberDetails, setMemberDetails] = useState<MemberDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  
+  // Bulk selection state
+  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
+  const [bulkSlotsValue, setBulkSlotsValue] = useState<string>('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -230,6 +236,85 @@ export default function AdminMembers() {
     setFilteredMembers(filtered);
   };
 
+  // Bulk selection handlers
+  const toggleMemberSelection = (memberId: string) => {
+    setSelectedMemberIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(memberId)) {
+        newSet.delete(memberId);
+      } else {
+        newSet.add(memberId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedMemberIds.size === filteredMembers.length) {
+      setSelectedMemberIds(new Set());
+    } else {
+      setSelectedMemberIds(new Set(filteredMembers.map(m => m.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedMemberIds(new Set());
+    setBulkSlotsValue('');
+  };
+
+  const handleBulkSlotsUpdate = async () => {
+    if (!user || !bulkSlotsValue || selectedMemberIds.size === 0) return;
+    
+    const newSlots = parseInt(bulkSlotsValue);
+    if (isNaN(newSlots) || newSlots < 1 || newSlots > 5) return;
+
+    setIsBulkUpdating(true);
+
+    try {
+      const selectedMembers = members.filter(m => selectedMemberIds.has(m.id));
+      
+      // Update each member and log to audit
+      for (const member of selectedMembers) {
+        if (member.membership_slots === newSlots) continue; // Skip if no change
+
+        const oldSlots = member.membership_slots;
+
+        // Update member profile
+        const { error } = await supabase
+          .from('member_profiles')
+          .update({ membership_slots: newSlots })
+          .eq('id', member.id);
+
+        if (error) throw error;
+
+        // Log to audit
+        await supabase.from('audit_log').insert({
+          actor_user_id: user.id,
+          action: 'MEMBERSHIP_SLOTS_CHANGED',
+          entity_type: 'member_profile',
+          entity_id: member.id,
+          metadata_json: { old_slots: oldSlots, new_slots: newSlots, bulk_update: true },
+        });
+      }
+
+      toast({
+        title: 'Bulk update complete',
+        description: `Updated ${selectedMembers.length} member(s) to ${newSlots} slot${newSlots > 1 ? 's' : ''}`,
+      });
+
+      clearSelection();
+      fetchMembers();
+    } catch (error: any) {
+      toast({
+        title: 'Bulk update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const updateMemberStatus = async (memberId: string, newStatus: 'pending' | 'active' | 'suspended' | 'exited') => {
     const { error } = await supabase
       .from('member_profiles')
@@ -255,6 +340,50 @@ export default function AdminMembers() {
     <AppLayout requireAdmin>
       <PageHeader title="Members" subtitle="Manage stokvel members" showBack />
 
+      {/* Bulk Selection Toolbar */}
+      {selectedMemberIds.size > 0 && (
+        <Card className="mb-4 border-accent bg-accent/5">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4 text-accent" />
+                <span className="text-sm font-medium">{selectedMemberIds.size} selected</span>
+                <Button variant="ghost" size="sm" className="h-7 px-2" onClick={clearSelection}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={bulkSlotsValue} onValueChange={setBulkSlotsValue}>
+                  <SelectTrigger className="h-8 w-[100px] text-xs">
+                    <SelectValue placeholder="Set slots" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 slot</SelectItem>
+                    <SelectItem value="2">2 slots</SelectItem>
+                    <SelectItem value="3">3 slots</SelectItem>
+                    <SelectItem value="4">4 slots</SelectItem>
+                    <SelectItem value="5">5 slots</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={handleBulkSlotsUpdate}
+                  disabled={!bulkSlotsValue || isBulkUpdating}
+                >
+                  {isBulkUpdating ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : (
+                    <Users className="h-3 w-3 mr-1" />
+                  )}
+                  Update Slots
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search and Filter */}
       <Card className="mb-4">
         <CardContent className="p-3 space-y-3">
@@ -267,18 +396,30 @@ export default function AdminMembers() {
               className="pl-9"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Members</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="exited">Exited</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Members</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="exited">Exited</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 text-xs whitespace-nowrap"
+              onClick={toggleSelectAll}
+            >
+              {selectedMemberIds.size === filteredMembers.length && filteredMembers.length > 0
+                ? 'Deselect All'
+                : 'Select All'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -310,12 +451,17 @@ export default function AdminMembers() {
           filteredMembers.map((member, index) => (
             <Card 
               key={member.id}
-              className="animate-fade-in"
+              className={`animate-fade-in transition-colors ${selectedMemberIds.has(member.id) ? 'ring-2 ring-accent bg-accent/5' : ''}`}
               style={{ animationDelay: `${index * 0.03}s` }}
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={selectedMemberIds.has(member.id)}
+                      onCheckedChange={() => toggleMemberSelection(member.id)}
+                      className="mt-1"
+                    />
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold">{member.full_name}</p>
