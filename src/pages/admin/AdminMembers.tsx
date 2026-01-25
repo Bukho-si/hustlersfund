@@ -751,26 +751,29 @@ export default function AdminMembers() {
                   </Select>
 
                   {/* Membership Slots Selector */}
-                  <Select 
-                    value={String(member.membership_slots)} 
-                    onValueChange={(v) => updateMemberSlots(member, parseInt(v))}
-                    disabled={processingSlotsId === member.id}
-                  >
-                    <SelectTrigger className="h-8 text-xs w-[90px]">
-                      {processingSlotsId === member.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <SelectValue />
-                      )}
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 slot</SelectItem>
-                      <SelectItem value="2">2 slots</SelectItem>
-                      <SelectItem value="3">3 slots</SelectItem>
-                      <SelectItem value="4">4 slots</SelectItem>
-                      <SelectItem value="5">5 slots</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1 bg-muted/50 rounded-md px-2 py-0.5">
+                    <Users className="h-3 w-3 text-muted-foreground" />
+                    <Select 
+                      value={String(member.membership_slots)} 
+                      onValueChange={(v) => updateMemberSlots(member, parseInt(v))}
+                      disabled={processingSlotsId === member.id}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-[80px] border-0 bg-transparent focus:ring-0 px-1">
+                        {processingSlotsId === member.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <SelectValue />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 slot</SelectItem>
+                        <SelectItem value="2">2 slots</SelectItem>
+                        <SelectItem value="3">3 slots</SelectItem>
+                        <SelectItem value="4">4 slots</SelectItem>
+                        <SelectItem value="5">5 slots</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
                   <Button
                     variant="outline"
