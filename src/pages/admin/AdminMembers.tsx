@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare } from 'lucide-react';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface Member {
@@ -389,6 +389,62 @@ export default function AdminMembers() {
     }
   };
 
+  const exportMembersToCSV = () => {
+    const headers = [
+      'Full Name',
+      'Phone',
+      'Vehicle Reg',
+      'Uber Driver ID',
+      'Status',
+      'Membership Slots',
+      'Joining Fee Paid',
+      'Joining Fee Paid Total',
+      'Joining Fee Required',
+      'Weekly Subscription',
+      'Petrol Loan Max',
+      'Personal Loan Max',
+      'Join Date',
+      'Is Admin'
+    ];
+
+    const rows = members.map(member => [
+      member.full_name,
+      member.phone || '',
+      member.vehicle_reg || '',
+      member.uber_driver_id || '',
+      member.status,
+      member.membership_slots,
+      member.joining_fee_paid ? 'Yes' : 'No',
+      member.joining_fee_paid_total || 0,
+      getJoiningFeeTotal(member.membership_slots),
+      getWeeklySubscription(member.membership_slots),
+      getPetrolLoanMax(member.membership_slots),
+      getPersonalLoanMax(member.membership_slots),
+      formatDate(member.join_date),
+      member.isAdmin ? 'Yes' : 'No'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `members-export-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Export complete',
+      description: `Exported ${members.length} members to CSV`,
+    });
+  };
+
   return (
     <AppLayout requireAdmin>
       <PageHeader title="Members" subtitle="Manage stokvel members" showBack />
@@ -498,6 +554,16 @@ export default function AdminMembers() {
               {selectedMemberIds.size === filteredMembers.length && filteredMembers.length > 0
                 ? 'Deselect All'
                 : 'Select All'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 text-xs whitespace-nowrap"
+              onClick={exportMembersToCSV}
+              disabled={members.length === 0}
+            >
+              <Download className="h-3 w-3 mr-1" />
+              Export CSV
             </Button>
           </div>
         </CardContent>
