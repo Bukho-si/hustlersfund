@@ -462,60 +462,89 @@ export default function AdminMembers() {
     }
   };
 
-  const exportMembersToCSV = () => {
-    const headers = [
-      'Full Name',
-      'Phone',
-      'Vehicle Reg',
-      'Uber Driver ID',
-      'Status',
-      'Membership Slots',
-      'Joining Fee Paid',
-      'Joining Fee Paid Total',
-      'Joining Fee Required',
-      'Weekly Subscription',
-      'Petrol Loan Max',
-      'Personal Loan Max',
-      'Join Date',
-      'Is Admin'
-    ];
+  const [isExporting, setIsExporting] = useState(false);
 
-    const rows = members.map(member => [
-      member.full_name,
-      member.phone || '',
-      member.vehicle_reg || '',
-      member.uber_driver_id || '',
-      member.status,
-      member.membership_slots,
-      member.joining_fee_paid ? 'Yes' : 'No',
-      member.joining_fee_paid_total || 0,
-      getJoiningFeeTotal(member.membership_slots),
-      getWeeklySubscription(member.membership_slots),
-      getPetrolLoanMax(member.membership_slots),
-      getPersonalLoanMax(member.membership_slots),
-      formatDate(member.join_date),
-      member.isAdmin ? 'Yes' : 'No'
-    ]);
+  const exportMembersToCSV = async () => {
+    setIsExporting(true);
+    
+    try {
+      // Fetch total verified payments for each member
+      const { data: paymentsData } = await supabase
+        .from('payments')
+        .select('member_user_id, total_amount, status')
+        .eq('status', 'verified');
+      
+      // Create payments lookup map
+      const paymentsMap = new Map<string, number>();
+      (paymentsData || []).forEach(p => {
+        const current = paymentsMap.get(p.member_user_id) || 0;
+        paymentsMap.set(p.member_user_id, current + Number(p.total_amount));
+      });
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
+      const headers = [
+        'Full Name',
+        'Phone',
+        'Vehicle Reg',
+        'Uber Driver ID',
+        'Status',
+        'Membership Slots',
+        'Joining Fee Paid',
+        'Joining Fee Paid Total',
+        'Joining Fee Required',
+        'Weekly Subscription',
+        'Total Payments (Verified)',
+        'Petrol Loan Max',
+        'Personal Loan Max',
+        'Join Date',
+        'Is Admin'
+      ];
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `members-export-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      const rows = members.map(member => [
+        member.full_name,
+        member.phone || '',
+        member.vehicle_reg || '',
+        member.uber_driver_id || '',
+        member.status,
+        member.membership_slots,
+        member.joining_fee_paid ? 'Yes' : 'No',
+        member.joining_fee_paid_total || 0,
+        getJoiningFeeTotal(member.membership_slots),
+        getWeeklySubscription(member.membership_slots),
+        paymentsMap.get(member.user_id) || 0,
+        getPetrolLoanMax(member.membership_slots),
+        getPersonalLoanMax(member.membership_slots),
+        formatDate(member.join_date),
+        member.isAdmin ? 'Yes' : 'No'
+      ]);
 
-    toast({
-      title: 'Export complete',
-      description: `Exported ${members.length} members to CSV`,
-    });
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `members-export-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Export complete',
+        description: `Exported ${members.length} members to CSV`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Export failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -633,10 +662,14 @@ export default function AdminMembers() {
               size="sm"
               className="h-10 text-xs whitespace-nowrap"
               onClick={exportMembersToCSV}
-              disabled={members.length === 0}
+              disabled={members.length === 0 || isExporting}
             >
-              <Download className="h-3 w-3 mr-1" />
-              Export CSV
+              {isExporting ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-3 w-3 mr-1" />
+              )}
+              {isExporting ? 'Exporting...' : 'Export CSV'}
             </Button>
           </div>
         </CardContent>
