@@ -75,6 +75,9 @@ export default function AdminMembers() {
   // Delete member state
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -461,8 +464,6 @@ export default function AdminMembers() {
       fetchMembers();
     }
   };
-
-  const [isExporting, setIsExporting] = useState(false);
 
   const exportMembersToCSV = async () => {
     setIsExporting(true);
