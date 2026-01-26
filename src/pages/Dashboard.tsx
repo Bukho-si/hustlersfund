@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   Shield,
   Users,
-  Calendar
+  Calendar,
+  RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -193,14 +194,33 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">
             Hey, {firstName}! 👋
           </h1>
-          {isAdmin && (
-            <Link to="/admin">
-              <Button variant="outline" size="sm" className="gap-1">
-                <Shield className="h-4 w-4" />
-                Admin
-              </Button>
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => {
+                // Clear caches and hard reload
+                if ('caches' in window) {
+                  caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                  });
+                }
+                window.location.reload();
+              }}
+              title="Hard refresh"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            {isAdmin && (
+              <Link to="/admin">
+                <Button variant="outline" size="sm" className="gap-1">
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
         <p className="text-muted-foreground text-sm">
           {data.profile?.status === 'active' 
