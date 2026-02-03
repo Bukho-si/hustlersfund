@@ -73,13 +73,19 @@ export default function Dashboard() {
   const isJoiningFeeOnlyWeek = currentCycle?.week_start_date === JOINING_FEE_ONLY_WEEK_START;
 
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-      fetchCurrentCycle();
-    }
+    const loadData = async () => {
+      if (!user) return;
+      
+      // First fetch the current cycle
+      const cycle = await fetchCurrentCycle();
+      // Then fetch dashboard data with the cycle id
+      fetchDashboardData(cycle?.id);
+    };
+    
+    loadData();
   }, [user]);
 
-  const fetchCurrentCycle = async () => {
+  const fetchCurrentCycle = async (): Promise<ContributionCycle | null> => {
     try {
       const { data, error } = await supabase
         .from('contribution_cycles')
@@ -91,12 +97,14 @@ export default function Dashboard() {
 
       if (error) throw error;
       setCurrentCycle(data);
+      return data;
     } catch (error) {
       console.error('Error fetching current cycle:', error);
+      return null;
     }
   };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (cycleId?: string) => {
     if (!user) return;
 
     try {
@@ -107,13 +115,27 @@ export default function Dashboard() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // Fetch current week payment (most recent)
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('status, total_amount')
-        .eq('member_user_id', user.id)
-        .order('submitted_at', { ascending: false })
-        .limit(1);
+      // Fetch current cycle payment (verified = paid for this week)
+      let currentWeekPayment = null;
+      if (cycleId) {
+        const { data: payments } = await supabase
+          .from('payments')
+          .select('status, total_amount')
+          .eq('member_user_id', user.id)
+          .eq('cycle_id', cycleId)
+          .order('submitted_at', { ascending: false })
+          .limit(1);
+        currentWeekPayment = payments?.[0] || null;
+      } else {
+        // Fallback to most recent payment if no cycle
+        const { data: payments } = await supabase
+          .from('payments')
+          .select('status, total_amount')
+          .eq('member_user_id', user.id)
+          .order('submitted_at', { ascending: false })
+          .limit(1);
+        currentWeekPayment = payments?.[0] || null;
+      }
 
       // Fetch outstanding loans
       const { data: loans } = await supabase
@@ -136,7 +158,7 @@ export default function Dashboard() {
 
       setData({
         profile,
-        currentWeekPayment: payments?.[0] || null,
+        currentWeekPayment,
         totalLoansOutstanding,
         emergencyDuesCount,
         emergencyDuesTotal,
@@ -339,10 +361,22 @@ export default function Dashboard() {
           </div>
           
           {data.currentWeekPayment ? (
-            <div className="mt-4 p-3 bg-muted rounded-lg flex items-center justify-between">
+            <div className={`mt-4 p-3 rounded-lg flex items-center justify-between ${
+              data.currentWeekPayment.status === 'verified' 
+                ? 'bg-success/10' 
+                : 'bg-muted'
+            }`}>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span className="text-sm">Payment submitted</span>
+                <CheckCircle2 className={`h-4 w-4 ${
+                  data.currentWeekPayment.status === 'verified' 
+                    ? 'text-success' 
+                    : 'text-muted-foreground'
+                }`} />
+                <span className="text-sm">
+                  {data.currentWeekPayment.status === 'verified' 
+                    ? "Week's dues paid ✓" 
+                    : 'Payment submitted'}
+                </span>
               </div>
               <StatusBadge status={data.currentWeekPayment.status} variant="payment" />
             </div>
