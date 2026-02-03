@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
@@ -241,6 +242,9 @@ export default function Dashboard() {
             : "Complete your profile to get started"}
         </p>
       </div>
+
+      {/* Install Banner */}
+      <InstallBanner />
 
       {/* Status Card */}
       {data.profile && (
