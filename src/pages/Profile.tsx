@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
-import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard } from 'lucide-react';
+import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard, Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface MemberProfile {
   full_name: string;
@@ -295,6 +296,16 @@ export default function Profile() {
             </>
           )}
         </Button>
+
+        <Link to="/install" className="block">
+          <Button 
+            variant="outline"
+            className="w-full h-12"
+          >
+            <Download className="h-5 w-5 mr-2" />
+            Install App
+          </Button>
+        </Link>
 
         <Button 
           variant="outline"
