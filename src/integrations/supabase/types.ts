@@ -74,6 +74,48 @@ export type Database = {
         }
         Relationships: []
       }
+      contribution_settings: {
+        Row: {
+          accident_emergency_amount: number
+          cash_atm_fee_amount: number
+          created_at: string
+          funeral_emergency_amount: number
+          id: string
+          joining_fee_amount: number
+          late_fine_amount: number
+          personal_loan_monthly_cap: number
+          petrol_loan_weekly_cap: number
+          updated_at: string
+          weekly_subscription_amount: number
+        }
+        Insert: {
+          accident_emergency_amount?: number
+          cash_atm_fee_amount?: number
+          created_at?: string
+          funeral_emergency_amount?: number
+          id?: string
+          joining_fee_amount?: number
+          late_fine_amount?: number
+          personal_loan_monthly_cap?: number
+          petrol_loan_weekly_cap?: number
+          updated_at?: string
+          weekly_subscription_amount?: number
+        }
+        Update: {
+          accident_emergency_amount?: number
+          cash_atm_fee_amount?: number
+          created_at?: string
+          funeral_emergency_amount?: number
+          id?: string
+          joining_fee_amount?: number
+          late_fine_amount?: number
+          personal_loan_monthly_cap?: number
+          petrol_loan_weekly_cap?: number
+          updated_at?: string
+          weekly_subscription_amount?: number
+        }
+        Relationships: []
+      }
       emergency_dues: {
         Row: {
           amount_due: number

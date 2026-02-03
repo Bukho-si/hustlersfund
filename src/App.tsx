@@ -23,6 +23,7 @@ import AdminLoans from "./pages/admin/AdminLoans";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

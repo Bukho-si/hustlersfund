@@ -1,23 +1,24 @@
 // Hustlers Stokvel Business Constants
+// NOTE: These are fallback defaults. Use useContributionSettings() hook to get database values.
 
-// Fees and amounts (in ZAR)
+// Fees and amounts (in ZAR) - FALLBACK DEFAULTS ONLY
 export const JOINING_FEE = 200;
 export const WEEKLY_SUBSCRIPTION = 150;
 export const LATE_FINE = 50;
 export const CASH_ATM_FEE = 10;
 
-// Loan limits
+// Loan limits - FALLBACK DEFAULTS ONLY
 export const PETROL_LOAN_MAX = 1500;
 export const PERSONAL_LOAN_MAX = 5000;
 
-// Emergency contribution defaults
+// Emergency contribution defaults - FALLBACK DEFAULTS ONLY
 export const FUNERAL_CONTRIBUTION = 200;
 export const ACCIDENT_CONTRIBUTION = 50;
 
 // Timezone
 export const TIMEZONE = 'Africa/Johannesburg';
 
-// Slot-based calculation helpers
+// Legacy slot-based calculation helpers (use useContributionSettings hook versions instead)
 export const getJoiningFeeTotal = (slots: number) => JOINING_FEE * slots;
 export const getWeeklySubscription = (slots: number) => WEEKLY_SUBSCRIPTION * slots;
 export const getPetrolLoanMax = (slots: number) => PETROL_LOAN_MAX * slots;
