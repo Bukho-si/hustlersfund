@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency, getWeeklySubscription, getJoiningFeeRemaining, getJoiningFeeTotal, WEEKLY_SUBSCRIPTION, JOINING_FEE } from '@/lib/constants';
+import { formatCurrency } from '@/lib/constants';
+import { useContributionSettings, getWeeklySubscription, getJoiningFeeRemaining } from '@/hooks/useContributionSettings';
 import { 
   CreditCard, 
   Wallet, 
@@ -19,9 +21,13 @@ import {
   Shield,
   Users,
   Calendar,
-  RefreshCw
+  RefreshCw,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
+
+// Joining fee only week - no subscriptions collected
+const JOINING_FEE_ONLY_WEEK_START = '2026-02-02';
 
 interface ContributionCycle {
   id: string;
@@ -51,6 +57,7 @@ interface DashboardData {
 
 export default function Dashboard() {
   const { user, isAdmin } = useAuth();
+  const { settings } = useContributionSettings();
   const [data, setData] = useState<DashboardData>({
     profile: null,
     currentWeekPayment: null,
@@ -60,6 +67,9 @@ export default function Dashboard() {
   });
   const [currentCycle, setCurrentCycle] = useState<ContributionCycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check if current cycle is the joining fee only week
+  const isJoiningFeeOnlyWeek = currentCycle?.week_start_date === JOINING_FEE_ONLY_WEEK_START;
 
   useEffect(() => {
     if (user) {
@@ -140,23 +150,26 @@ export default function Dashboard() {
   // Calculate this week's dues with slot multipliers
   const calculateWeeklyDues = () => {
     const slots = data.profile?.membership_slots || 1;
-    const weeklyAmount = getWeeklySubscription(slots);
+    // During joining fee only week, no subscription is collected
+    const weeklyAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(slots, settings);
     const joiningFeeRemaining = data.profile 
-      ? getJoiningFeeRemaining(slots, data.profile.joining_fee_paid_total)
+      ? getJoiningFeeRemaining(slots, data.profile.joining_fee_paid_total, settings)
       : 0;
 
     let total = weeklyAmount;
     const breakdown: { label: string; amount: number; detail?: string }[] = [];
     
-    // Weekly subscription with slot breakdown
-    if (slots > 1) {
-      breakdown.push({ 
-        label: 'Weekly subscription', 
-        amount: weeklyAmount,
-        detail: `R${WEEKLY_SUBSCRIPTION} × ${slots}`
-      });
-    } else {
-      breakdown.push({ label: 'Weekly subscription', amount: weeklyAmount });
+    // Weekly subscription with slot breakdown (only if not joining fee only week)
+    if (!isJoiningFeeOnlyWeek) {
+      if (slots > 1) {
+        breakdown.push({ 
+          label: 'Weekly subscription', 
+          amount: weeklyAmount,
+          detail: `R${settings.weekly_subscription_amount} × ${slots}`
+        });
+      } else {
+        breakdown.push({ label: 'Weekly subscription', amount: weeklyAmount });
+      }
     }
 
     // Joining fee if not fully paid
@@ -166,7 +179,7 @@ export default function Dashboard() {
         breakdown.push({ 
           label: 'Joining fee (remaining)', 
           amount: joiningFeeRemaining,
-          detail: `R${JOINING_FEE} × ${slots} total`
+          detail: `R${settings.joining_fee_amount} × ${slots} total`
         });
       } else {
         breakdown.push({ label: 'Joining fee (once-off)', amount: joiningFeeRemaining });
@@ -295,6 +308,14 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
+          {isJoiningFeeOnlyWeek && (
+            <Alert className="mb-4 border-info/30 bg-info/10">
+              <Info className="h-4 w-4 text-info" />
+              <AlertDescription className="text-sm">
+                <strong>Joining Fees Only This Week</strong> — Weekly subscriptions start next week.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             {weeklyDues.breakdown.map((item, index) => (
               <div key={index} className="flex justify-between text-sm">
