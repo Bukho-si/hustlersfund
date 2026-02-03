@@ -16,7 +16,8 @@ import {
   Shield,
   BarChart3,
   Calendar,
-  Clock
+  Clock,
+  Settings2
 } from 'lucide-react';
 
 interface ContributionCycle {
@@ -239,8 +240,29 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Contribution Settings Card - Prominent */}
+      <Card className="animate-fade-in mb-4 border-primary/30 bg-primary/5" style={{ animationDelay: '0.2s' }}>
+        <CardContent className="p-4">
+          <Link 
+            to="/admin/contribution-settings" 
+            className="flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+                <Settings2 className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Edit Contribution Amounts</h3>
+                <p className="text-xs text-muted-foreground">Manage fees, loan caps & emergency amounts</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
-      <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+      <Card className="animate-fade-in" style={{ animationDelay: '0.25s' }}>
         <CardContent className="p-4">
           <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
