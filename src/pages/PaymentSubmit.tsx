@@ -11,7 +11,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, getWeeklySubscription, getJoiningFeeRemaining, WEEKLY_SUBSCRIPTION, JOINING_FEE, CASH_ATM_FEE } from '@/lib/constants';
-import { Upload, Building2, Banknote, Loader2, CheckCircle2 } from 'lucide-react';
+import { Upload, Building2, Banknote, Loader2, CheckCircle2, Info } from 'lucide-react';
+
+// First week of stokvel operations - joining fees only
+const JOINING_FEE_ONLY_WEEK_START = '2026-02-02';
 
 export default function PaymentSubmit() {
   const navigate = useNavigate();
@@ -25,12 +28,31 @@ export default function PaymentSubmit() {
   const [membershipSlots, setMembershipSlots] = useState(1);
   const [joiningFeePaidTotal, setJoiningFeePaidTotal] = useState(0);
   const [emergencyDuesTotal, setEmergencyDuesTotal] = useState(0);
+  const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
+  const [currentCycleStart, setCurrentCycleStart] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       checkProfileAndDues();
+      checkCurrentCycle();
     }
   }, [user]);
+
+  const checkCurrentCycle = async () => {
+    const { data: cycle } = await supabase
+      .from('contribution_cycles')
+      .select('week_start_date')
+      .eq('is_closed', false)
+      .order('week_start_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (cycle) {
+      setCurrentCycleStart(cycle.week_start_date);
+      // Check if this is the first week (joining fees only)
+      setIsJoiningFeeOnlyWeek(cycle.week_start_date === JOINING_FEE_ONLY_WEEK_START);
+    }
+  };
 
   const checkProfileAndDues = async () => {
     if (!user) return;
@@ -59,7 +81,8 @@ export default function PaymentSubmit() {
   };
 
   // Calculate totals with slot multipliers
-  const baseAmount = getWeeklySubscription(membershipSlots);
+  // If it's joining fee only week, no weekly subscription
+  const baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
   const joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
   const cashFeeAmount = method === 'cash_atm' ? CASH_ATM_FEE : 0;
   const totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount + emergencyDuesTotal;
@@ -205,25 +228,45 @@ export default function PaymentSubmit() {
         <Card>
           <CardContent className="p-4">
             <Label className="text-sm font-medium mb-3 block">Amount Breakdown</Label>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">Weekly subscription</span>
-                  {membershipSlots > 1 && (
-                    <span className="text-xs text-muted-foreground/70">R{WEEKLY_SUBSCRIPTION} × {membershipSlots} slots</span>
-                  )}
+            
+            {/* Joining Fee Only Week Notice */}
+            {isJoiningFeeOnlyWeek && (
+              <div className="flex items-start gap-2 p-3 bg-info/10 rounded-lg mb-3 text-info">
+                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium">Joining Fees Only This Week</p>
+                  <p className="text-info/80 text-xs">Weekly subscriptions start from next week.</p>
                 </div>
-                <span>{formatCurrency(baseAmount)}</span>
               </div>
+            )}
+
+            <div className="space-y-2 text-sm">
+              {!isJoiningFeeOnlyWeek && (
+                <div className="flex justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">Weekly subscription</span>
+                    {membershipSlots > 1 && (
+                      <span className="text-xs text-muted-foreground/70">R{WEEKLY_SUBSCRIPTION} × {membershipSlots} slots</span>
+                    )}
+                  </div>
+                  <span>{formatCurrency(baseAmount)}</span>
+                </div>
+              )}
               {joiningFeeAmount > 0 && (
                 <div className="flex justify-between text-accent">
                   <div className="flex flex-col">
-                    <span>Joining fee (remaining)</span>
+                    <span>Joining fee {isJoiningFeeOnlyWeek ? '' : '(remaining)'}</span>
                     {membershipSlots > 1 && (
                       <span className="text-xs text-accent/70">R{JOINING_FEE} × {membershipSlots} total</span>
                     )}
                   </div>
                   <span>{formatCurrency(joiningFeeAmount)}</span>
+                </div>
+              )}
+              {joiningFeeAmount === 0 && isJoiningFeeOnlyWeek && (
+                <div className="flex justify-between text-success">
+                  <span>Joining fee</span>
+                  <span>Paid ✓</span>
                 </div>
               )}
               {method === 'cash_atm' && (
