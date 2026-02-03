@@ -14,6 +14,7 @@ import Loans from "./pages/Loans";
 import LoanRequest from "./pages/LoanRequest";
 import Emergencies from "./pages/Emergencies";
 import Profile from "./pages/Profile";
+import Install from "./pages/Install";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/loans/request" element={<LoanRequest />} />
             <Route path="/emergencies" element={<Emergencies />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/install" element={<Install />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
