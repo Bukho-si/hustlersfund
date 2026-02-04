@@ -66,10 +66,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    if (!error && data.user) {
+      // Check if returning deleted member (no profile exists)
+      const { data: profile } = await supabase
+        .from('member_profiles')
+        .select('id')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      
+      if (!profile) {
+        // Recreate profile for returning member
+        const fullName = data.user.user_metadata?.full_name || email.split('@')[0];
+        await supabase
+          .from('member_profiles')
+          .insert({
+            user_id: data.user.id,
+            full_name: fullName,
+            status: 'pending',
+          });
+      }
+    }
+    
     return { error: error as Error | null };
   };
 
