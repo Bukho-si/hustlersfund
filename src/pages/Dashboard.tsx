@@ -118,14 +118,30 @@ export default function Dashboard() {
       // Fetch current cycle payment (verified = paid for this week)
       let currentWeekPayment = null;
       if (cycleId) {
-        const { data: payments } = await supabase
+        // First try to find payment with matching cycle_id
+        const { data: cyclePayments } = await supabase
           .from('payments')
           .select('status, total_amount')
           .eq('member_user_id', user.id)
           .eq('cycle_id', cycleId)
           .order('submitted_at', { ascending: false })
           .limit(1);
-        currentWeekPayment = payments?.[0] || null;
+        
+        currentWeekPayment = cyclePayments?.[0] || null;
+        
+        // If no payment with cycle_id, check for recent payments without cycle_id 
+        // that were submitted during this cycle's period
+        if (!currentWeekPayment) {
+          const { data: recentPayments } = await supabase
+            .from('payments')
+            .select('status, total_amount, submitted_at')
+            .eq('member_user_id', user.id)
+            .is('cycle_id', null)
+            .gte('submitted_at', currentCycle?.week_start_date || '')
+            .order('submitted_at', { ascending: false })
+            .limit(1);
+          currentWeekPayment = recentPayments?.[0] || null;
+        }
       } else {
         // Fallback to most recent payment if no cycle
         const { data: payments } = await supabase
