@@ -29,7 +29,7 @@ export default function PaymentSubmit() {
   const [joiningFeePaidTotal, setJoiningFeePaidTotal] = useState(0);
   const [emergencyDuesTotal, setEmergencyDuesTotal] = useState(0);
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
-  const [currentCycleStart, setCurrentCycleStart] = useState<string | null>(null);
+  const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -41,14 +41,14 @@ export default function PaymentSubmit() {
   const checkCurrentCycle = async () => {
     const { data: cycle } = await supabase
       .from('contribution_cycles')
-      .select('week_start_date')
+      .select('id, week_start_date')
       .eq('is_closed', false)
       .order('week_start_date', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (cycle) {
-      setCurrentCycleStart(cycle.week_start_date);
+      setCurrentCycleId(cycle.id);
       // Check if this is the first week (joining fees only)
       setIsJoiningFeeOnlyWeek(cycle.week_start_date === JOINING_FEE_ONLY_WEEK_START);
     }
@@ -147,12 +147,13 @@ export default function PaymentSubmit() {
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      // Create payment record
+      // Create payment record with cycle_id
       const { error: paymentError } = await supabase
         .from('payments')
         .insert({
           member_user_id: user.id,
           method: method,
+          cycle_id: currentCycleId,
           base_amount: baseAmount,
           joining_fee_amount: joiningFeeAmount,
           late_fine_amount: 0,
