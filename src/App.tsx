@@ -15,6 +15,7 @@ import LoanRequest from "./pages/LoanRequest";
 import Emergencies from "./pages/Emergencies";
 import Profile from "./pages/Profile";
 import Install from "./pages/Install";
+import ResetPassword from "./pages/ResetPassword";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/emergencies" element={<Emergencies />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/install" element={<Install />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />

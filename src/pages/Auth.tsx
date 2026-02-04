@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Car, Users } from 'lucide-react';
 import { z } from 'zod';
+import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -178,7 +179,14 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password">Password</Label>
+                    <ForgotPasswordDialog>
+                      <button type="button" className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline">
+                        Forgot password?
+                      </button>
+                    </ForgotPasswordDialog>
+                  </div>
                   <Input
                     id="login-password"
                     type="password"
