@@ -68,9 +68,7 @@ export default function Dashboard() {
   });
   const [currentCycle, setCurrentCycle] = useState<ContributionCycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Check if current cycle is the joining fee only week
-  const isJoiningFeeOnlyWeek = currentCycle?.week_start_date === JOINING_FEE_ONLY_WEEK_START;
+  const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -97,6 +95,10 @@ export default function Dashboard() {
 
       if (error) throw error;
       setCurrentCycle(data);
+      // Set joining fee only week flag based on fetched data
+      if (data) {
+        setIsJoiningFeeOnlyWeek(data.week_start_date === JOINING_FEE_ONLY_WEEK_START);
+      }
       return data;
     } catch (error) {
       console.error('Error fetching current cycle:', error);
