@@ -10,7 +10,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Download, FileText, FileSpreadsheet, File } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, File, Printer } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/constants';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -463,6 +463,132 @@ export function ExportButton({
     }
   };
 
+  // Print Functions - generate PDF and open print dialog
+  const printReport = (type: 'summary' | 'members' | 'payments' | 'loans' | 'all') => {
+    const doc = new jsPDF();
+    let yPos = 20;
+
+    doc.setFontSize(18);
+    doc.text('Financial Report', 14, yPos);
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.text(`Generated: ${formatDateTime(new Date())}`, 14, yPos);
+    yPos += 15;
+
+    if (type === 'summary' || type === 'all') {
+      if (summary) {
+        doc.setFontSize(14);
+        doc.text('Financial Summary', 14, yPos);
+        yPos += 5;
+        
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Pool Balance', formatCurrency(summary.totalPoolBalance)],
+            ['Total Contributions', formatCurrency(summary.totalContributions)],
+            ['Active Loans', formatCurrency(summary.totalLoansActive)],
+            ['Interest Earned', formatCurrency(summary.totalInterestEarned)],
+            ['Emergency Dues', formatCurrency(summary.totalEmergencyDues)],
+            ['Collection Rate', `${summary.collectionRate.toFixed(1)}%`],
+            ['Active Members', String(summary.activeMembers)],
+            ['Pending Payments', String(summary.pendingPayments)],
+          ],
+          theme: 'striped',
+        });
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+    }
+
+    if (type === 'members' || type === 'all') {
+      if (memberBalances && memberBalances.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFontSize(14);
+        doc.text('Member Balances', 14, yPos);
+        yPos += 5;
+        
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Member', 'Slots', 'Contributions', 'Loans', 'Net Position']],
+          body: memberBalances.map(b => [
+            b.fullName,
+            String(b.membershipSlots),
+            formatCurrency(b.totalContributions),
+            formatCurrency(b.outstandingLoans),
+            formatCurrency(b.netPosition),
+          ]),
+          theme: 'striped',
+        });
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+    }
+
+    if (type === 'payments' || type === 'all') {
+      if (paymentsLedger && paymentsLedger.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFontSize(14);
+        doc.text('Payments Ledger', 14, yPos);
+        yPos += 5;
+        
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Member', 'Amount', 'Method', 'Status', 'Date']],
+          body: paymentsLedger.slice(0, 50).map(p => [
+            p.memberName,
+            formatCurrency(p.total_amount),
+            p.method,
+            p.status,
+            formatDateTime(p.submitted_at),
+          ]),
+          theme: 'striped',
+        });
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+    }
+
+    if (type === 'loans' || type === 'all') {
+      if (loansLedger && loansLedger.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFontSize(14);
+        doc.text('Loans Ledger', 14, yPos);
+        yPos += 5;
+        
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Member', 'Type', 'Amount', 'Outstanding', 'Status']],
+          body: loansLedger.slice(0, 50).map(l => [
+            l.memberName,
+            l.type,
+            formatCurrency(l.amount),
+            formatCurrency(l.outstanding_balance),
+            l.status,
+          ]),
+          theme: 'striped',
+        });
+      }
+    }
+
+    // Open print dialog instead of saving
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+    toast.success('Print dialog opened');
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -565,6 +691,35 @@ export function ExportButton({
             <DropdownMenuItem onClick={() => exportToWord('all')}>
               <Download className="h-4 w-4 mr-2" />
               Export All
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+
+        <DropdownMenuSeparator />
+
+        {/* Print Options */}
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem onClick={() => printReport('summary')}>
+              Financial Summary
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => printReport('members')}>
+              Member Balances
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => printReport('payments')}>
+              Payments Ledger
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => printReport('loans')}>
+              Loans Ledger
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => printReport('all')}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print All Reports
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
