@@ -131,13 +131,13 @@ export default function Dashboard() {
         
         // If no payment with cycle_id, check for recent payments without cycle_id 
         // that were submitted during this cycle's period
-        if (!currentWeekPayment) {
+        if (!currentWeekPayment && currentCycle?.week_start_date) {
           const { data: recentPayments } = await supabase
             .from('payments')
             .select('status, total_amount, submitted_at')
             .eq('member_user_id', user.id)
             .is('cycle_id', null)
-            .gte('submitted_at', currentCycle?.week_start_date || '')
+            .gte('submitted_at', currentCycle.week_start_date)
             .order('submitted_at', { ascending: false })
             .limit(1);
           currentWeekPayment = recentPayments?.[0] || null;
