@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2 } from 'lucide-react';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +39,7 @@ interface Member {
   membership_slots: number;
   join_date: string;
   isAdmin?: boolean;
+  email?: string;
 }
 
 interface MemberDetails {
@@ -75,6 +76,9 @@ export default function AdminMembers() {
   // Delete member state
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Password reset state
+  const [resettingPasswordId, setResettingPasswordId] = useState<string | null>(null);
   
   // Export state
   const [isExporting, setIsExporting] = useState(false);
@@ -120,13 +124,64 @@ export default function AdminMembers() {
 
     const adminUserIds = new Set(adminRoles?.map(r => r.user_id) || []);
     
+    // Fetch user emails from edge function
+    let emailMap: Record<string, string> = {};
+    try {
+      const { data: emailData } = await supabase.functions.invoke('get-member-emails');
+      if (emailData?.emails) {
+        emailMap = emailData.emails;
+      }
+    } catch (error) {
+      console.error('Error fetching emails:', error);
+    }
+    
     const membersWithRoles = (profilesData || []).map(member => ({
       ...member,
       isAdmin: adminUserIds.has(member.user_id),
+      email: emailMap[member.user_id] || undefined,
     }));
 
     setMembers(membersWithRoles);
     setIsLoading(false);
+  };
+
+  const sendPasswordReset = async (member: Member) => {
+    if (!member.email) {
+      toast({
+        title: 'Email not available',
+        description: 'Unable to send password reset. Please check member details.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setResettingPasswordId(member.user_id);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('admin-reset-password', {
+        body: { 
+          email: member.email,
+          redirectUrl: `${window.location.origin}/reset-password`
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      toast({
+        title: 'Password reset sent',
+        description: `Reset email sent to ${member.email}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to send reset',
+        description: error.message || 'An error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setResettingPasswordId(null);
+    }
   };
 
   const fetchMemberDetails = async (member: Member) => {
@@ -931,6 +986,22 @@ export default function AdminMembers() {
                     </DialogContent>
                   </Dialog>
                   
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => sendPasswordReset(member)}
+                    disabled={resettingPasswordId === member.user_id || !member.email}
+                    title={member.email ? `Send reset to ${member.email}` : 'Email not available'}
+                  >
+                    {resettingPasswordId === member.user_id ? (
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    ) : (
+                      <KeyRound className="h-3 w-3 mr-1" />
+                    )}
+                    Reset Password
+                  </Button>
+
                   <Button
                     variant="ghost"
                     size="sm"
