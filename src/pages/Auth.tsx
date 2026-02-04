@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -187,9 +188,8 @@ export default function Auth() {
                       </button>
                     </ForgotPasswordDialog>
                   </div>
-                  <Input
+                  <PasswordInput
                     id="login-password"
-                    type="password"
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
@@ -231,9 +231,8 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="signup-password"
-                    type="password"
                     placeholder="Create a password"
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
@@ -243,9 +242,8 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-confirm">Confirm Password</Label>
-                  <Input
+                  <PasswordInput
                     id="signup-confirm"
-                    type="password"
                     placeholder="Confirm your password"
                     value={signupConfirmPassword}
                     onChange={(e) => setSignupConfirmPassword(e.target.value)}
