@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { useAuth } from '@/hooks/useAuth';
+import { useCurrentCycle } from '@/hooks/useContributionCycles';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import { useContributionSettings, getWeeklySubscription, getJoiningFeeRemaining } from '@/hooks/useContributionSettings';
@@ -30,15 +32,6 @@ import { format } from 'date-fns';
 // Joining fee only week - no subscriptions collected
 const JOINING_FEE_ONLY_WEEK_START = '2026-02-02';
 
-interface ContributionCycle {
-  id: string;
-  week_start_date: string;
-  week_end_date: string;
-  deadline: string;
-  closes_on: string;
-  is_closed: boolean;
-}
-
 interface DashboardData {
   profile: {
     full_name: string;
@@ -59,6 +52,8 @@ interface DashboardData {
 export default function Dashboard() {
   const { user, isAdmin } = useAuth();
   const { settings } = useContributionSettings();
+  const queryClient = useQueryClient();
+  const { data: currentCycle, refetch: refetchCycle } = useCurrentCycle();
   const [data, setData] = useState<DashboardData>({
     profile: null,
     currentWeekPayment: null,
@@ -66,45 +61,43 @@ export default function Dashboard() {
     emergencyDuesCount: 0,
     emergencyDuesTotal: 0,
   });
-  const [currentCycle, setCurrentCycle] = useState<ContributionCycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
+
+  // Auto-refresh when deadline is reached
+  useEffect(() => {
+    if (!currentCycle?.deadline) return;
+
+    const deadlineTime = new Date(currentCycle.deadline).getTime();
+    const now = Date.now();
+    const timeUntilDeadline = deadlineTime - now;
+
+    // If deadline hasn't passed yet, set a timer to refresh when it does
+    if (timeUntilDeadline > 0) {
+      const timer = setTimeout(() => {
+        refetchCycle();
+        queryClient.invalidateQueries({ queryKey: ['current-contribution-cycle'] });
+      }, timeUntilDeadline + 1000); // Add 1 second buffer
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentCycle?.deadline, refetchCycle, queryClient]);
+
+  // Update joining fee only week flag when cycle changes
+  useEffect(() => {
+    if (currentCycle) {
+      setIsJoiningFeeOnlyWeek(currentCycle.week_start_date === JOINING_FEE_ONLY_WEEK_START);
+    }
+  }, [currentCycle]);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      
-      // First fetch the current cycle
-      const cycle = await fetchCurrentCycle();
-      // Then fetch dashboard data with the cycle id
-      fetchDashboardData(cycle?.id);
+      fetchDashboardData(currentCycle?.id);
     };
     
     loadData();
-  }, [user]);
-
-  const fetchCurrentCycle = async (): Promise<ContributionCycle | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('contribution_cycles')
-        .select('*')
-        .eq('is_closed', false)
-        .order('week_start_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      setCurrentCycle(data);
-      // Set joining fee only week flag based on fetched data
-      if (data) {
-        setIsJoiningFeeOnlyWeek(data.week_start_date === JOINING_FEE_ONLY_WEEK_START);
-      }
-      return data;
-    } catch (error) {
-      console.error('Error fetching current cycle:', error);
-      return null;
-    }
-  };
+  }, [user, currentCycle?.id]);
 
   const fetchDashboardData = async (cycleId?: string) => {
     if (!user) return;
@@ -260,6 +253,7 @@ export default function Dashboard() {
                     names.forEach(name => caches.delete(name));
                   });
                 }
+                refetchCycle();
                 window.location.reload();
               }}
               title="Hard refresh"
