@@ -1,23 +1,23 @@
  import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
  import { supabase } from '@/integrations/supabase/client';
  import { useToast } from '@/hooks/use-toast';
- 
- export interface ContributionCycle {
-   id: string;
-   week_start_date: string;
-   week_end_date: string;
-   deadline: string;
-   closes_on: string;
-   is_closed: boolean;
-   created_at: string;
- }
- 
- export interface CycleFormData {
-   week_start_date: string;
-   week_end_date: string;
-   deadline: string;
-   closes_on: string;
- }
+
+export interface ContributionCycle {
+  id: string;
+  week_start_date: string;
+  week_end_date: string;
+  deadline: string;
+  closes_on: string;
+  is_closed: boolean;
+  created_at: string;
+}
+
+export interface CycleFormData {
+  week_start_date: string;
+  week_end_date: string;
+  deadline: string;
+  closes_on: string;
+}
  
  export function useContributionCycles() {
    return useQuery({
@@ -33,6 +33,38 @@
      },
    });
  }
+
+export function useDeleteCycle() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('contribution_cycles')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contribution-cycles'] });
+      queryClient.invalidateQueries({ queryKey: ['current-contribution-cycle'] });
+      toast({
+        title: 'Cycle Deleted',
+        description: 'Contribution cycle has been removed.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete cycle. It may have linked payments.',
+        variant: 'destructive',
+      });
+      console.error('Delete cycle error:', error);
+    },
+  });
+}
  
  export function useCurrentCycle() {
    return useQuery({
