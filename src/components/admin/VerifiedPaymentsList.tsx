@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { EditPaymentDialog } from './EditPaymentDialog';
 import { PaymentHistoryDialog } from './PaymentHistoryDialog';
-import { Pencil, CheckCircle2, Building2, Banknote, Loader2, History } from 'lucide-react';
+import { MemberPaymentsDialog } from './MemberPaymentsDialog';
+import { Pencil, CheckCircle2, Building2, Banknote, Loader2, History, ListCollapse } from 'lucide-react';
 
 interface PaymentWithProfile {
   id: string;
@@ -34,6 +35,8 @@ export function VerifiedPaymentsList() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentWithProfile | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [memberPaymentsOpen, setMemberPaymentsOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<{ userId: string; name: string } | null>(null);
   const [historyPayment, setHistoryPayment] = useState<PaymentWithProfile | null>(null);
 
   useEffect(() => {
@@ -117,9 +120,18 @@ export function VerifiedPaymentsList() {
                   <div className="flex items-center gap-3">
                     {getMethodIcon(payment.method)}
                     <div>
-                      <p className="font-medium text-sm">
+                      <button
+                        className="font-medium text-sm hover:underline text-left"
+                        onClick={() => {
+                          setSelectedMember({
+                            userId: payment.member_user_id,
+                            name: payment.profile?.full_name || 'Unknown',
+                          });
+                          setMemberPaymentsOpen(true);
+                        }}
+                      >
                         {payment.profile?.full_name || 'Unknown'}
-                      </p>
+                      </button>
                       <p className="text-xs text-muted-foreground">
                         Verified: {payment.verified_at ? formatDate(payment.verified_at) : 'N/A'}
                       </p>
@@ -129,6 +141,20 @@ export function VerifiedPaymentsList() {
                     <span className="font-semibold">
                       {formatCurrency(Number(payment.total_amount))}
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedMember({
+                          userId: payment.member_user_id,
+                          name: payment.profile?.full_name || 'Unknown',
+                        });
+                        setMemberPaymentsOpen(true);
+                      }}
+                      title="View all payments for this member"
+                    >
+                      <ListCollapse className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -172,6 +198,14 @@ export function VerifiedPaymentsList() {
         onOpenChange={setHistoryDialogOpen}
         paymentId={historyPayment?.id || null}
         memberName={historyPayment?.profile?.full_name}
+      />
+
+      <MemberPaymentsDialog
+        open={memberPaymentsOpen}
+        onOpenChange={setMemberPaymentsOpen}
+        memberUserId={selectedMember?.userId || null}
+        memberName={selectedMember?.name || null}
+        onPaymentDeleted={fetchVerifiedPayments}
       />
     </>
   );
