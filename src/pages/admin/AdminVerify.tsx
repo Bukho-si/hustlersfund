@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate, getJoiningFeeTotal } from '@/lib/constants';
+import { EditPaymentDialog } from '@/components/admin/EditPaymentDialog';
 import { 
   FileCheck, 
   Building2, 
@@ -18,7 +19,8 @@ import {
   XCircle, 
   Eye,
   Loader2,
-  Download
+  Download,
+  Pencil
 } from 'lucide-react';
 
 interface PaymentWithProfile {
@@ -50,6 +52,8 @@ export default function AdminVerify() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<PaymentWithProfile | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<PaymentWithProfile | null>(null);
 
   useEffect(() => {
     fetchPayments();
@@ -278,6 +282,19 @@ export default function AdminVerify() {
                       View Proof
                     </a>
                   )}
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setEditingPayment(payment);
+                      setEditDialogOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  
                   <div className="flex-1" />
                   
                   <Dialog>
@@ -340,6 +357,13 @@ export default function AdminVerify() {
           ))
         )}
       </div>
+
+      <EditPaymentDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        payment={editingPayment}
+        onSaved={fetchPayments}
+      />
     </AppLayout>
   );
 }
