@@ -10,10 +10,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/constants';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 interface PaymentData {
   id: string;
@@ -24,6 +25,7 @@ interface PaymentData {
   cash_fee_amount: number;
   emergency_total_amount: number;
   total_amount: number;
+  status?: string;
   profile: {
     full_name: string;
   } | null;
@@ -34,6 +36,7 @@ interface EditPaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   payment: PaymentData | null;
   onSaved: () => void;
+  requireExplanation?: boolean;
 }
 
 export function EditPaymentDialog({
@@ -41,6 +44,7 @@ export function EditPaymentDialog({
   onOpenChange,
   payment,
   onSaved,
+  requireExplanation = false,
 }: EditPaymentDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [baseAmount, setBaseAmount] = useState('');
@@ -48,6 +52,7 @@ export function EditPaymentDialog({
   const [lateFineAmount, setLateFineAmount] = useState('');
   const [cashFeeAmount, setCashFeeAmount] = useState('');
   const [emergencyAmount, setEmergencyAmount] = useState('');
+  const [explanation, setExplanation] = useState('');
 
   useEffect(() => {
     if (payment) {
@@ -56,6 +61,7 @@ export function EditPaymentDialog({
       setLateFineAmount(String(payment.late_fine_amount || 0));
       setCashFeeAmount(String(payment.cash_fee_amount || 0));
       setEmergencyAmount(String(payment.emergency_total_amount || 0));
+      setExplanation('');
     }
   }, [payment]);
 
@@ -69,8 +75,16 @@ export function EditPaymentDialog({
     );
   };
 
+  const isVerified = payment?.status === 'verified';
+  const needsExplanation = requireExplanation || isVerified;
+
   const handleSave = async () => {
     if (!payment) return;
+
+    if (needsExplanation && !explanation.trim()) {
+      toast.error('Please provide an explanation for this edit');
+      return;
+    }
 
     setIsLoading(true);
 
@@ -91,17 +105,32 @@ export function EditPaymentDialog({
 
       if (error) throw error;
 
-      // Log to audit
+      // Log to audit with explanation
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from('audit_log').insert({
         actor_user_id: user?.id,
         entity_type: 'payment',
         entity_id: payment.id,
-        action: 'payment_edited',
+        action: isVerified ? 'verified_payment_edited' : 'payment_edited',
         metadata_json: {
           member_name: payment.profile?.full_name,
           previous_total: payment.total_amount,
           new_total: newTotal,
+          explanation: explanation.trim() || null,
+          previous_values: {
+            base_amount: payment.base_amount,
+            joining_fee_amount: payment.joining_fee_amount,
+            late_fine_amount: payment.late_fine_amount,
+            cash_fee_amount: payment.cash_fee_amount,
+            emergency_total_amount: payment.emergency_total_amount,
+          },
+          new_values: {
+            base_amount: parseFloat(baseAmount) || 0,
+            joining_fee_amount: parseFloat(joiningFeeAmount) || 0,
+            late_fine_amount: parseFloat(lateFineAmount) || 0,
+            cash_fee_amount: parseFloat(cashFeeAmount) || 0,
+            emergency_total_amount: parseFloat(emergencyAmount) || 0,
+          },
         },
       });
 
@@ -120,13 +149,22 @@ export function EditPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Payment</DialogTitle>
           <DialogDescription>
             Modify contribution amounts for {payment.profile?.full_name || 'Unknown'}
           </DialogDescription>
         </DialogHeader>
+
+        {isVerified && (
+          <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 border border-warning/30">
+            <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+            <p className="text-sm text-warning">
+              This payment has already been verified. An explanation is required for any changes.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -194,13 +232,28 @@ export function EditPaymentDialog({
               <span className="font-bold text-lg">{formatCurrency(calculateTotal())}</span>
             </div>
           </div>
+
+          {needsExplanation && (
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="explanation">
+                Explanation for Edit <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="explanation"
+                placeholder="Explain why this payment is being modified..."
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                rows={3}
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
+          <Button onClick={handleSave} disabled={isLoading || (needsExplanation && !explanation.trim())}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
           </Button>
