@@ -8,21 +8,41 @@
    useContributionCycles, 
    useCreateCycle, 
    useUpdateCycle,
+   useDeleteCycle,
    type ContributionCycle,
    type CycleFormData 
  } from '@/hooks/useContributionCycles';
  import { CycleFormDialog } from '@/components/cycles/CycleFormDialog';
  import { format } from 'date-fns';
- import { Plus, Calendar, Clock, CheckCircle, XCircle, Edit2 } from 'lucide-react';
+ import { Plus, Calendar, Clock, CheckCircle, XCircle, Edit2, MoreVertical, Trash2 } from 'lucide-react';
  import { Skeleton } from '@/components/ui/skeleton';
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+ } from '@/components/ui/dropdown-menu';
+ import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+ } from '@/components/ui/alert-dialog';
  
  export default function AdminCycles() {
    const { data: cycles, isLoading } = useContributionCycles();
    const createCycle = useCreateCycle();
    const updateCycle = useUpdateCycle();
+   const deleteCycle = useDeleteCycle();
    
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editingCycle, setEditingCycle] = useState<ContributionCycle | null>(null);
+   const [deleteConfirmCycle, setDeleteConfirmCycle] = useState<ContributionCycle | null>(null);
  
    const handleCreate = (data: CycleFormData) => {
      createCycle.mutate(data, {
@@ -38,10 +58,17 @@
      );
    };
  
-   const handleToggleClosed = (cycle: ContributionCycle) => {
+   const handleSetStatus = (cycle: ContributionCycle, isClosed: boolean) => {
      updateCycle.mutate({
        id: cycle.id,
-       updates: { is_closed: !cycle.is_closed },
+       updates: { is_closed: isClosed },
+     });
+   };
+ 
+   const handleDelete = () => {
+     if (!deleteConfirmCycle) return;
+     deleteCycle.mutate(deleteConfirmCycle.id, {
+       onSuccess: () => setDeleteConfirmCycle(null),
      });
    };
  
@@ -99,13 +126,51 @@
                      <Calendar className="h-4 w-4 text-primary" />
                      Week of {format(new Date(cycle.week_start_date), 'MMM d, yyyy')}
                    </CardTitle>
-                   <Badge variant={cycle.is_closed ? 'secondary' : 'default'}>
-                     {cycle.is_closed ? 'Closed' : 'Active'}
-                   </Badge>
+                   <div className="flex items-center gap-2">
+                     <Badge variant={cycle.is_closed ? 'secondary' : 'default'}>
+                       {cycle.is_closed ? 'Closed' : 'Active'}
+                     </Badge>
+                     <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                         <Button variant="ghost" size="icon" className="h-8 w-8">
+                           <MoreVertical className="h-4 w-4" />
+                         </Button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end" className="bg-popover z-50">
+                         <DropdownMenuItem onClick={() => openEditDialog(cycle)}>
+                           <Edit2 className="h-4 w-4 mr-2" />
+                           Edit Cycle
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem 
+                           onClick={() => handleSetStatus(cycle, false)}
+                           disabled={!cycle.is_closed}
+                         >
+                           <CheckCircle className="h-4 w-4 mr-2 text-success" />
+                           Set Active
+                         </DropdownMenuItem>
+                         <DropdownMenuItem 
+                           onClick={() => handleSetStatus(cycle, true)}
+                           disabled={cycle.is_closed}
+                         >
+                           <XCircle className="h-4 w-4 mr-2 text-warning" />
+                           Set Closed
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem 
+                           onClick={() => setDeleteConfirmCycle(cycle)}
+                           className="text-destructive focus:text-destructive"
+                         >
+                           <Trash2 className="h-4 w-4 mr-2" />
+                           Delete
+                         </DropdownMenuItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+                   </div>
                  </div>
                </CardHeader>
                <CardContent className="pt-0">
-                 <div className="grid grid-cols-2 gap-3 mb-4">
+                 <div className="grid grid-cols-2 gap-3">
                    <div className="bg-muted/50 rounded-lg p-3">
                      <p className="text-xs text-muted-foreground mb-1">Period</p>
                      <p className="text-sm font-medium">
@@ -121,34 +186,6 @@
                        {format(new Date(cycle.deadline), 'EEE, MMM d HH:mm')}
                      </p>
                    </div>
-                 </div>
-                 <div className="flex gap-2">
-                   <Button
-                     variant="outline"
-                     size="sm"
-                     onClick={() => openEditDialog(cycle)}
-                   >
-                     <Edit2 className="h-3 w-3 mr-1" />
-                     Edit
-                   </Button>
-                   <Button
-                     variant={cycle.is_closed ? 'default' : 'secondary'}
-                     size="sm"
-                     onClick={() => handleToggleClosed(cycle)}
-                     disabled={updateCycle.isPending}
-                   >
-                     {cycle.is_closed ? (
-                       <>
-                         <CheckCircle className="h-3 w-3 mr-1" />
-                         Reopen
-                       </>
-                     ) : (
-                       <>
-                         <XCircle className="h-3 w-3 mr-1" />
-                         Close
-                       </>
-                     )}
-                   </Button>
                  </div>
                </CardContent>
              </Card>
@@ -171,13 +208,38 @@
          onSubmit={handleUpdate}
          isLoading={updateCycle.isPending}
          defaultValues={editingCycle ? {
-          week_start_date: editingCycle.week_start_date,
+           week_start_date: editingCycle.week_start_date,
            week_end_date: editingCycle.week_end_date,
            deadline: editingCycle.deadline,
            closes_on: editingCycle.closes_on,
          } : undefined}
          isEditing
        />
+ 
+       {/* Delete Confirmation */}
+       <AlertDialog open={!!deleteConfirmCycle} onOpenChange={(open) => !open && setDeleteConfirmCycle(null)}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>Delete Contribution Cycle?</AlertDialogTitle>
+             <AlertDialogDescription>
+               This will permanently delete the cycle for{' '}
+               <strong>
+                 {deleteConfirmCycle && format(new Date(deleteConfirmCycle.week_start_date), 'MMM d, yyyy')}
+               </strong>. 
+               This action cannot be undone. Payments linked to this cycle may be affected.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+             <AlertDialogCancel>Cancel</AlertDialogCancel>
+             <AlertDialogAction 
+               onClick={handleDelete}
+               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+             >
+               {deleteCycle.isPending ? 'Deleting...' : 'Delete'}
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
      </AppLayout>
    );
  }
