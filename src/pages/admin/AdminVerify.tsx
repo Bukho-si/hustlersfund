@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate, getJoiningFeeTotal } from '@/lib/constants';
 import { EditPaymentDialog } from '@/components/admin/EditPaymentDialog';
+import { PaymentHistoryDialog } from '@/components/admin/PaymentHistoryDialog';
 import { VerifiedPaymentsList } from '@/components/admin/VerifiedPaymentsList';
 import { 
   FileCheck, 
@@ -21,7 +22,8 @@ import {
   Eye,
   Loader2,
   Pencil,
-  Clock
+  Clock,
+  History
 } from 'lucide-react';
 
 interface PaymentWithProfile {
@@ -55,6 +57,8 @@ export default function AdminVerify() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentWithProfile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentWithProfile | null>(null);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [historyPayment, setHistoryPayment] = useState<PaymentWithProfile | null>(null);
 
   useEffect(() => {
     fetchPayments();
@@ -296,9 +300,22 @@ export default function AdminVerify() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
+                        setHistoryPayment(payment);
+                        setHistoryDialogOpen(true);
+                      }}
+                      title="View edit history"
+                    >
+                      <History className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
                         setEditingPayment(payment);
                         setEditDialogOpen(true);
                       }}
+                      title="Edit payment"
                     >
                       <Pencil className="h-4 w-4 mr-1" />
                       Edit
@@ -377,6 +394,13 @@ export default function AdminVerify() {
         onOpenChange={setEditDialogOpen}
         payment={editingPayment}
         onSaved={fetchPayments}
+      />
+
+      <PaymentHistoryDialog
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+        paymentId={historyPayment?.id || null}
+        memberName={historyPayment?.profile?.full_name}
       />
     </AppLayout>
   );
