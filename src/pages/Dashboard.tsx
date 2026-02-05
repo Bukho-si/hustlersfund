@@ -63,6 +63,7 @@ export default function Dashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
+  const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
 
   // Auto-refresh when deadline is reached
   useEffect(() => {
@@ -81,6 +82,9 @@ export default function Dashboard() {
 
       return () => clearTimeout(timer);
     }
+    
+    // Deadline has passed
+    setIsDeadlinePassed(true);
   }, [currentCycle?.deadline, refetchCycle, queryClient]);
 
   // Update joining fee only week flag when cycle changes
@@ -319,20 +323,37 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground">Contribution cycle open</p>
               </div>
             </div>
-            <div className="bg-warning/10 rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-warning" />
-                <span className="text-sm font-medium">Payment deadline</span>
+            {isDeadlinePassed ? (
+              <div className="bg-destructive/10 rounded-lg p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Deadline passed</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-destructive">
+                    {format(new Date(currentCycle.deadline), 'EEE, MMM d')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    at {format(new Date(currentCycle.deadline), 'HH:mm')}
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold text-warning">
-                  {format(new Date(currentCycle.deadline), 'EEE, MMM d')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  by {format(new Date(currentCycle.deadline), 'HH:mm')}
-                </p>
+            ) : (
+              <div className="bg-warning/10 rounded-lg p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-warning" />
+                  <span className="text-sm font-medium">Payment deadline</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-warning">
+                    {format(new Date(currentCycle.deadline), 'EEE, MMM d')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    by {format(new Date(currentCycle.deadline), 'HH:mm')}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       )}
