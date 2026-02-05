@@ -4,6 +4,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
   Table, 
   TableBody, 
   TableCell, 
@@ -12,8 +19,10 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/constants';
-import { Search, Users } from 'lucide-react';
+import { Search, Users, ArrowUpDown } from 'lucide-react';
 import type { MemberBalance } from '@/hooks/useFinancialReports';
+
+type SortOption = 'name' | 'contributions' | 'net';
 
 interface MemberBalancesTableProps {
   balances: MemberBalance[] | undefined;
@@ -22,10 +31,21 @@ interface MemberBalancesTableProps {
 
 export function MemberBalancesTable({ balances, isLoading }: MemberBalancesTableProps) {
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
 
   const filteredBalances = balances
     ?.filter((b) => b.fullName.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'contributions':
+          return b.totalContributions - a.totalContributions;
+        case 'net':
+          return b.netPosition - a.netPosition;
+        case 'name':
+        default:
+          return a.fullName.localeCompare(b.fullName);
+      }
+    });
 
   if (isLoading) {
     return (
@@ -48,16 +68,29 @@ export function MemberBalancesTable({ balances, isLoading }: MemberBalancesTable
   return (
     <Card className="animate-fade-in">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <CardTitle className="text-sm font-medium">Member Balances</CardTitle>
-          <div className="relative w-48">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search member..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-sm"
-            />
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-40">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-8 text-sm"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <ArrowUpDown className="h-3 w-3 mr-1" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name (A-Z)</SelectItem>
+                <SelectItem value="contributions">Contributions</SelectItem>
+                <SelectItem value="net">Net Position</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
