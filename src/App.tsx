@@ -26,6 +26,7 @@ import AdminEvents from "./pages/admin/AdminEvents";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
+import AdminCycles from "./pages/admin/AdminCycles";
 
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
+            <Route path="/admin/cycles" element={<AdminCycles />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
