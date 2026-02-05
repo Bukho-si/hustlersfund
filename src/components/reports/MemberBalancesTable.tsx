@@ -23,9 +23,9 @@ interface MemberBalancesTableProps {
 export function MemberBalancesTable({ balances, isLoading }: MemberBalancesTableProps) {
   const [search, setSearch] = useState('');
 
-  const filteredBalances = balances?.filter((b) =>
-    b.fullName.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredBalances = balances
+    ?.filter((b) => b.fullName.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
 
   if (isLoading) {
     return (
