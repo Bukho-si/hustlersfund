@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { Plus, Wallet, Fuel, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Wallet, Fuel, User, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 
 interface Loan {
@@ -94,6 +94,14 @@ export default function Loans() {
           </CardContent>
         </Card>
       )}
+
+      {/* Submit Payment CTA */}
+      <Link to="/payments/submit">
+        <Button className="w-full mb-4 bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+          <CreditCard className="h-4 w-4" />
+          Submit Payment
+        </Button>
+      </Link>
 
       <div className="space-y-3">
         {isLoading ? (
