@@ -285,15 +285,36 @@ export default function AdminVerify() {
 
                   <div className="flex items-center gap-2">
                     {payment.proof_file_url && (
-                      <a
-                        href={payment.proof_file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-info hover:underline"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-info hover:text-info/80 gap-1 px-2"
+                        onClick={async () => {
+                          // Extract the file path from the URL
+                          const url = payment.proof_file_url!;
+                          const bucketPath = url.includes('/payment-proofs/') 
+                            ? url.split('/payment-proofs/').pop() 
+                            : null;
+                          
+                          if (bucketPath) {
+                            const { data, error } = await supabase.storage
+                              .from('payment-proofs')
+                              .createSignedUrl(decodeURIComponent(bucketPath), 300);
+                            
+                            if (data?.signedUrl) {
+                              window.open(data.signedUrl, '_blank');
+                            } else {
+                              // Fallback to direct URL
+                              window.open(url, '_blank');
+                            }
+                          } else {
+                            window.open(url, '_blank');
+                          }
+                        }}
                       >
                         <Eye className="h-3 w-3" />
                         View Proof
-                      </a>
+                      </Button>
                     )}
                     
                     <Button

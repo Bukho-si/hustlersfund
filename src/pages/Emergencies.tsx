@@ -6,7 +6,9 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { AlertTriangle, Heart, Car } from 'lucide-react';
+import { AlertTriangle, Heart, Car, CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface EmergencyEvent {
   id: string;
@@ -88,6 +90,16 @@ export default function Emergencies() {
             <AlertTriangle className="h-8 w-8 text-warning" />
           </CardContent>
         </Card>
+      )}
+
+      {/* Submit Payment CTA */}
+      {totalUnpaid > 0 && (
+        <Link to="/payments/submit">
+          <Button className="w-full mb-4 bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+            <CreditCard className="h-4 w-4" />
+            Submit Payment
+          </Button>
+        </Link>
       )}
 
       <div className="space-y-3">
