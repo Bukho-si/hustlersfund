@@ -236,6 +236,7 @@ export default function Dashboard() {
   const weeklyDues = calculateWeeklyDues();
   const firstName = data.profile?.full_name?.split(' ')[0] || 'Hustler';
   const slots = data.profile?.membership_slots || 1;
+  const isPaid = data.currentWeekPayment?.status === 'verified';
 
   return (
     <AppLayout>
@@ -302,16 +303,28 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-primary-foreground/70 text-xs mb-1">This Week's Dues</p>
-                <p className="text-2xl font-bold">{formatCurrency(weeklyDues.total)}</p>
+                {isPaid ? (
+                  <>
+                    <p className="text-primary-foreground/70 text-xs mb-1">This Week</p>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-5 w-5" style={{ color: '#86efac' }} />
+                      <p className="text-2xl font-bold">Paid</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-primary-foreground/70 text-xs mb-1">This Week's Dues</p>
+                    <p className="text-2xl font-bold">{formatCurrency(weeklyDues.total)}</p>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Current Contribution Cycle */}
-      {currentCycle && (
+      {/* Current Contribution Cycle - hidden when paid */}
+      {currentCycle && !isPaid && (
         <Card className="mb-4 animate-fade-in border-accent/30" style={{ animationDelay: '0.05s' }}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -358,71 +371,77 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Weekly Dues Breakdown */}
-      <Card className="mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            This Week's Breakdown
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {isJoiningFeeOnlyWeek && (
-            <Alert className="mb-4 border-info/30 bg-info/10">
-              <Info className="h-4 w-4 text-info" />
-              <AlertDescription className="text-sm">
-                <strong>Joining Fees Only This Week</strong> — Weekly subscriptions start next week.
-              </AlertDescription>
-            </Alert>
-          )}
-          <div className="space-y-2">
-            {weeklyDues.breakdown.map((item, index) => (
-              <div key={index} className="flex justify-between text-sm">
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{item.label}</span>
-                  {item.detail && (
-                    <span className="text-xs text-muted-foreground/70">{item.detail}</span>
-                  )}
+      {/* Weekly Dues - show paid card when verified, otherwise show breakdown */}
+      {isPaid ? (
+        <Card className="mb-4 animate-fade-in border-success/30" style={{ animationDelay: '0.1s' }}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="font-semibold text-success">Week's Dues Paid</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(data.currentWeekPayment!.total_amount)} verified
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              This Week's Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {isJoiningFeeOnlyWeek && (
+              <Alert className="mb-4 border-info/30 bg-info/10">
+                <Info className="h-4 w-4 text-info" />
+                <AlertDescription className="text-sm">
+                  <strong>Joining Fees Only This Week</strong> — Weekly subscriptions start next week.
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              {weeklyDues.breakdown.map((item, index) => (
+                <div key={index} className="flex justify-between text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    {item.detail && (
+                      <span className="text-xs text-muted-foreground/70">{item.detail}</span>
+                    )}
+                  </div>
+                  <span className="font-medium">{formatCurrency(item.amount)}</span>
                 </div>
-                <span className="font-medium">{formatCurrency(item.amount)}</span>
+              ))}
+              <div className="border-t pt-2 flex justify-between text-sm font-semibold">
+                <span>Total Due</span>
+                <span className="text-accent">{formatCurrency(weeklyDues.total)}</span>
               </div>
-            ))}
-            <div className="border-t pt-2 flex justify-between text-sm font-semibold">
-              <span>Total Due</span>
-              <span className="text-accent">{formatCurrency(weeklyDues.total)}</span>
             </div>
-          </div>
-          
-          {data.currentWeekPayment ? (
-            <div className={`mt-4 p-3 rounded-lg flex items-center justify-between ${
-              data.currentWeekPayment.status === 'verified' 
-                ? 'bg-success/10' 
-                : 'bg-muted'
-            }`}>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className={`h-4 w-4 ${
-                  data.currentWeekPayment.status === 'verified' 
-                    ? 'text-success' 
-                    : 'text-muted-foreground'
-                }`} />
-                <span className="text-sm">
-                  {data.currentWeekPayment.status === 'verified' 
-                    ? "Week's dues paid ✓" 
-                    : 'Payment submitted'}
-                </span>
+            
+            {data.currentWeekPayment ? (
+              <div className="mt-4 p-3 rounded-lg flex items-center justify-between bg-muted">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Payment submitted</span>
+                </div>
+                <StatusBadge status={data.currentWeekPayment.status} variant="payment" />
               </div>
-              <StatusBadge status={data.currentWeekPayment.status} variant="payment" />
-            </div>
-          ) : (
-            <Link to="/payments/submit" className="block mt-4">
-              <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12">
-                <CreditCard className="h-5 w-5 mr-2" />
-                Submit Payment
-              </Button>
-            </Link>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <Link to="/payments/submit" className="block mt-4">
+                <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12">
+                  <CreditCard className="h-5 w-5 mr-2" />
+                  Submit Payment
+                </Button>
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-3 mb-4">
