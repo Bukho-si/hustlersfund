@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound } from 'lucide-react';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound, BellRing } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,6 +82,7 @@ export default function AdminMembers() {
   
   // Export state
   const [isExporting, setIsExporting] = useState(false);
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -603,6 +604,83 @@ export default function AdminMembers() {
     }
   };
 
+  const sendPaymentReminders = async () => {
+    if (!user) return;
+    setIsSendingReminders(true);
+
+    try {
+      // Get current open cycle
+      const { data: cycle } = await supabase
+        .from('contribution_cycles')
+        .select('id, week_start_date, week_end_date')
+        .eq('is_closed', false)
+        .order('week_start_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!cycle) {
+        toast({ title: 'No open cycle', description: 'There is no active contribution cycle.', variant: 'destructive' });
+        return;
+      }
+
+      // Get active members
+      const { data: activeMembers } = await supabase
+        .from('member_profiles')
+        .select('user_id, full_name')
+        .eq('status', 'active');
+
+      if (!activeMembers?.length) {
+        toast({ title: 'No active members', variant: 'destructive' });
+        return;
+      }
+
+      // Get members who have paid this cycle
+      const { data: paidPayments } = await supabase
+        .from('payments')
+        .select('member_user_id')
+        .eq('cycle_id', cycle.id);
+
+      // Also check payments submitted during cycle period without cycle_id
+      const { data: periodPayments } = await supabase
+        .from('payments')
+        .select('member_user_id')
+        .is('cycle_id', null)
+        .gte('submitted_at', cycle.week_start_date);
+
+      const paidUserIds = new Set([
+        ...(paidPayments || []).map(p => p.member_user_id),
+        ...(periodPayments || []).map(p => p.member_user_id),
+      ]);
+
+      const unpaidMembers = activeMembers.filter(m => !paidUserIds.has(m.user_id));
+
+      if (unpaidMembers.length === 0) {
+        toast({ title: 'All caught up!', description: 'All active members have submitted payments this week.' });
+        return;
+      }
+
+      // Insert notifications for unpaid members
+      const notifications = unpaidMembers.map(m => ({
+        user_id: m.user_id,
+        title: '💰 Payment Reminder',
+        message: `Hi ${m.full_name.split(' ')[0]}, your weekly contribution for ${cycle.week_start_date} – ${cycle.week_end_date} is still outstanding. Please submit your payment.`,
+        type: 'reminder',
+      }));
+
+      const { error } = await supabase.from('notifications').insert(notifications);
+      if (error) throw error;
+
+      toast({
+        title: 'Reminders sent',
+        description: `Notified ${unpaidMembers.length} unpaid member(s)`,
+      });
+    } catch (error: any) {
+      toast({ title: 'Failed to send reminders', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSendingReminders(false);
+    }
+  };
+
   return (
     <AppLayout requireAdmin>
       <PageHeader title="Members" subtitle="Manage stokvel members" showBack />
@@ -726,6 +804,20 @@ export default function AdminMembers() {
                 <Download className="h-3 w-3 mr-1" />
               )}
               {isExporting ? 'Exporting...' : 'Export CSV'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 text-xs whitespace-nowrap"
+              onClick={sendPaymentReminders}
+              disabled={isSendingReminders}
+            >
+              {isSendingReminders ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <BellRing className="h-3 w-3 mr-1" />
+              )}
+              {isSendingReminders ? 'Sending...' : 'Send Reminders'}
             </Button>
           </div>
         </CardContent>
