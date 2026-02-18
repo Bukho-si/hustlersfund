@@ -817,18 +817,18 @@ export default function AdminMembers() {
       {/* Search and Filter */}
       <Card className="mb-4">
         <CardContent className="p-3 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, phone, or vehicle..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
           <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone, or vehicle..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -839,10 +839,12 @@ export default function AdminMembers() {
                 <SelectItem value="exited">Exited</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
-              className="h-10 text-xs whitespace-nowrap"
+              className="h-8 text-xs"
               onClick={toggleSelectAll}
             >
               {selectedMemberIds.size === filteredMembers.length && filteredMembers.length > 0
@@ -852,104 +854,105 @@ export default function AdminMembers() {
             <Button
               variant="outline"
               size="sm"
-              className="h-10 text-xs whitespace-nowrap"
+              className="h-8 text-xs"
               onClick={exportMembersToCSV}
               disabled={members.length === 0 || isExporting}
             >
-              {isExporting ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Download className="h-3 w-3 mr-1" />
-              )}
-              {isExporting ? 'Exporting...' : 'Export CSV'}
+              {isExporting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+              {isExporting ? 'Exporting...' : 'Export'}
+            </Button>
+            <div className="w-px h-5 bg-border" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={sendPaymentReminders}
+              disabled={isSendingReminders}
+            >
+              {isSendingReminders ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <BellRing className="h-3 w-3 mr-1" />}
+              {isSendingReminders ? 'Sending...' : 'Remind Unpaid'}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="h-10 text-xs whitespace-nowrap"
-              onClick={sendPaymentReminders}
-              disabled={isSendingReminders}
+              className="h-8 text-xs"
+              onClick={() => setCustomReminderOpen(true)}
             >
-              {isSendingReminders ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <BellRing className="h-3 w-3 mr-1" />
-              )}
-              {isSendingReminders ? 'Sending...' : 'Send Reminders'}
+              <MessageSquare className="h-3 w-3 mr-1" />
+              Custom Message
             </Button>
-            <Dialog open={customReminderOpen} onOpenChange={setCustomReminderOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-10 text-xs whitespace-nowrap"
-                >
-                  <MessageSquare className="h-3 w-3 mr-1" />
-                  Custom Reminder
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Send Custom Reminder</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Send to</label>
-                    <Select value={customTarget} onValueChange={(v) => setCustomTarget(v as 'selected' | 'all_active')}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all_active">All active members</SelectItem>
-                        <SelectItem value="selected" disabled={selectedMemberIds.size === 0}>
-                          Selected members ({selectedMemberIds.size})
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Title</label>
-                    <Input
-                      placeholder="e.g. 📢 Important Notice"
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      maxLength={100}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Message</label>
-                    <Textarea
-                      placeholder="Type your message here..."
-                      value={customMessage}
-                      onChange={(e) => setCustomMessage(e.target.value)}
-                      rows={4}
-                      maxLength={500}
-                    />
-                    <p className="text-xs text-muted-foreground text-right">{customMessage.length}/500</p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline" size="sm">Cancel</Button>
-                  </DialogClose>
-                  <Button
-                    size="sm"
-                    onClick={sendCustomReminder}
-                    disabled={!customTitle.trim() || !customMessage.trim() || isSendingCustom}
-                  >
-                    {isSendingCustom ? (
-                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    ) : (
-                      <MessageSquare className="h-3 w-3 mr-1" />
-                    )}
-                    {isSendingCustom ? 'Sending...' : 'Send'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
         </CardContent>
       </Card>
+
+      {/* Custom Reminder Dialog */}
+      <Dialog open={customReminderOpen} onOpenChange={(open) => {
+        setCustomReminderOpen(open);
+        if (!open) { setCustomTitle(''); setCustomMessage(''); }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-accent" />
+              Send Custom Message
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex gap-2">
+              <Button
+                variant={customTarget === 'all_active' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 h-9 text-xs"
+                onClick={() => setCustomTarget('all_active')}
+              >
+                All Active Members
+              </Button>
+              <Button
+                variant={customTarget === 'selected' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 h-9 text-xs"
+                onClick={() => setCustomTarget('selected')}
+                disabled={selectedMemberIds.size === 0}
+              >
+                Selected ({selectedMemberIds.size})
+              </Button>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                placeholder="e.g. 📢 Important Notice"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                maxLength={100}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Message</label>
+              <Textarea
+                placeholder="Type your message here..."
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                rows={4}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground text-right">{customMessage.length}/500</p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </DialogClose>
+            <Button
+              size="sm"
+              onClick={sendCustomReminder}
+              disabled={!customTitle.trim() || !customMessage.trim() || isSendingCustom}
+            >
+              {isSendingCustom ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <MessageSquare className="h-3 w-3 mr-1" />}
+              {isSendingCustom ? 'Sending...' : 'Send Message'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Members List */}
       <div className="space-y-3">
