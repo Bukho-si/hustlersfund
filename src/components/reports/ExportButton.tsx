@@ -13,7 +13,7 @@ import {
 import { Download, FileText, FileSpreadsheet, File, Printer } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/constants';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, HeadingLevel, WidthType, BorderStyle } from 'docx';
@@ -115,11 +115,12 @@ export function ExportButton({
   };
 
   // Excel Export Functions
-  const exportToExcel = (type: 'summary' | 'members' | 'payments' | 'loans' | 'all') => {
-    const wb = XLSX.utils.book_new();
+  const exportToExcel = async (type: 'summary' | 'members' | 'payments' | 'loans' | 'all') => {
+    const wb = new ExcelJS.Workbook();
 
     if (type === 'summary' || type === 'all') {
       if (summary) {
+        const ws = wb.addWorksheet('Summary');
         const summaryData = [
           ['Financial Summary Report'],
           ['Generated', formatDateTime(new Date())],
@@ -134,46 +135,38 @@ export function ExportButton({
           ['Active Members', summary.activeMembers],
           ['Pending Payments', summary.pendingPayments],
         ];
-        const ws = XLSX.utils.aoa_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+        summaryData.forEach(row => ws.addRow(row));
       }
     }
 
     if (type === 'members' || type === 'all') {
       if (memberBalances && memberBalances.length > 0) {
-        const membersData = [
-          ['Member', 'Slots', 'Joining Fee Paid', 'Total Contributions', 'Outstanding Loans', 'Emergency Dues', 'Net Position'],
-          ...memberBalances.map(b => [b.fullName, b.membershipSlots, b.joiningFeePaidTotal, b.totalContributions, b.outstandingLoans, b.emergencyDues, b.netPosition])
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(membersData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Member Balances');
+        const ws = wb.addWorksheet('Member Balances');
+        ws.addRow(['Member', 'Slots', 'Joining Fee Paid', 'Total Contributions', 'Outstanding Loans', 'Emergency Dues', 'Net Position']);
+        memberBalances.forEach(b => ws.addRow([b.fullName, b.membershipSlots, b.joiningFeePaidTotal, b.totalContributions, b.outstandingLoans, b.emergencyDues, b.netPosition]));
       }
     }
 
     if (type === 'payments' || type === 'all') {
       if (paymentsLedger && paymentsLedger.length > 0) {
-        const paymentsData = [
-          ['Member', 'Amount', 'Method', 'Status', 'Date'],
-          ...paymentsLedger.map(p => [p.memberName, p.total_amount, p.method, p.status, formatDateTime(p.submitted_at)])
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(paymentsData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Payments');
+        const ws = wb.addWorksheet('Payments');
+        ws.addRow(['Member', 'Amount', 'Method', 'Status', 'Date']);
+        paymentsLedger.forEach(p => ws.addRow([p.memberName, p.total_amount, p.method, p.status, formatDateTime(p.submitted_at)]));
       }
     }
 
     if (type === 'loans' || type === 'all') {
       if (loansLedger && loansLedger.length > 0) {
-        const loansData = [
-          ['Member', 'Type', 'Amount', 'Interest', 'Outstanding', 'Status', 'Requested'],
-          ...loansLedger.map(l => [l.memberName, l.type, l.amount, l.interest_amount || 0, l.outstanding_balance, l.status, formatDateTime(l.requested_at)])
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(loansData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Loans');
+        const ws = wb.addWorksheet('Loans');
+        ws.addRow(['Member', 'Type', 'Amount', 'Interest', 'Outstanding', 'Status', 'Requested']);
+        loansLedger.forEach(l => ws.addRow([l.memberName, l.type, l.amount, l.interest_amount || 0, l.outstanding_balance, l.status, formatDateTime(l.requested_at)]));
       }
     }
 
     const filename = type === 'all' ? `financial-reports-${getDateSuffix()}.xlsx` : `${type}-${getDateSuffix()}.xlsx`;
-    XLSX.writeFile(wb, filename);
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, filename);
     toast.success(`Exported as Excel`);
   };
 
@@ -458,7 +451,7 @@ export function ExportButton({
           exportMemberBalancesCSV();
           break;
         case 'excel':
-          exportToExcel('all');
+          await exportToExcel('all');
           break;
         case 'pdf':
           exportToPDF('all');
