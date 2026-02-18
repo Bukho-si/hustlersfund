@@ -103,24 +103,32 @@ export default function Dashboard() {
     loadData();
   }, [user, currentCycle?.id]);
 
-  // Realtime subscription: auto-refresh when member's payment status changes
+  // Realtime subscriptions: auto-refresh when payments, loans, or emergency dues change
   useEffect(() => {
     if (!user) return;
 
+    const refreshData = () => fetchDashboardData(currentCycle?.id);
+
     const channel = supabase
-      .channel('dashboard-payments')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'payments',
-          filter: `member_user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchDashboardData(currentCycle?.id);
-        }
-      )
+      .channel('dashboard-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'payments',
+        filter: `member_user_id=eq.${user.id}`,
+      }, refreshData)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'loans',
+        filter: `member_user_id=eq.${user.id}`,
+      }, refreshData)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'emergency_dues',
+        filter: `member_user_id=eq.${user.id}`,
+      }, refreshData)
       .subscribe();
 
     return () => {
