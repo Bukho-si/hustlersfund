@@ -7,13 +7,14 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound, BellRing } from 'lucide-react';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound, BellRing, MessageSquare } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,13 @@ export default function AdminMembers() {
   // Export state
   const [isExporting, setIsExporting] = useState(false);
   const [isSendingReminders, setIsSendingReminders] = useState(false);
+  
+  // Custom reminder state
+  const [customReminderOpen, setCustomReminderOpen] = useState(false);
+  const [customTitle, setCustomTitle] = useState('');
+  const [customMessage, setCustomMessage] = useState('');
+  const [customTarget, setCustomTarget] = useState<'selected' | 'all_active'>('all_active');
+  const [isSendingCustom, setIsSendingCustom] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -681,6 +689,56 @@ export default function AdminMembers() {
     }
   };
 
+  const sendCustomReminder = async () => {
+    if (!user || !customTitle.trim() || !customMessage.trim()) return;
+    setIsSendingCustom(true);
+
+    try {
+      let targetUserIds: string[] = [];
+
+      if (customTarget === 'selected' && selectedMemberIds.size > 0) {
+        targetUserIds = members
+          .filter(m => selectedMemberIds.has(m.id))
+          .map(m => m.user_id);
+      } else {
+        // All active members
+        const { data: activeMembers } = await supabase
+          .from('member_profiles')
+          .select('user_id')
+          .eq('status', 'active');
+        targetUserIds = (activeMembers || []).map(m => m.user_id);
+      }
+
+      if (targetUserIds.length === 0) {
+        toast({ title: 'No recipients', description: 'No members match the selected target.', variant: 'destructive' });
+        return;
+      }
+
+      const notifications = targetUserIds.map(uid => ({
+        user_id: uid,
+        title: customTitle.trim(),
+        message: customMessage.trim(),
+        type: 'custom',
+      }));
+
+      const { error } = await supabase.from('notifications').insert(notifications);
+      if (error) throw error;
+
+      toast({
+        title: 'Custom reminder sent',
+        description: `Notified ${targetUserIds.length} member(s)`,
+      });
+
+      setCustomReminderOpen(false);
+      setCustomTitle('');
+      setCustomMessage('');
+    } catch (error: any) {
+      toast({ title: 'Failed to send', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSendingCustom(false);
+    }
+  };
+
   return (
     <AppLayout requireAdmin>
       <PageHeader title="Members" subtitle="Manage stokvel members" showBack />
@@ -819,6 +877,76 @@ export default function AdminMembers() {
               )}
               {isSendingReminders ? 'Sending...' : 'Send Reminders'}
             </Button>
+            <Dialog open={customReminderOpen} onOpenChange={setCustomReminderOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 text-xs whitespace-nowrap"
+                >
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  Custom Reminder
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Send Custom Reminder</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Send to</label>
+                    <Select value={customTarget} onValueChange={(v) => setCustomTarget(v as 'selected' | 'all_active')}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all_active">All active members</SelectItem>
+                        <SelectItem value="selected" disabled={selectedMemberIds.size === 0}>
+                          Selected members ({selectedMemberIds.size})
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Title</label>
+                    <Input
+                      placeholder="e.g. 📢 Important Notice"
+                      value={customTitle}
+                      onChange={(e) => setCustomTitle(e.target.value)}
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Message</label>
+                    <Textarea
+                      placeholder="Type your message here..."
+                      value={customMessage}
+                      onChange={(e) => setCustomMessage(e.target.value)}
+                      rows={4}
+                      maxLength={500}
+                    />
+                    <p className="text-xs text-muted-foreground text-right">{customMessage.length}/500</p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline" size="sm">Cancel</Button>
+                  </DialogClose>
+                  <Button
+                    size="sm"
+                    onClick={sendCustomReminder}
+                    disabled={!customTitle.trim() || !customMessage.trim() || isSendingCustom}
+                  >
+                    {isSendingCustom ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <MessageSquare className="h-3 w-3 mr-1" />
+                    )}
+                    {isSendingCustom ? 'Sending...' : 'Send'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
