@@ -27,6 +27,9 @@ const signupSchema = z.object({
   path: ['confirmPassword'],
 });
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
+
 export default function Auth() {
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
@@ -36,6 +39,10 @@ export default function Auth() {
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  
+  // Rate limiting state
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   
   // Signup form state
   const [signupName, setSignupName] = useState('');
@@ -49,8 +56,20 @@ export default function Auth() {
     return null;
   }
 
+  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLockedOut) {
+      const remainingSec = Math.ceil(((lockoutUntil ?? 0) - Date.now()) / 1000);
+      toast({
+        title: 'Too many attempts',
+        description: `Please wait ${Math.ceil(remainingSec / 60)} minute(s) before trying again.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     
     const validation = loginSchema.safeParse({ email: loginEmail, password: loginPassword });
     if (!validation.success) {
@@ -67,16 +86,30 @@ export default function Auth() {
     setIsLoading(false);
 
     if (error) {
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+
+      if (newAttempts >= MAX_ATTEMPTS) {
+        const until = Date.now() + LOCKOUT_MS;
+        setLockoutUntil(until);
+        setTimeout(() => {
+          setLockoutUntil(null);
+          setFailedAttempts(0);
+        }, LOCKOUT_MS);
+      }
+
       toast({
         title: 'Login Failed',
         description: error.message === 'Invalid login credentials' 
-          ? 'Incorrect email or password. Please try again.'
+          ? `Incorrect email or password.${newAttempts >= 3 ? ` ${MAX_ATTEMPTS - newAttempts} attempt(s) remaining.` : ''}`
           : error.message,
         variant: 'destructive',
       });
       return;
     }
 
+    setFailedAttempts(0);
+    setLockoutUntil(null);
     toast({
       title: 'Welcome back!',
       description: 'You have successfully logged in.',
@@ -197,8 +230,8 @@ export default function Auth() {
                     className="h-12"
                   />
                 </div>
-                <Button type="submit" className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign In'}
+                <Button type="submit" className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" disabled={isLoading || isLockedOut}>
+                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : isLockedOut ? 'Locked — Try later' : 'Sign In'}
                 </Button>
               </form>
             </TabsContent>
