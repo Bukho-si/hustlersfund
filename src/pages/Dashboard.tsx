@@ -103,6 +103,31 @@ export default function Dashboard() {
     loadData();
   }, [user, currentCycle?.id]);
 
+  // Realtime subscription: auto-refresh when member's payment status changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('dashboard-payments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'payments',
+          filter: `member_user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchDashboardData(currentCycle?.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, currentCycle?.id]);
+
   const fetchDashboardData = async (cycleId?: string) => {
     if (!user) return;
 
