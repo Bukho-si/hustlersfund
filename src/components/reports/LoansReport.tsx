@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +7,8 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { CreditCard, TrendingUp, Percent, AlertTriangle } from 'lucide-react';
+import { DateRangeFilter } from './DateRangeFilter';
+import { startOfDay, endOfDay } from 'date-fns';
 
 interface LoanEntry {
   id: string;
@@ -31,7 +34,7 @@ function useLoansReportData() {
         .select('*')
         .order('requested_at', { ascending: false });
 
-      if (!loans) return { loans: [], summary: { totalDisbursed: 0, totalOutstanding: 0, totalInterest: 0, petrolCount: 0, personalCount: 0, pendingCount: 0 } };
+      if (!loans) return { loans: [] };
 
       const memberIds = [...new Set(loans.map(l => l.member_user_id))];
       const { data: profiles } = await supabase
@@ -41,7 +44,6 @@ function useLoansReportData() {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
 
-      // Get repayment totals per loan
       const loanIds = loans.map(l => l.id);
       const { data: repayments } = await supabase
         .from('loan_repayments')
@@ -68,22 +70,7 @@ function useLoansReportData() {
         totalRepaid: repaymentMap.get(l.id) || 0,
       }));
 
-      const approved = loans.filter(l => l.status === 'approved');
-      const totalDisbursed = approved.reduce((s, l) => s + Number(l.amount), 0);
-      const totalOutstanding = approved.reduce((s, l) => s + Number(l.outstanding_balance), 0);
-      const totalInterest = approved.reduce((s, l) => s + Number(l.interest_amount || 0), 0);
-
-      return {
-        loans: mapped,
-        summary: {
-          totalDisbursed,
-          totalOutstanding,
-          totalInterest,
-          petrolCount: loans.filter(l => l.type === 'petrol').length,
-          personalCount: loans.filter(l => l.type === 'personal').length,
-          pendingCount: loans.filter(l => l.status === 'pending').length,
-        },
-      };
+      return { loans: mapped };
     },
     refetchInterval: 30000,
   });
@@ -91,6 +78,30 @@ function useLoansReportData() {
 
 export function LoansReport() {
   const { data, isLoading } = useLoansReportData();
+  const [fromDate, setFromDate] = useState<Date | undefined>();
+  const [toDate, setToDate] = useState<Date | undefined>();
+
+  const filtered = useMemo(() => {
+    const all = data?.loans || [];
+    return all.filter(l => {
+      const d = new Date(l.requestedAt);
+      if (fromDate && d < startOfDay(fromDate)) return false;
+      if (toDate && d > endOfDay(toDate)) return false;
+      return true;
+    });
+  }, [data?.loans, fromDate, toDate]);
+
+  const summary = useMemo(() => {
+    const approved = filtered.filter(l => l.status === 'approved');
+    return {
+      totalDisbursed: approved.reduce((s, l) => s + l.amount, 0),
+      totalOutstanding: approved.reduce((s, l) => s + l.outstandingBalance, 0),
+      totalInterest: approved.reduce((s, l) => s + l.interestAmount, 0),
+      petrolCount: filtered.filter(l => l.type === 'petrol').length,
+      personalCount: filtered.filter(l => l.type === 'personal').length,
+      pendingCount: filtered.filter(l => l.status === 'pending').length,
+    };
+  }, [filtered]);
 
   if (isLoading) {
     return (
@@ -105,8 +116,6 @@ export function LoansReport() {
     );
   }
 
-  const { loans, summary } = data || { loans: [], summary: { totalDisbursed: 0, totalOutstanding: 0, totalInterest: 0, petrolCount: 0, personalCount: 0, pendingCount: 0 } };
-
   const cards = [
     { label: 'Total Disbursed', value: formatCurrency(summary.totalDisbursed), icon: CreditCard, color: 'text-info', bg: 'bg-info/10' },
     { label: 'Outstanding', value: formatCurrency(summary.totalOutstanding), icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10' },
@@ -116,6 +125,9 @@ export function LoansReport() {
 
   return (
     <div className="space-y-4">
+      {/* Date Range Filter */}
+      <DateRangeFilter from={fromDate} to={toDate} onFromChange={setFromDate} onToChange={setToDate} />
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
         {cards.map(card => (
@@ -136,6 +148,7 @@ export function LoansReport() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">
             All Loans
+            <span className="ml-2 text-xs font-normal text-muted-foreground">({filtered.length} records)</span>
             {summary.pendingCount > 0 && (
               <Badge variant="outline" className="ml-2 text-warning border-warning">{summary.pendingCount} pending</Badge>
             )}
@@ -143,7 +156,7 @@ export function LoansReport() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2 max-h-[500px] overflow-y-auto">
-            {loans.length > 0 ? loans.map(l => (
+            {filtered.length > 0 ? filtered.map(l => (
               <div key={l.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -179,7 +192,7 @@ export function LoansReport() {
                 </div>
               </div>
             )) : (
-              <div className="py-8 text-center text-muted-foreground text-sm">No loans found</div>
+              <div className="py-8 text-center text-muted-foreground text-sm">No loans found for this period</div>
             )}
           </div>
         </CardContent>
