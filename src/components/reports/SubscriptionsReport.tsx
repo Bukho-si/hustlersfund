@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { Wallet, TrendingUp, Users, AlertTriangle } from 'lucide-react';
+import { DateRangeFilter } from './DateRangeFilter';
+import { startOfDay, endOfDay } from 'date-fns';
 
 interface SubsPayment {
   id: string;
@@ -40,7 +43,6 @@ function useSubscriptionsData() {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
 
-      // Get cycle info
       const cycleIds = [...new Set(payments.filter(p => p.cycle_id).map(p => p.cycle_id!))];
       const { data: cycles } = cycleIds.length > 0
         ? await supabase.from('contribution_cycles').select('id, week_start_date, week_end_date').in('id', cycleIds)
@@ -64,22 +66,7 @@ function useSubscriptionsData() {
         cycleName: p.cycle_id ? cycleMap.get(p.cycle_id) || null : null,
       }));
 
-      const verified = payments.filter(p => p.status === 'verified');
-      const pending = payments.filter(p => ['submitted', 'pending_verification'].includes(p.status));
-      const rejected = payments.filter(p => p.status === 'rejected');
-      const totalVerifiedAmount = verified.reduce((sum, p) => sum + Number(p.total_amount), 0);
-
-      return {
-        payments: mapped,
-        summary: {
-          total: payments.length,
-          verified: verified.length,
-          pending: pending.length,
-          rejected: rejected.length,
-          totalVerifiedAmount,
-          avgPerWeek: totalVerifiedAmount / Math.max(1, new Set(payments.map(p => p.cycle_id).filter(Boolean)).size),
-        },
-      };
+      return { payments: mapped };
     },
     refetchInterval: 30000,
   });
@@ -87,6 +74,34 @@ function useSubscriptionsData() {
 
 export function SubscriptionsReport() {
   const { data, isLoading } = useSubscriptionsData();
+  const [fromDate, setFromDate] = useState<Date | undefined>();
+  const [toDate, setToDate] = useState<Date | undefined>();
+
+  const filtered = useMemo(() => {
+    const all = data?.payments || [];
+    return all.filter(p => {
+      const d = new Date(p.submittedAt);
+      if (fromDate && d < startOfDay(fromDate)) return false;
+      if (toDate && d > endOfDay(toDate)) return false;
+      return true;
+    });
+  }, [data?.payments, fromDate, toDate]);
+
+  const summary = useMemo(() => {
+    const verified = filtered.filter(p => p.status === 'verified');
+    const pending = filtered.filter(p => ['submitted', 'pending_verification'].includes(p.status));
+    const rejected = filtered.filter(p => p.status === 'rejected');
+    const totalVerifiedAmount = verified.reduce((sum, p) => sum + p.totalAmount, 0);
+
+    return {
+      total: filtered.length,
+      verified: verified.length,
+      pending: pending.length,
+      rejected: rejected.length,
+      totalVerifiedAmount,
+      avgPerWeek: totalVerifiedAmount / Math.max(1, verified.length),
+    };
+  }, [filtered]);
 
   if (isLoading) {
     return (
@@ -101,17 +116,18 @@ export function SubscriptionsReport() {
     );
   }
 
-  const { payments, summary } = data || { payments: [], summary: { total: 0, verified: 0, pending: 0, rejected: 0, totalVerifiedAmount: 0, avgPerWeek: 0 } };
-
   const cards = [
     { label: 'Total Verified', value: formatCurrency(summary.totalVerifiedAmount), icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
-    { label: 'Avg Per Cycle', value: formatCurrency(summary.avgPerWeek), icon: TrendingUp, color: 'text-info', bg: 'bg-info/10' },
+    { label: 'Avg Per Payment', value: formatCurrency(summary.avgPerWeek), icon: TrendingUp, color: 'text-info', bg: 'bg-info/10' },
     { label: 'Verified Count', value: summary.verified.toString(), icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Pending / Rejected', value: `${summary.pending} / ${summary.rejected}`, icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10' },
   ];
 
   return (
     <div className="space-y-4">
+      {/* Date Range Filter */}
+      <DateRangeFilter from={fromDate} to={toDate} onFromChange={setFromDate} onToChange={setToDate} />
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
         {cards.map(card => (
@@ -130,11 +146,14 @@ export function SubscriptionsReport() {
       {/* Payment Breakdown Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Weekly Subscription Payments</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Weekly Subscription Payments
+            <span className="ml-2 text-xs font-normal text-muted-foreground">({filtered.length} records)</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 max-h-[500px] overflow-y-auto">
-            {payments.length > 0 ? payments.map(p => (
+            {filtered.length > 0 ? filtered.map(p => (
               <div key={p.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{p.memberName}</p>
@@ -157,7 +176,7 @@ export function SubscriptionsReport() {
                 </div>
               </div>
             )) : (
-              <div className="py-8 text-center text-muted-foreground text-sm">No subscription payments found</div>
+              <div className="py-8 text-center text-muted-foreground text-sm">No subscription payments found for this period</div>
             )}
           </div>
         </CardContent>
