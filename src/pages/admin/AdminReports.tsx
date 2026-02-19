@@ -10,6 +10,8 @@ import { LoanDistributionChart } from '@/components/reports/LoanDistributionChar
 import { TransactionsTable } from '@/components/reports/TransactionsTable';
 import { MemberBalancesTable } from '@/components/reports/MemberBalancesTable';
 import { ExportButton } from '@/components/reports/ExportButton';
+import { SubscriptionsReport } from '@/components/reports/SubscriptionsReport';
+import { LoansReport } from '@/components/reports/LoansReport';
 import {
   useFinancialSummary,
   useWeeklyContributions,
@@ -65,30 +67,45 @@ export default function AdminReports() {
         Last updated: {lastUpdated.toLocaleTimeString()}
       </div>
 
-      {/* Summary Cards */}
-      <div className="mb-6">
-        <SummaryCards summary={summary} isLoading={summaryLoading} />
-      </div>
-
-      {/* Charts */}
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
-        <ContributionsChart data={weeklyContributions} isLoading={weeklyLoading} />
-        <LoanDistributionChart data={loanDistribution} isLoading={loanDistLoading} />
-      </div>
-
-      {/* Tabs for Tables */}
-      <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="members">Member Balances</TabsTrigger>
+      {/* Main Report Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="w-full">
+          <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
+          <TabsTrigger value="subscriptions" className="flex-1">Weekly Subs</TabsTrigger>
+          <TabsTrigger value="loans" className="flex-1">Loans</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="transactions">
-          <TransactionsTable transactions={transactions} isLoading={transactionsLoading} />
+        {/* Overview Tab - existing content */}
+        <TabsContent value="overview" className="space-y-6">
+          <SummaryCards summary={summary} isLoading={summaryLoading} />
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <ContributionsChart data={weeklyContributions} isLoading={weeklyLoading} />
+            <LoanDistributionChart data={loanDistribution} isLoading={loanDistLoading} />
+          </div>
+
+          <Tabs defaultValue="transactions" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="members">Member Balances</TabsTrigger>
+            </TabsList>
+            <TabsContent value="transactions">
+              <TransactionsTable transactions={transactions} isLoading={transactionsLoading} />
+            </TabsContent>
+            <TabsContent value="members">
+              <MemberBalancesTable balances={memberBalances} isLoading={balancesLoading} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
-        <TabsContent value="members">
-          <MemberBalancesTable balances={memberBalances} isLoading={balancesLoading} />
+        {/* Weekly Subscriptions Tab */}
+        <TabsContent value="subscriptions">
+          <SubscriptionsReport />
+        </TabsContent>
+
+        {/* Loans Tab */}
+        <TabsContent value="loans">
+          <LoansReport />
         </TabsContent>
       </Tabs>
     </AppLayout>
