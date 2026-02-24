@@ -265,15 +265,13 @@ export default function PaymentSubmit() {
                     onValueChange={(v) => setRepaymentOption(v as typeof repaymentOption)}
                     className="space-y-2"
                   >
-                    {loanInterest > 0 && (
-                      <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentOption === 'interest_only' ? 'border-accent bg-accent/10' : 'border-border'}`}>
-                        <RadioGroupItem value="interest_only" />
-                        <div>
-                          <p className="text-sm font-medium">Pay Interest Only</p>
-                          <p className="text-xs text-muted-foreground">{formatCurrency(loanInterest)}</p>
-                        </div>
-                      </label>
-                    )}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentOption === 'interest_only' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                      <RadioGroupItem value="interest_only" />
+                      <div>
+                        <p className="text-sm font-medium">Pay Interest Only</p>
+                        <p className="text-xs text-muted-foreground">{loanInterest > 0 ? formatCurrency(loanInterest) : 'Interest amount'}</p>
+                      </div>
+                    </label>
 
                     <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentOption === 'part_payment' ? 'border-accent bg-accent/10' : 'border-border'}`}>
                       <RadioGroupItem value="part_payment" />
