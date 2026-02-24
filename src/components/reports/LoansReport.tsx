@@ -1,14 +1,19 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatDate } from '@/lib/constants';
-import { CreditCard, TrendingUp, Percent, AlertTriangle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/constants';
+import { CreditCard, TrendingUp, Percent, AlertTriangle, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { DateRangeFilter } from './DateRangeFilter';
 import { startOfDay, endOfDay } from 'date-fns';
+import { toast } from 'sonner';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 interface LoanEntry {
   id: string;
@@ -103,6 +108,38 @@ export function LoansReport() {
     };
   }, [filtered]);
 
+  const getDateSuffix = () => new Date().toISOString().split('T')[0];
+
+  const exportCSV = useCallback(() => {
+    if (filtered.length === 0) { toast.error('No data to export'); return; }
+    const rows = [
+      ['Member', 'Type', 'Amount', 'Interest Rate', 'Interest Amount', 'Total Repayable', 'Repaid', 'Outstanding', 'Status', 'Repayment Period', 'Requested'],
+      ...filtered.map(l => [
+        `"${l.memberName}"`, l.type, l.amount, `${l.interestRate}%`, l.interestAmount, l.totalRepayable, l.totalRepaid, l.outstandingBalance, l.status, l.repaymentPeriod || '', formatDateTime(l.requestedAt),
+      ]),
+    ];
+    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `loans-report-${getDateSuffix()}.csv`);
+    toast.success('Loans exported as CSV');
+  }, [filtered]);
+
+  const exportExcel = useCallback(async () => {
+    if (filtered.length === 0) { toast.error('No data to export'); return; }
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Loans');
+    ws.addRow(['Loans Report']);
+    ws.addRow(['Generated', formatDateTime(new Date())]);
+    ws.addRow(['Total Disbursed', summary.totalDisbursed, '', 'Outstanding', summary.totalOutstanding, '', 'Interest Earned', summary.totalInterest]);
+    ws.addRow([]);
+    const headerRow = ws.addRow(['Member', 'Type', 'Amount', 'Interest Rate', 'Interest Amount', 'Total Repayable', 'Repaid', 'Outstanding', 'Status', 'Period', 'Requested']);
+    headerRow.eachCell(cell => { cell.font = { bold: true }; });
+    filtered.forEach(l => ws.addRow([l.memberName, l.type, l.amount, `${l.interestRate}%`, l.interestAmount, l.totalRepayable, l.totalRepaid, l.outstandingBalance, l.status, l.repaymentPeriod || '', formatDateTime(l.requestedAt)]));
+    ws.columns.forEach(col => { col.width = 16; });
+    const buffer = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `loans-report-${getDateSuffix()}.xlsx`);
+    toast.success('Loans exported as Excel');
+  }, [filtered, summary]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -125,10 +162,30 @@ export function LoansReport() {
 
   return (
     <div className="space-y-4">
-      {/* Date Range Filter */}
-      <DateRangeFilter from={fromDate} to={toDate} onFromChange={setFromDate} onToChange={setToDate} />
-
-      {/* Summary Cards */}
+      {/* Date Range Filter + Export */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1">
+          <DateRangeFilter from={fromDate} to={toDate} onFromChange={setFromDate} onToChange={setToDate} />
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={exportCSV}>
+              <FileText className="h-4 w-4 mr-2" />
+              Export CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportExcel}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Export Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         {cards.map(card => (
           <Card key={card.label}>
