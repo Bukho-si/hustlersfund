@@ -178,7 +178,7 @@ export default function Loans() {
                 )}
 
                 {loan.status === 'approved' && Number(loan.outstanding_balance) > 0 && (
-                  <Link to={`/payments/submit?type=loan_repayment&amount=${loan.outstanding_balance}&loanType=${loan.type}`}>
+                  <Link to={`/payments/submit?type=loan_repayment&amount=${loan.outstanding_balance}&loanType=${loan.type}&interest=${loan.interest_amount || 0}`}>
                     <Button className="w-full mt-3 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" size="sm">
                       <CreditCard className="h-4 w-4" />
                       Submit Payment ({formatCurrency(Number(loan.outstanding_balance))})

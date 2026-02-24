@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -24,8 +25,12 @@ export default function PaymentSubmit() {
   
   const paymentType = searchParams.get('type');
   const loanAmount = parseFloat(searchParams.get('amount') || '0');
+  const loanInterest = parseFloat(searchParams.get('interest') || '0');
+  const loanType = searchParams.get('loanType') || '';
   const isLoanRepayment = paymentType === 'loan_repayment' && loanAmount > 0;
 
+  const [repaymentOption, setRepaymentOption] = useState<'interest_only' | 'part_payment' | 'full_payment'>('full_payment');
+  const [partAmount, setPartAmount] = useState('');
   const [method, setMethod] = useState<'eft' | 'cash_atm'>('eft');
   const [notes, setNotes] = useState(isLoanRepayment ? 'Loan repayment' : '');
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -93,9 +98,14 @@ export default function PaymentSubmit() {
   let totalAmount: number;
 
   if (isLoanRepayment) {
-    baseAmount = loanAmount;
+    const selectedLoanAmount = repaymentOption === 'interest_only' 
+      ? loanInterest 
+      : repaymentOption === 'part_payment' 
+        ? (parseFloat(partAmount) || 0) 
+        : loanAmount;
+    baseAmount = selectedLoanAmount;
     joiningFeeAmount = 0;
-    totalAmount = loanAmount + cashFeeAmount;
+    totalAmount = selectedLoanAmount + cashFeeAmount;
   } else {
     baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
     joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
@@ -246,20 +256,79 @@ export default function PaymentSubmit() {
             <Label className="text-sm font-medium mb-3 block">Amount Breakdown</Label>
             
             {isLoanRepayment ? (
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Loan repayment</span>
-                  <span>{formatCurrency(loanAmount)}</span>
+              <div className="space-y-4">
+                {/* Repayment Type Selection */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Repayment Type</Label>
+                  <RadioGroup
+                    value={repaymentOption}
+                    onValueChange={(v) => setRepaymentOption(v as typeof repaymentOption)}
+                    className="space-y-2"
+                  >
+                    {loanInterest > 0 && (
+                      <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentOption === 'interest_only' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                        <RadioGroupItem value="interest_only" />
+                        <div>
+                          <p className="text-sm font-medium">Pay Interest Only</p>
+                          <p className="text-xs text-muted-foreground">{formatCurrency(loanInterest)}</p>
+                        </div>
+                      </label>
+                    )}
+
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentOption === 'part_payment' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                      <RadioGroupItem value="part_payment" />
+                      <div>
+                        <p className="text-sm font-medium">Pay Part Loan</p>
+                        <p className="text-xs text-muted-foreground">Enter a custom amount</p>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentOption === 'full_payment' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                      <RadioGroupItem value="full_payment" />
+                      <div>
+                        <p className="text-sm font-medium">Pay Full Amount</p>
+                        <p className="text-xs text-muted-foreground">Settle full balance of {formatCurrency(loanAmount)}</p>
+                      </div>
+                    </label>
+                  </RadioGroup>
                 </div>
-                {method === 'cash_atm' && (
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Cash/ATM processing fee</span>
-                    <span>{formatCurrency(cashFeeAmount)}</span>
+
+                {/* Part payment amount input */}
+                {repaymentOption === 'part_payment' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="partAmount">Amount (R)</Label>
+                    <Input
+                      id="partAmount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      max={loanAmount}
+                      placeholder="0.00"
+                      value={partAmount}
+                      onChange={(e) => setPartAmount(e.target.value)}
+                      required
+                    />
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-lg pt-3 border-t">
-                  <span>Total</span>
-                  <span className="text-accent">{formatCurrency(totalAmount)}</span>
+
+                {/* Summary */}
+                <div className="space-y-2 text-sm pt-2 border-t">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {repaymentOption === 'interest_only' ? 'Interest payment' : repaymentOption === 'part_payment' ? 'Part payment' : 'Full settlement'}
+                    </span>
+                    <span>{formatCurrency(baseAmount)}</span>
+                  </div>
+                  {method === 'cash_atm' && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Cash/ATM processing fee</span>
+                      <span>{formatCurrency(cashFeeAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold text-lg pt-3 border-t">
+                    <span>Total</span>
+                    <span className="text-accent">{formatCurrency(totalAmount)}</span>
+                  </div>
                 </div>
               </div>
             ) : (
