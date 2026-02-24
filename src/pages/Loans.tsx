@@ -95,15 +95,7 @@ export default function Loans() {
         </Card>
       )}
 
-      {/* Submit Payment CTA - only show if there are outstanding loans */}
-      {totalOutstanding > 0 && (
-        <Link to={`/payments/submit?type=loan_repayment&amount=${totalOutstanding}`}>
-          <Button className="w-full mb-4 bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-            <CreditCard className="h-4 w-4" />
-            Submit Loan Repayment ({formatCurrency(totalOutstanding)})
-          </Button>
-        </Link>
-      )}
+      {/* Per-Loan Submit Payment Buttons - moved into each loan card */}
 
       <div className="space-y-3">
         {isLoading ? (
@@ -183,6 +175,15 @@ export default function Loans() {
                   <p className="text-xs text-muted-foreground mt-2 italic">
                     "{loan.reason}"
                   </p>
+                )}
+
+                {loan.status === 'approved' && Number(loan.outstanding_balance) > 0 && (
+                  <Link to={`/payments/submit?type=loan_repayment&amount=${loan.outstanding_balance}&loanType=${loan.type}`}>
+                    <Button className="w-full mt-3 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" size="sm">
+                      <CreditCard className="h-4 w-4" />
+                      Submit Payment ({formatCurrency(Number(loan.outstanding_balance))})
+                    </Button>
+                  </Link>
                 )}
 
                 {loan.status === 'approved' && (
