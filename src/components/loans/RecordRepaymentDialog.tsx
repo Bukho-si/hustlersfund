@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/constants';
 import { Loader2, Plus } from 'lucide-react';
+
+type RepaymentType = 'interest_only' | 'part_payment' | 'full_payment';
 
 interface RecordRepaymentDialogProps {
   loanId: string;
@@ -14,6 +17,7 @@ interface RecordRepaymentDialogProps {
   memberName: string;
   onSuccess: () => void;
   userId: string;
+  interestAmount?: number | null;
 }
 
 export function RecordRepaymentDialog({ 
@@ -21,12 +25,26 @@ export function RecordRepaymentDialog({
   outstandingBalance, 
   memberName,
   onSuccess,
-  userId 
+  userId,
+  interestAmount
 }: RecordRepaymentDialogProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [repaymentType, setRepaymentType] = useState<RepaymentType>('part_payment');
   const [amount, setAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const interestOnly = Number(interestAmount || 0);
+
+  useEffect(() => {
+    if (repaymentType === 'interest_only') {
+      setAmount(interestOnly > 0 ? interestOnly.toFixed(2) : '');
+    } else if (repaymentType === 'full_payment') {
+      setAmount(outstandingBalance.toFixed(2));
+    } else {
+      setAmount('');
+    }
+  }, [repaymentType, interestOnly, outstandingBalance]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +72,6 @@ export function RecordRepaymentDialog({
     setIsSubmitting(true);
 
     try {
-      // Insert the repayment record
       const { error: repaymentError } = await supabase
         .from('loan_repayments')
         .insert({
@@ -65,7 +82,6 @@ export function RecordRepaymentDialog({
 
       if (repaymentError) throw repaymentError;
 
-      // Update the loan's outstanding balance
       const newBalance = outstandingBalance - repaymentAmount;
       const { error: loanError } = await supabase
         .from('loans')
@@ -74,12 +90,17 @@ export function RecordRepaymentDialog({
 
       if (loanError) throw loanError;
 
+      const typeLabel = repaymentType === 'interest_only' ? 'Interest payment' 
+        : repaymentType === 'full_payment' ? 'Full settlement' 
+        : 'Part payment';
+
       toast({
-        title: 'Repayment recorded',
+        title: `${typeLabel} recorded`,
         description: `${formatCurrency(repaymentAmount)} recorded for ${memberName}`,
       });
 
       setAmount('');
+      setRepaymentType('part_payment');
       setOpen(false);
       onSuccess();
     } catch (error: any) {
@@ -114,10 +135,50 @@ export function RecordRepaymentDialog({
           <div className="p-3 rounded-lg bg-muted">
             <p className="text-sm text-muted-foreground">Outstanding Balance</p>
             <p className="font-semibold text-lg text-accent">{formatCurrency(outstandingBalance)}</p>
+            {interestOnly > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Interest portion: {formatCurrency(interestOnly)}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <Label>Payment Type</Label>
+            <RadioGroup
+              value={repaymentType}
+              onValueChange={(v) => setRepaymentType(v as RepaymentType)}
+              className="space-y-2"
+            >
+              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentType === 'interest_only' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                <RadioGroupItem value="interest_only" />
+                <div>
+                  <p className="text-sm font-medium">Pay Interest Only</p>
+                  <p className="text-xs text-muted-foreground">
+                    {interestOnly > 0 ? formatCurrency(interestOnly) : 'No interest on this loan'}
+                  </p>
+                </div>
+              </label>
+
+              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentType === 'part_payment' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                <RadioGroupItem value="part_payment" />
+                <div>
+                  <p className="text-sm font-medium">Pay Part Loan</p>
+                  <p className="text-xs text-muted-foreground">Enter a custom amount to pay off partially</p>
+                </div>
+              </label>
+
+              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${repaymentType === 'full_payment' ? 'border-accent bg-accent/10' : 'border-border'}`}>
+                <RadioGroupItem value="full_payment" />
+                <div>
+                  <p className="text-sm font-medium">Pay Full Amount</p>
+                  <p className="text-xs text-muted-foreground">Settle full balance of {formatCurrency(outstandingBalance)}</p>
+                </div>
+              </label>
+            </RadioGroup>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Repayment Amount (R)</Label>
+            <Label htmlFor="amount">Amount (R)</Label>
             <Input
               id="amount"
               type="number"
@@ -127,6 +188,7 @@ export function RecordRepaymentDialog({
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              readOnly={repaymentType === 'interest_only' || repaymentType === 'full_payment'}
               required
             />
           </div>
@@ -143,7 +205,7 @@ export function RecordRepaymentDialog({
             <Button
               type="submit"
               className="flex-1 bg-success text-success-foreground hover:bg-success/90"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (repaymentType === 'interest_only' && interestOnly <= 0)}
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
