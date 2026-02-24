@@ -25,8 +25,9 @@ export default function PaymentSubmit() {
   
   const paymentType = searchParams.get('type');
   const loanAmount = parseFloat(searchParams.get('amount') || '0');
-  const loanInterest = parseFloat(searchParams.get('interest') || '0');
+  const loanInterestParam = parseFloat(searchParams.get('interest') || '0');
   const loanType = searchParams.get('loanType') || '';
+  const loanId = searchParams.get('loanId') || '';
   const isLoanRepayment = paymentType === 'loan_repayment' && loanAmount > 0;
 
   const [repaymentOption, setRepaymentOption] = useState<'interest_only' | 'part_payment' | 'full_payment'>('full_payment');
@@ -40,6 +41,7 @@ export default function PaymentSubmit() {
   const [emergencyDuesTotal, setEmergencyDuesTotal] = useState(0);
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
   const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
+  const [loanInterest, setLoanInterest] = useState(loanInterestParam);
 
   useEffect(() => {
     if (user) {
@@ -47,6 +49,23 @@ export default function PaymentSubmit() {
       checkCurrentCycle();
     }
   }, [user]);
+
+  // Fetch loan interest from DB if not provided in URL
+  useEffect(() => {
+    if (isLoanRepayment && loanInterestParam === 0 && loanId) {
+      const fetchLoanInterest = async () => {
+        const { data } = await supabase
+          .from('loans')
+          .select('interest_amount')
+          .eq('id', loanId)
+          .maybeSingle();
+        if (data?.interest_amount) {
+          setLoanInterest(data.interest_amount);
+        }
+      };
+      fetchLoanInterest();
+    }
+  }, [isLoanRepayment, loanInterestParam, loanId]);
 
   const checkCurrentCycle = async () => {
     const { data: cycle } = await supabase
