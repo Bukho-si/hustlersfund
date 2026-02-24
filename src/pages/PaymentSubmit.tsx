@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,11 +18,16 @@ const JOINING_FEE_ONLY_WEEK_START = '2026-02-02';
 
 export default function PaymentSubmit() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   
+  const paymentType = searchParams.get('type');
+  const loanAmount = parseFloat(searchParams.get('amount') || '0');
+  const isLoanRepayment = paymentType === 'loan_repayment' && loanAmount > 0;
+
   const [method, setMethod] = useState<'eft' | 'cash_atm'>('eft');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(isLoanRepayment ? 'Loan repayment' : '');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [membershipSlots, setMembershipSlots] = useState(1);
@@ -80,12 +85,22 @@ export default function PaymentSubmit() {
     setEmergencyDuesTotal(total);
   };
 
-  // Calculate totals with slot multipliers
-  // If it's joining fee only week, no weekly subscription
-  const baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
-  const joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
+  // Calculate totals
   const cashFeeAmount = method === 'cash_atm' ? CASH_ATM_FEE : 0;
-  const totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount + emergencyDuesTotal;
+
+  let baseAmount: number;
+  let joiningFeeAmount: number;
+  let totalAmount: number;
+
+  if (isLoanRepayment) {
+    baseAmount = loanAmount;
+    joiningFeeAmount = 0;
+    totalAmount = loanAmount + cashFeeAmount;
+  } else {
+    baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
+    joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
+    totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount + emergencyDuesTotal;
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -189,7 +204,7 @@ export default function PaymentSubmit() {
 
   return (
     <AppLayout>
-      <PageHeader title="Submit Payment" showBack />
+      <PageHeader title={isLoanRepayment ? "Submit Loan Repayment" : "Submit Payment"} showBack />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Payment Method */}
@@ -230,63 +245,84 @@ export default function PaymentSubmit() {
           <CardContent className="p-4">
             <Label className="text-sm font-medium mb-3 block">Amount Breakdown</Label>
             
-            {/* Joining Fee Only Week Notice */}
-            {isJoiningFeeOnlyWeek && (
-              <div className="flex items-start gap-2 p-3 bg-info/10 rounded-lg mb-3 text-info">
-                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
-                  <p className="font-medium">Joining Fees Only This Week</p>
-                  <p className="text-info/80 text-xs">Weekly subscriptions start from next week.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2 text-sm">
-              {!isJoiningFeeOnlyWeek && (
+            {isLoanRepayment ? (
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Weekly subscription</span>
-                    {membershipSlots > 1 && (
-                      <span className="text-xs text-muted-foreground/70">R{WEEKLY_SUBSCRIPTION} × {membershipSlots} slots</span>
-                    )}
+                  <span className="text-muted-foreground">Loan repayment</span>
+                  <span>{formatCurrency(loanAmount)}</span>
+                </div>
+                {method === 'cash_atm' && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Cash/ATM processing fee</span>
+                    <span>{formatCurrency(cashFeeAmount)}</span>
                   </div>
-                  <span>{formatCurrency(baseAmount)}</span>
+                )}
+                <div className="flex justify-between font-bold text-lg pt-3 border-t">
+                  <span>Total</span>
+                  <span className="text-accent">{formatCurrency(totalAmount)}</span>
                 </div>
-              )}
-              {joiningFeeAmount > 0 && (
-                <div className="flex justify-between text-accent">
-                  <div className="flex flex-col">
-                    <span>Joining fee {isJoiningFeeOnlyWeek ? '' : '(remaining)'}</span>
-                    {membershipSlots > 1 && (
-                      <span className="text-xs text-accent/70">R{JOINING_FEE} × {membershipSlots} total</span>
-                    )}
-                  </div>
-                  <span>{formatCurrency(joiningFeeAmount)}</span>
-                </div>
-              )}
-              {joiningFeeAmount === 0 && isJoiningFeeOnlyWeek && (
-                <div className="flex justify-between text-success">
-                  <span>Joining fee</span>
-                  <span>Paid ✓</span>
-                </div>
-              )}
-              {method === 'cash_atm' && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Cash/ATM processing fee</span>
-                  <span>{formatCurrency(cashFeeAmount)}</span>
-                </div>
-              )}
-              {emergencyDuesTotal > 0 && (
-                <div className="flex justify-between text-warning">
-                  <span>Emergency dues</span>
-                  <span>{formatCurrency(emergencyDuesTotal)}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-bold text-lg pt-3 border-t">
-                <span>Total</span>
-                <span className="text-accent">{formatCurrency(totalAmount)}</span>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Joining Fee Only Week Notice */}
+                {isJoiningFeeOnlyWeek && (
+                  <div className="flex items-start gap-2 p-3 bg-info/10 rounded-lg mb-3 text-info">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium">Joining Fees Only This Week</p>
+                      <p className="text-info/80 text-xs">Weekly subscriptions start from next week.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 text-sm">
+                  {!isJoiningFeeOnlyWeek && (
+                    <div className="flex justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground">Weekly subscription</span>
+                        {membershipSlots > 1 && (
+                          <span className="text-xs text-muted-foreground/70">R{WEEKLY_SUBSCRIPTION} × {membershipSlots} slots</span>
+                        )}
+                      </div>
+                      <span>{formatCurrency(baseAmount)}</span>
+                    </div>
+                  )}
+                  {joiningFeeAmount > 0 && (
+                    <div className="flex justify-between text-accent">
+                      <div className="flex flex-col">
+                        <span>Joining fee {isJoiningFeeOnlyWeek ? '' : '(remaining)'}</span>
+                        {membershipSlots > 1 && (
+                          <span className="text-xs text-accent/70">R{JOINING_FEE} × {membershipSlots} total</span>
+                        )}
+                      </div>
+                      <span>{formatCurrency(joiningFeeAmount)}</span>
+                    </div>
+                  )}
+                  {joiningFeeAmount === 0 && isJoiningFeeOnlyWeek && (
+                    <div className="flex justify-between text-success">
+                      <span>Joining fee</span>
+                      <span>Paid ✓</span>
+                    </div>
+                  )}
+                  {method === 'cash_atm' && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Cash/ATM processing fee</span>
+                      <span>{formatCurrency(cashFeeAmount)}</span>
+                    </div>
+                  )}
+                  {emergencyDuesTotal > 0 && (
+                    <div className="flex justify-between text-warning">
+                      <span>Emergency dues</span>
+                      <span>{formatCurrency(emergencyDuesTotal)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold text-lg pt-3 border-t">
+                    <span>Total</span>
+                    <span className="text-accent">{formatCurrency(totalAmount)}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
