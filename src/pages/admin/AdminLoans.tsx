@@ -35,6 +35,7 @@ interface LoanWithProfile {
   requested_at: string;
   status: string;
   outstanding_balance: number;
+  interest_amount: number | null;
   profile: {
     full_name: string;
   } | null;
@@ -297,6 +298,7 @@ export default function AdminLoans() {
                 memberName={loan.profile?.full_name || 'Unknown'}
                 onSuccess={handleRepaymentSuccess}
                 userId={user?.id || ''}
+                interestAmount={loan.interest_amount}
               />
             </div>
             {isExpanded && (
