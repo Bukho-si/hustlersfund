@@ -95,13 +95,15 @@ export default function Loans() {
         </Card>
       )}
 
-      {/* Submit Payment CTA */}
-      <Link to="/payments/submit">
-        <Button className="w-full mb-4 bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-          <CreditCard className="h-4 w-4" />
-          Submit Payment
-        </Button>
-      </Link>
+      {/* Submit Payment CTA - only show if there are outstanding loans */}
+      {totalOutstanding > 0 && (
+        <Link to={`/payments/submit?type=loan_repayment&amount=${totalOutstanding}`}>
+          <Button className="w-full mb-4 bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+            <CreditCard className="h-4 w-4" />
+            Submit Loan Repayment ({formatCurrency(totalOutstanding)})
+          </Button>
+        </Link>
+      )}
 
       <div className="space-y-3">
         {isLoading ? (
