@@ -33,6 +33,8 @@ const getStatusStyles = (status: string, variant: string) => {
         return 'bg-warning/10 text-warning border-warning/20';
       case 'rejected':
         return 'bg-destructive/10 text-destructive border-destructive/20';
+      case 'withdrawn':
+        return 'bg-muted text-muted-foreground border-muted';
       default:
         return 'bg-muted text-muted-foreground border-muted';
     }

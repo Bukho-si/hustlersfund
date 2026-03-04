@@ -8,7 +8,19 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { Plus, CreditCard, Building2, Banknote } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Plus, CreditCard, Building2, Banknote, XCircle, Loader2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Payment {
   id: string;
@@ -26,8 +38,10 @@ interface Payment {
 
 export default function Payments() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -58,6 +72,26 @@ export default function Payments() {
     ) : (
       <Banknote className="h-4 w-4 text-warning" />
     );
+  };
+
+  const handleWithdraw = async (paymentId: string) => {
+    setWithdrawingId(paymentId);
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .update({ status: 'withdrawn' as any })
+        .eq('id', paymentId)
+        .eq('member_user_id', user!.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Payment withdrawn', description: 'You can now submit a new payment.' });
+      fetchPayments();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Could not withdraw payment', variant: 'destructive' });
+    } finally {
+      setWithdrawingId(null);
+    }
   };
 
   return (
@@ -163,6 +197,43 @@ export default function Payments() {
                   <p className="text-xs text-muted-foreground mt-2 italic">
                     "{payment.notes}"
                   </p>
+                )}
+
+                {payment.status === 'submitted' && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-3 text-destructive border-destructive/30 hover:bg-destructive/10 gap-2"
+                        disabled={withdrawingId === payment.id}
+                      >
+                        {withdrawingId === payment.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <XCircle className="h-4 w-4" />
+                        )}
+                        Withdraw Payment
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Withdraw this payment?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will cancel your submitted payment of {formatCurrency(Number(payment.total_amount))}. You'll be able to submit a new payment afterwards.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Payment</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleWithdraw(payment.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Yes, Withdraw
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </CardContent>
             </Card>

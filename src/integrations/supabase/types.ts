@@ -522,6 +522,7 @@ export type Database = {
         | "pending_verification"
         | "verified"
         | "rejected"
+        | "withdrawn"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -662,6 +663,7 @@ export const Constants = {
         "pending_verification",
         "verified",
         "rejected",
+        "withdrawn",
       ],
     },
   },
