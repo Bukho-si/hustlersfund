@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -258,6 +258,9 @@ export default function PaymentSubmit() {
               <div className="text-sm">
                 <p className="font-medium">Payment already submitted</p>
                 <p className="text-warning/80 text-xs">You have already submitted a payment for this cycle. You cannot submit another until the current one is processed.</p>
+                <Link to="/payments" className="inline-block mt-2 text-xs font-medium underline underline-offset-2 hover:text-warning/90">
+                  View your payments →
+                </Link>
               </div>
             </CardContent>
           </Card>
