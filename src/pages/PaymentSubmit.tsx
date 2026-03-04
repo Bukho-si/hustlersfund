@@ -42,6 +42,7 @@ export default function PaymentSubmit() {
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
   const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
   const [loanInterest, setLoanInterest] = useState(loanInterestParam);
+  const [hasExistingPayment, setHasExistingPayment] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -78,8 +79,21 @@ export default function PaymentSubmit() {
 
     if (cycle) {
       setCurrentCycleId(cycle.id);
-      // Check if this is the first week (joining fees only)
       setIsJoiningFeeOnlyWeek(cycle.week_start_date === JOINING_FEE_ONLY_WEEK_START);
+
+      // Check for existing non-rejected subscription payment for this cycle
+      if (!isLoanRepayment && user) {
+        const { data: existing } = await supabase
+          .from('payments')
+          .select('id')
+          .eq('member_user_id', user.id)
+          .eq('cycle_id', cycle.id)
+          .in('status', ['submitted', 'pending_verification', 'verified'])
+          .limit(1)
+          .maybeSingle();
+
+        setHasExistingPayment(!!existing);
+      }
     }
   };
 
@@ -236,6 +250,19 @@ export default function PaymentSubmit() {
       <PageHeader title={isLoanRepayment ? "Submit Loan Repayment" : "Submit Payment"} showBack />
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Duplicate Payment Warning */}
+        {hasExistingPayment && !isLoanRepayment && (
+          <Card className="border-warning">
+            <CardContent className="p-4 flex items-start gap-2 text-warning">
+              <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium">Payment already submitted</p>
+                <p className="text-warning/80 text-xs">You have already submitted a payment for this cycle. You cannot submit another until the current one is processed.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Payment Method */}
         <Card>
           <CardContent className="p-4">
@@ -475,10 +502,12 @@ export default function PaymentSubmit() {
         <Button 
           type="submit" 
           className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (hasExistingPayment && !isLoanRepayment)}
         >
           {isSubmitting ? (
             <Loader2 className="h-5 w-5 animate-spin" />
+          ) : hasExistingPayment && !isLoanRepayment ? (
+            'Already Submitted'
           ) : (
             `Submit Payment (${formatCurrency(totalAmount)})`
           )}
