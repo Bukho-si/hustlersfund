@@ -699,6 +699,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      recalculate_wallet_balance: {
+        Args: { _member_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
