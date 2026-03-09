@@ -33,7 +33,7 @@ const LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, userRoles } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
