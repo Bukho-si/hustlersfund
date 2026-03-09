@@ -111,6 +111,7 @@ const App = () => (
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/ledger" element={<AdminLedger />} />
+            <Route path="/admin/loan-management" element={<AdminLoanManagement />} />
             <Route path="/admin/migration-validation" element={<AdminMigrationValidation />} />
             <Route path="/admin/emergency-event/:eventId" element={<AdminEmergencyEventDetail />} />
             
