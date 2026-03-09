@@ -174,7 +174,7 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h2 className="font-bold text-lg">Hustlers Admin</h2>
-            <p className="text-primary-foreground/70 text-sm">Full management access</p>
+            <p className="text-primary-foreground/70 text-sm">Admin Panel</p>
           </div>
         </CardContent>
       </Card>
