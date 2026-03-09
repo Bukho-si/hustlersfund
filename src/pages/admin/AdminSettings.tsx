@@ -50,10 +50,11 @@ export default function AdminSettings() {
   }, []);
 
   const fetchAll = async () => {
-    const [settingsRes, windowRes, fundRes] = await Promise.all([
+    const [settingsRes, windowRes, fundRes, personalFundRes] = await Promise.all([
       supabase.from('loan_settings').select('*').limit(1).maybeSingle(),
       supabase.from('petrol_request_window').select('*').limit(1).maybeSingle(),
       supabase.from('petrol_fund').select('*').limit(1).maybeSingle(),
+      supabase.from('personal_loan_fund').select('*').limit(1).maybeSingle(),
     ]);
 
     if (settingsRes.data) {
