@@ -146,28 +146,23 @@ export default function Loans() {
                   <StatusBadge status={loan.status} variant="loan" />
                 </div>
 
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Principal amount</span>
-                    <span className="font-medium">{formatCurrency(Number(loan.amount))}</span>
-                  </div>
+                <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
+                  <span className="text-muted-foreground">Principal amount</span>
+                  <span className="font-medium text-right">{formatCurrency(Number(loan.amount))}</span>
                   {loan.interest_rate_percent !== null && loan.interest_rate_percent > 0 && (
                     <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
-                        <span className="font-medium text-warning">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total repayable</span>
-                        <span className="font-medium">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
-                      </div>
+                      <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
+                      <span className="font-medium text-warning text-right">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
+                      <span className="text-muted-foreground">Total repayable</span>
+                      <span className="font-medium text-right">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
                     </>
                   )}
-                {(loan.status === 'approved' || loan.status === 'disbursed') && (
-                    <div className="flex justify-between pt-1 border-t mt-1">
+                  {(loan.status === 'approved' || loan.status === 'disbursed') && (
+                    <>
+                      <span className="text-muted-foreground pt-1 border-t col-span-2" />
                       <span className="text-muted-foreground">Outstanding balance</span>
-                      <span className="font-semibold text-accent">{formatCurrency(Number(loan.outstanding_balance))}</span>
-                    </div>
+                      <span className="font-semibold text-accent text-right">{formatCurrency(Number(loan.outstanding_balance))}</span>
+                    </>
                   )}
                 </div>
 

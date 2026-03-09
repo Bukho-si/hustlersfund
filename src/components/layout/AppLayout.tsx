@@ -41,12 +41,12 @@ export function AppLayout({ children, requireAuth = true, requireAdmin = false }
       return (
         <div className="min-h-screen bg-background pb-20">
           <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-            <div className="container max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="w-full max-w-[720px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
               <AppBrandWidget />
               {user && <NotificationBell />}
             </div>
           </header>
-          <main className="container max-w-lg mx-auto px-4 py-4">
+          <main className="w-full max-w-[720px] mx-auto px-4 py-4">
             <Card>
               <CardContent className="p-8 text-center">
                 <ShieldX className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -66,12 +66,12 @@ export function AppLayout({ children, requireAuth = true, requireAdmin = false }
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-        <div className="container max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="w-full max-w-[720px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <AppBrandWidget />
           {user && <NotificationBell />}
         </div>
       </header>
-      <main className="container max-w-lg mx-auto px-4 py-4">
+      <main className="w-full max-w-[720px] mx-auto px-4 py-4">
         {children}
       </main>
       {user && <MobileNav />}

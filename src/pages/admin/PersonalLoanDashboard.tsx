@@ -94,7 +94,7 @@ export default function PersonalLoanDashboard() {
         <PersonalFundLowBanner balance={fund.current_balance} threshold={fund.low_balance_threshold} />
       )}
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         {statCards.map((stat, i) => (
           <Link key={stat.label} to={stat.href} className={`block animate-fade-in ${(stat as any).span ? 'col-span-2' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
             <Card className={`h-full hover:shadow-card-hover transition-shadow ${(stat as any).urgent ? 'ring-2 ring-warning' : ''}`}>

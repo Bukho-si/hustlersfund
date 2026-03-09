@@ -99,12 +99,8 @@ export default function Dashboard() {
   }, [currentCycle]);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      fetchDashboardData(currentCycle?.id);
-    };
-    
-    loadData();
+    if (!user) return;
+    fetchDashboardData(currentCycle?.id);
   }, [user, currentCycle?.id]);
 
   // Realtime subscriptions: auto-refresh when payments, loans, or emergency dues change
