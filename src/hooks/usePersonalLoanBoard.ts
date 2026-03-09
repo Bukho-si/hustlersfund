@@ -22,6 +22,7 @@ export interface PersonalLoanWithProfile {
   approved_by: string | null;
   approved_at: string | null;
   rejection_reason: string | null;
+  due_date: string | null;
   profile: { full_name: string; membership_slots: number } | null;
   locker_name?: string;
   last_repayment_date?: string | null;
@@ -90,7 +91,7 @@ export function usePersonalLoanBoard() {
       .from('loans')
       .select('*')
       .eq('type', 'personal')
-      .in('status', ['requested', 'under_review', 'approved', 'disbursed', 'pending'])
+      .in('status', ['requested', 'under_review', 'approved', 'disbursed', 'pending', 'repaid', 'rejected'])
       .order('requested_at', { ascending: true });
 
     if (error) { console.error('Error fetching personal loans:', error); return; }
@@ -295,11 +296,12 @@ export function usePersonalLoanBoard() {
 
   const requested = loans.filter(l => l.status === 'requested');
   const underReview = loans.filter(l => l.status === 'under_review');
-  const approved = loans.filter(l => l.status === 'approved');
-  const disbursed = loans.filter(l => l.status === 'disbursed' && Number(l.outstanding_balance) > 0);
+  const approved = loans.filter(l => ['approved', 'disbursed'].includes(l.status) && Number(l.outstanding_balance) > 0);
+  const repaid = loans.filter(l => l.status === 'repaid');
+  const rejected = loans.filter(l => l.status === 'rejected');
 
   return {
-    loans, columns: { requested, underReview, approved, disbursed },
+    loans, columns: { requested, underReview, approved, repaid, rejected },
     activities, metrics, isLoading, processingId,
     lockLoan, unlockLoan, approveLoan, rejectLoan, disburseLoan,
     isLockExpired, refreshLoans: fetchLoans, refreshAll: fetchAll,

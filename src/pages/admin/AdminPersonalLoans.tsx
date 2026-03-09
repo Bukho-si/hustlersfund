@@ -61,6 +61,7 @@ export default function AdminPersonalLoans() {
         <TabsContent value="board">
           <PersonalLoanBoard
             columns={columns} userId={user?.id || ''} processingId={processingId}
+            isAdmin={true}
             onLock={lockLoan} onUnlock={unlockLoan} onApprove={approveLoan}
             onReject={rejectLoan} onDisburse={disburseLoan}
             onRepaymentSuccess={handleRepaymentSuccess} refreshTrigger={refreshTrigger}
