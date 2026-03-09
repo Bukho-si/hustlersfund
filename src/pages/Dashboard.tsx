@@ -360,7 +360,43 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Current Contribution Cycle - hidden when paid */}
+      {/* Wallet Balance Widget */}
+      {wallet && (
+        <Link to="/wallet" className="block mb-4 animate-fade-in">
+          <Card className="hover:shadow-card-hover transition-shadow border-accent/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Wallet className="h-4 w-4 text-accent" />
+                  </div>
+                  <span className="text-sm font-medium">My Wallet</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5">Contributions</p>
+                  <p className="text-sm font-bold text-success">{formatCurrency(wallet.contribution_balance + wallet.joining_fee_balance)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5 flex items-center gap-0.5"><Fuel className="h-2.5 w-2.5" />Petrol Loan</p>
+                  <p className={`text-sm font-bold ${wallet.petrol_loan_balance > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {wallet.petrol_loan_balance > 0 ? `-${formatCurrency(wallet.petrol_loan_balance)}` : formatCurrency(0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5 flex items-center gap-0.5"><DollarSign className="h-2.5 w-2.5" />Personal</p>
+                  <p className={`text-sm font-bold ${wallet.personal_loan_balance > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {wallet.personal_loan_balance > 0 ? `-${formatCurrency(wallet.personal_loan_balance)}` : formatCurrency(0)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      )}
+
       {currentCycle && !isPaid && (
         <Card className="mb-4 animate-fade-in border-accent/30" style={{ animationDelay: '0.05s' }}>
           <CardContent className="p-4">
