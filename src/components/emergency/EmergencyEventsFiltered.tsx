@@ -35,6 +35,7 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
   const { user } = useAuth();
   const { toast } = useToast();
   const { settings } = useContributionSettings();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<EmergencyEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
