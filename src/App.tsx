@@ -48,6 +48,7 @@ import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLedger from "./pages/admin/AdminLedger";
+import AdminMigrationValidation from "./pages/admin/AdminMigrationValidation";
 
 import NotFound from "./pages/NotFound";
 
