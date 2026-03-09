@@ -195,6 +195,27 @@ export default function Emergencies() {
                   )}
                 </div>
 
+                {/* Progress bar for active events */}
+                {due.event.status === 'active' && eventProgress[due.event_id] && (
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" /> Member Progress
+                      </span>
+                      <span className="font-medium flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-success" />
+                        {eventProgress[due.event_id].paidMembers} / {eventProgress[due.event_id].totalMembers} paid
+                      </span>
+                    </div>
+                    <Progress
+                      value={eventProgress[due.event_id].totalMembers > 0
+                        ? (eventProgress[due.event_id].paidMembers / eventProgress[due.event_id].totalMembers) * 100
+                        : 0}
+                      className="h-2"
+                    />
+                  </div>
+                )
+
                 {due.status === 'unpaid' && (
                   <p className="text-xs text-muted-foreground mt-3 italic">
                     Include this in your next weekly payment
