@@ -604,6 +604,62 @@ export type Database = {
           },
         ]
       }
+      personal_loan_activity: {
+        Row: {
+          action: string
+          actor_user_id: string
+          created_at: string
+          details: string | null
+          id: string
+          loan_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          loan_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          loan_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_loan_activity_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_loan_fund: {
+        Row: {
+          current_balance: number
+          id: string
+          last_updated: string
+          low_balance_threshold: number
+        }
+        Insert: {
+          current_balance?: number
+          id?: string
+          last_updated?: string
+          low_balance_threshold?: number
+        }
+        Update: {
+          current_balance?: number
+          id?: string
+          last_updated?: string
+          low_balance_threshold?: number
+        }
+        Relationships: []
+      }
       petrol_fund: {
         Row: {
           current_balance: number
