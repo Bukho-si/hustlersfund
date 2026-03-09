@@ -38,6 +38,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
+import AdminLedger from "./pages/admin/AdminLedger";
 
 import NotFound from "./pages/NotFound";
 
