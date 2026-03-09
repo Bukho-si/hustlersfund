@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings, Percent, Fuel, User, Clock, Banknote } from 'lucide-react';
+import { Loader2, Settings, Percent, Fuel, User, Clock, Banknote, Wallet } from 'lucide-react';
 
 interface LoanSettings {
   id: string;
@@ -40,15 +40,21 @@ export default function AdminSettings() {
   const [fundThreshold, setFundThreshold] = useState('');
   const [fundId, setFundId] = useState<string | null>(null);
 
+  // Personal loan fund
+  const [personalFundBalance, setPersonalFundBalance] = useState('');
+  const [personalFundThreshold, setPersonalFundThreshold] = useState('');
+  const [personalFundId, setPersonalFundId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchAll();
   }, []);
 
   const fetchAll = async () => {
-    const [settingsRes, windowRes, fundRes] = await Promise.all([
+    const [settingsRes, windowRes, fundRes, personalFundRes] = await Promise.all([
       supabase.from('loan_settings').select('*').limit(1).maybeSingle(),
       supabase.from('petrol_request_window').select('*').limit(1).maybeSingle(),
       supabase.from('petrol_fund').select('*').limit(1).maybeSingle(),
+      supabase.from('personal_loan_fund').select('*').limit(1).maybeSingle(),
     ]);
 
     if (settingsRes.data) {
@@ -70,6 +76,13 @@ export default function AdminSettings() {
       setFundId(f.id);
       setFundBalance(String(f.current_balance));
       setFundThreshold(String(f.low_balance_threshold));
+    }
+
+    if (personalFundRes.data) {
+      const pf = personalFundRes.data as any;
+      setPersonalFundId(pf.id);
+      setPersonalFundBalance(String(pf.current_balance));
+      setPersonalFundThreshold(String(pf.low_balance_threshold));
     }
 
     setIsLoading(false);
@@ -128,6 +141,21 @@ export default function AdminSettings() {
               low_balance_threshold: thresholdNum,
             })
             .eq('id', fundId);
+        }
+      }
+
+      // Update personal loan fund
+      if (personalFundId) {
+        const pBalanceNum = parseFloat(personalFundBalance);
+        const pThresholdNum = parseFloat(personalFundThreshold);
+        if (!isNaN(pBalanceNum) && !isNaN(pThresholdNum)) {
+          await supabase
+            .from('personal_loan_fund')
+            .update({
+              current_balance: pBalanceNum,
+              low_balance_threshold: pThresholdNum,
+            })
+            .eq('id', personalFundId);
         }
       }
 
@@ -270,7 +298,30 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
 
-          <Button 
+          {/* Personal Loan Fund */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wallet className="h-5 w-5 text-info" />
+                Personal Loan Fund
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="personal-fund-balance">Current Balance (R)</Label>
+                <Input id="personal-fund-balance" type="number" value={personalFundBalance} onChange={(e) => setPersonalFundBalance(e.target.value)} min="0" step="0.01" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personal-fund-threshold">Low Balance Alert Threshold (R)</Label>
+                <Input id="personal-fund-threshold" type="number" value={personalFundThreshold} onChange={(e) => setPersonalFundThreshold(e.target.value)} min="0" step="0.01" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                A warning banner will appear on the Personal Loans dashboard when the fund drops below this threshold.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Button
             onClick={handleSave} 
             disabled={isSaving}
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
