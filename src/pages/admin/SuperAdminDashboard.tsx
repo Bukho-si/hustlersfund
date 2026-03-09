@@ -24,6 +24,8 @@ interface Stats {
 }
 
 export default function SuperAdminDashboard() {
+  const { data: contributionsData, isLoading: contribLoading } = useWeeklyContributions();
+  const { data: loanDistData, isLoading: loanDistLoading } = useLoanDistribution();
   const [stats, setStats] = useState<Stats>({
     activeMembers: 0,
     pendingVerifications: 0,
