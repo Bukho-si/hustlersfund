@@ -23,6 +23,7 @@ export default function LoanRequest() {
   const { toast } = useToast();
   
   const { getInterestRate, isLoading: settingsLoading } = useLoanSettings();
+  const { window: requestWindow, isWithinWindow } = usePetrolRequestWindow();
   
   const [type, setType] = useState<'petrol' | 'personal'>('petrol');
   const [amount, setAmount] = useState('');
@@ -31,6 +32,8 @@ export default function LoanRequest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [membershipSlots, setMembershipSlots] = useState(1);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  
+  const petrolWindowOpen = type === 'petrol' ? isWithinWindow() : true;
 
   useEffect(() => {
     if (user) {
