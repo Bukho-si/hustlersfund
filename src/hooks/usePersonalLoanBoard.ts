@@ -22,6 +22,7 @@ export interface PersonalLoanWithProfile {
   approved_by: string | null;
   approved_at: string | null;
   rejection_reason: string | null;
+  due_date: string | null;
   profile: { full_name: string; membership_slots: number } | null;
   locker_name?: string;
   last_repayment_date?: string | null;
