@@ -146,7 +146,7 @@ export default function Loans() {
                   <StatusBadge status={loan.status} variant="loan" />
                 </div>
 
-                <div className="space-y-1 text-sm">
+                <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Principal amount</span>
                     <span className="font-medium">{formatCurrency(Number(loan.amount))}</span>
