@@ -1,12 +1,18 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { AppRole, isAnyAdmin, isSuperAdmin, canAccessModule, canAccessRoute, getAllowedModules, AdminModule } from '@/lib/roles';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  userRoles: AppRole[];
+  isSuperAdmin: boolean;
+  canAccessModule: (module: AdminModule) => boolean;
+  canAccessRoute: (route: string) => boolean;
+  getAllowedModules: () => Set<AdminModule>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -20,33 +26,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRoles, setUserRoles] = useState<AppRole[]>([]);
+
+  const isAdminValue = isAnyAdmin(userRoles);
+  const isSuperAdminValue = isSuperAdmin(userRoles);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer role check with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
-            checkAdminRole(session.user.id);
+            fetchUserRoles(session.user.id);
           }, 0);
         } else {
-          setIsAdmin(false);
+          setUserRoles([]);
         }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        fetchUserRoles(session.user.id);
       }
       setIsLoading(false);
     });
@@ -54,15 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
+  const fetchUserRoles = async (userId: string) => {
     const { data } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
+      .eq('user_id', userId);
     
-    setIsAdmin(!!data);
+    const roles = (data || []).map(r => r.role as AppRole);
+    setUserRoles(roles);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -72,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     
     if (!error && data.user) {
-      // Check if returning deleted member (no profile exists)
       const { data: profile } = await supabase
         .from('member_profiles')
         .select('id')
@@ -80,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
       
       if (!profile) {
-        // Recreate profile for returning member
         const fullName = data.user.user_metadata?.full_name || email.split('@')[0];
         await supabase
           .from('member_profiles')
@@ -111,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) return { error: error as Error };
 
-    // Create member profile after signup
     if (data.user) {
       const { error: profileError } = await supabase
         .from('member_profiles')
@@ -133,10 +135,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setIsAdmin(false);
+    setUserRoles([]);
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPasswordFn = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -151,7 +153,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signIn, signUp, signOut, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{
+      user,
+      session,
+      isLoading,
+      isAdmin: isAdminValue,
+      userRoles,
+      isSuperAdmin: isSuperAdminValue,
+      canAccessModule: (module: AdminModule) => canAccessModule(userRoles, module),
+      canAccessRoute: (route: string) => canAccessRoute(userRoles, route),
+      getAllowedModules: () => getAllowedModules(userRoles),
+      signIn,
+      signUp,
+      signOut,
+      resetPassword: resetPasswordFn,
+      updatePassword,
+    }}>
       {children}
     </AuthContext.Provider>
   );
