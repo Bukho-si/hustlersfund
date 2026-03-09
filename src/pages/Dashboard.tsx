@@ -139,14 +139,9 @@ export default function Dashboard() {
         currentWeekPayment = payments?.[0] || null;
       }
 
-      const { data: emergencyDues } = await supabase
-        .from('emergency_dues')
-        .select('amount_due, amount_paid')
-        .eq('member_user_id', user.id)
-        .eq('status', 'unpaid');
-
-      const emergencyDuesCount = emergencyDues?.length || 0;
-      const emergencyDuesTotal = emergencyDues?.reduce((sum, due) => sum + (Number(due.amount_due) - Number(due.amount_paid)), 0) || 0;
+      // Emergency dues are tracked separately in the Emergency tab - NOT included in weekly
+      const emergencyDuesCount = 0;
+      const emergencyDuesTotal = 0;
 
       setData({ profile, currentWeekPayment, emergencyDuesCount, emergencyDuesTotal });
     } catch (error) {

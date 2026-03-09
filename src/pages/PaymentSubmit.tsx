@@ -416,12 +416,7 @@ export default function PaymentSubmit() {
                       <span>{formatCurrency(cashFeeAmount)}</span>
                     </div>
                   )}
-                  {emergencyDuesTotal > 0 && (
-                    <div className="flex justify-between text-warning">
-                      <span>Emergency dues</span>
-                      <span>{formatCurrency(emergencyDuesTotal)}</span>
-                    </div>
-                  )}
+                  {/* Emergency dues are paid separately via the Emergency tab */}
                   <div className="flex justify-between font-bold text-lg pt-3 border-t">
                     <span>Total</span>
                     <span className="text-accent">{formatCurrency(totalAmount)}</span>
