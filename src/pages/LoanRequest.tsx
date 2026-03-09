@@ -86,6 +86,15 @@ export default function LoanRequest() {
       return;
     }
 
+    if (type === 'petrol' && !isWithinWindow()) {
+      toast({
+        title: 'Outside request window',
+        description: `Petrol loan requests are only allowed between ${requestWindow?.start_time?.slice(0, 5) || '06:00'} and ${requestWindow?.end_time?.slice(0, 5) || '10:00'}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
