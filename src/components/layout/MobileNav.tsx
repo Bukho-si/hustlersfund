@@ -12,10 +12,11 @@ interface NavItem {
 }
 
 const memberNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/payments', label: 'Payments', icon: CreditCard },
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/wallet', label: 'Wallet', icon: Wallet },
+  { href: '/loans', label: 'Loans', icon: DollarSign },
   { href: '/emergencies', label: 'Emergency', icon: AlertTriangle },
+  { href: '/activity', label: 'Activity', icon: Activity },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
