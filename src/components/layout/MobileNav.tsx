@@ -21,7 +21,7 @@ const memberNavItems: NavItem[] = [
 ];
 
 const allAdminNavItems: NavItem[] = [
-  { href: '/admin', label: 'Dashboard', icon: Home, module: 'dashboard' },
+  { href: '__admin_dash__', label: 'Dashboard', icon: Home, module: 'dashboard' },
   { href: '/admin/members', label: 'Members', icon: Users, module: 'members' },
   { href: '/admin/verify', label: 'Verify', icon: FileCheck, module: 'verify' },
   { href: '/admin/cycles', label: 'Cycles', icon: RefreshCw, module: 'cycles' },
