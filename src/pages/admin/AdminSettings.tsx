@@ -298,7 +298,30 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
 
-          <Button 
+          {/* Personal Loan Fund */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wallet className="h-5 w-5 text-info" />
+                Personal Loan Fund
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="personal-fund-balance">Current Balance (R)</Label>
+                <Input id="personal-fund-balance" type="number" value={personalFundBalance} onChange={(e) => setPersonalFundBalance(e.target.value)} min="0" step="0.01" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personal-fund-threshold">Low Balance Alert Threshold (R)</Label>
+                <Input id="personal-fund-threshold" type="number" value={personalFundThreshold} onChange={(e) => setPersonalFundThreshold(e.target.value)} min="0" step="0.01" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                A warning banner will appear on the Personal Loans dashboard when the fund drops below this threshold.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Button
             onClick={handleSave} 
             disabled={isSaving}
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
