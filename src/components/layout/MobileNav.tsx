@@ -35,9 +35,10 @@ const allAdminNavItems: NavItem[] = [
 
 export function MobileNav() {
   const location = useLocation();
-  const { isAdmin, canAccessModule } = useAuth();
+  const { isAdmin, canAccessModule, userRoles } = useAuth();
   
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const adminDashRoute = getDashboardRoute(userRoles);
   
   let navItems: NavItem[];
   if (isAdminRoute && isAdmin) {
