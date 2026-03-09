@@ -49,6 +49,7 @@ import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLedger from "./pages/admin/AdminLedger";
 import AdminMigrationValidation from "./pages/admin/AdminMigrationValidation";
+import AdminEmergencyEventDetail from "./pages/admin/AdminEmergencyEventDetail";
 
 import NotFound from "./pages/NotFound";
 
