@@ -21,6 +21,8 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import EmergencyAdminDashboard from "./pages/admin/EmergencyAdminDashboard";
+import AccidentAdminDashboard from "./pages/admin/AccidentAdminDashboard";
+import FuneralAdminDashboard from "./pages/admin/FuneralAdminDashboard";
 import PetrolLoanDashboard from "./pages/admin/PetrolLoanDashboard";
 import PersonalLoanDashboard from "./pages/admin/PersonalLoanDashboard";
 import AdminMembers from "./pages/admin/AdminMembers";
@@ -29,8 +31,14 @@ import AdminLoans from "./pages/admin/AdminLoans";
 import AdminPetrolLoans from "./pages/admin/AdminPetrolLoans";
 import AdminPersonalLoans from "./pages/admin/AdminPersonalLoans";
 import AdminEvents from "./pages/admin/AdminEvents";
+import AdminAccidentEvents from "./pages/admin/AdminAccidentEvents";
+import AdminFuneralEvents from "./pages/admin/AdminFuneralEvents";
 import AdminEmergencyPayments from "./pages/admin/AdminEmergencyPayments";
+import AdminAccidentPayments from "./pages/admin/AdminAccidentPayments";
+import AdminFuneralPayments from "./pages/admin/AdminFuneralPayments";
 import AdminEmergencyReports from "./pages/admin/AdminEmergencyReports";
+import AdminAccidentReports from "./pages/admin/AdminAccidentReports";
+import AdminFuneralReports from "./pages/admin/AdminFuneralReports";
 import AdminPetrolLoanReports from "./pages/admin/AdminPetrolLoanReports";
 import AdminPersonalLoanReports from "./pages/admin/AdminPersonalLoanReports";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -68,22 +76,30 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
             <Route path="/admin/emergency-dashboard" element={<EmergencyAdminDashboard />} />
+            <Route path="/admin/accident-dashboard" element={<AccidentAdminDashboard />} />
+            <Route path="/admin/funeral-dashboard" element={<FuneralAdminDashboard />} />
             <Route path="/admin/petrol-dashboard" element={<PetrolLoanDashboard />} />
             <Route path="/admin/personal-loan-dashboard" element={<PersonalLoanDashboard />} />
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/verify" element={<AdminVerify />} />
+            <Route path="/admin/cycles" element={<AdminCycles />} />
             <Route path="/admin/loans" element={<AdminLoans />} />
             <Route path="/admin/petrol-loans" element={<AdminPetrolLoans />} />
             <Route path="/admin/personal-loans" element={<AdminPersonalLoans />} />
             <Route path="/admin/events" element={<AdminEvents />} />
+            <Route path="/admin/accident-events" element={<AdminAccidentEvents />} />
+            <Route path="/admin/funeral-events" element={<AdminFuneralEvents />} />
             <Route path="/admin/emergency-payments" element={<AdminEmergencyPayments />} />
+            <Route path="/admin/accident-payments" element={<AdminAccidentPayments />} />
+            <Route path="/admin/funeral-payments" element={<AdminFuneralPayments />} />
             <Route path="/admin/emergency-reports" element={<AdminEmergencyReports />} />
+            <Route path="/admin/accident-reports" element={<AdminAccidentReports />} />
+            <Route path="/admin/funeral-reports" element={<AdminFuneralReports />} />
             <Route path="/admin/petrol-loan-reports" element={<AdminPetrolLoanReports />} />
             <Route path="/admin/personal-loan-reports" element={<AdminPersonalLoanReports />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
-            <Route path="/admin/cycles" element={<AdminCycles />} />
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/ledger" element={<AdminLedger />} />
             
