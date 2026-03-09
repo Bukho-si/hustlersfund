@@ -147,10 +147,8 @@ export default function Loans() {
                 </div>
 
                 <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Principal amount</span>
-                    <span className="font-medium">{formatCurrency(Number(loan.amount))}</span>
-                  </div>
+                  <span className="text-muted-foreground">Principal amount</span>
+                  <span className="font-medium text-right">{formatCurrency(Number(loan.amount))}</span>
                   {loan.interest_rate_percent !== null && loan.interest_rate_percent > 0 && (
                     <>
                       <div className="flex justify-between">
