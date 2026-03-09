@@ -81,20 +81,27 @@ function useLoansReportData() {
   });
 }
 
-export function LoansReport() {
+interface LoansReportProps {
+  loanTypeFilter?: 'petrol' | 'personal';
+}
+
+export function LoansReport({ loanTypeFilter }: LoansReportProps = {}) {
   const { data, isLoading } = useLoansReportData();
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
 
   const filtered = useMemo(() => {
-    const all = data?.loans || [];
+    let all = data?.loans || [];
+    if (loanTypeFilter) {
+      all = all.filter(l => l.type === loanTypeFilter);
+    }
     return all.filter(l => {
       const d = new Date(l.requestedAt);
       if (fromDate && d < startOfDay(fromDate)) return false;
       if (toDate && d > endOfDay(toDate)) return false;
       return true;
     });
-  }, [data?.loans, fromDate, toDate]);
+  }, [data?.loans, fromDate, toDate, loanTypeFilter]);
 
   const summary = useMemo(() => {
     const approved = filtered.filter(l => l.status === 'approved');

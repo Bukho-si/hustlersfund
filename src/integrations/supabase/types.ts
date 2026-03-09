@@ -499,6 +499,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -509,7 +510,13 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "member" | "admin"
+      app_role:
+        | "member"
+        | "admin"
+        | "super_admin"
+        | "emergency_admin"
+        | "petrol_loan_admin"
+        | "personal_loan_admin"
       emergency_due_status: "unpaid" | "paid"
       emergency_event_status: "active" | "closed"
       emergency_type: "funeral" | "accident"
@@ -650,7 +657,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["member", "admin"],
+      app_role: [
+        "member",
+        "admin",
+        "super_admin",
+        "emergency_admin",
+        "petrol_loan_admin",
+        "personal_loan_admin",
+      ],
       emergency_due_status: ["unpaid", "paid"],
       emergency_event_status: ["active", "closed"],
       emergency_type: ["funeral", "accident"],

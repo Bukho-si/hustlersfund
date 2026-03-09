@@ -22,11 +22,18 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminMembers from "./pages/admin/AdminMembers";
 import AdminVerify from "./pages/admin/AdminVerify";
 import AdminLoans from "./pages/admin/AdminLoans";
+import AdminPetrolLoans from "./pages/admin/AdminPetrolLoans";
+import AdminPersonalLoans from "./pages/admin/AdminPersonalLoans";
 import AdminEvents from "./pages/admin/AdminEvents";
+import AdminEmergencyPayments from "./pages/admin/AdminEmergencyPayments";
+import AdminEmergencyReports from "./pages/admin/AdminEmergencyReports";
+import AdminPetrolLoanReports from "./pages/admin/AdminPetrolLoanReports";
+import AdminPersonalLoanReports from "./pages/admin/AdminPersonalLoanReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
+import AdminRoles from "./pages/admin/AdminRoles";
 
 import NotFound from "./pages/NotFound";
 
@@ -57,11 +64,18 @@ const App = () => (
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/verify" element={<AdminVerify />} />
             <Route path="/admin/loans" element={<AdminLoans />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/petrol-loans" element={<AdminPetrolLoans />} />
+            <Route path="/admin/personal-loans" element={<AdminPersonalLoans />} />
             <Route path="/admin/events" element={<AdminEvents />} />
+            <Route path="/admin/emergency-payments" element={<AdminEmergencyPayments />} />
+            <Route path="/admin/emergency-reports" element={<AdminEmergencyReports />} />
+            <Route path="/admin/petrol-loan-reports" element={<AdminPetrolLoanReports />} />
+            <Route path="/admin/personal-loan-reports" element={<AdminPersonalLoanReports />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             <Route path="/admin/cycles" element={<AdminCycles />} />
+            <Route path="/admin/roles" element={<AdminRoles />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
