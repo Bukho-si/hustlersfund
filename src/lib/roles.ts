@@ -27,8 +27,7 @@ const ROLE_MODULES: Record<string, AdminModule[]> = {
     'petrol_loans', 'personal_loans',
     'emergency_events', 'emergency_payments', 'emergency_reports',
     'petrol_loan_reports', 'personal_loan_reports',
-    'reports', 'roles', 'settings', 'contribution_settings',
-  ],
+    'reports', 'roles', 'settings', 'contribution_settings', 'ledger',
   // Legacy admin role treated as super_admin
   admin: [
     'dashboard', 'members', 'verify', 'cycles',
