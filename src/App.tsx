@@ -50,6 +50,7 @@ import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLedger from "./pages/admin/AdminLedger";
+import AdminLoanManagement from "./pages/admin/AdminLoanManagement";
 import AdminMigrationValidation from "./pages/admin/AdminMigrationValidation";
 import AdminEmergencyEventDetail from "./pages/admin/AdminEmergencyEventDetail";
 
@@ -110,6 +111,7 @@ const App = () => (
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/ledger" element={<AdminLedger />} />
+            <Route path="/admin/loan-management" element={<AdminLoanManagement />} />
             <Route path="/admin/migration-validation" element={<AdminMigrationValidation />} />
             <Route path="/admin/emergency-event/:eventId" element={<AdminEmergencyEventDetail />} />
             
