@@ -179,6 +179,8 @@ export default function AdminSettings() {
         metadata_json: {
           petrol_interest_rate_percent: petrolRateNum,
           personal_interest_rate_percent: personalRateNum,
+          petrol_repayment_days: petrolDaysNum,
+          personal_repayment_days: personalDaysNum,
           request_window: { start: windowStart, end: windowEnd, active: windowActive },
         },
       });
@@ -187,6 +189,8 @@ export default function AdminSettings() {
         ...settings,
         petrol_interest_rate_percent: petrolRateNum,
         personal_interest_rate_percent: personalRateNum,
+        petrol_repayment_days: petrolDaysNum,
+        personal_repayment_days: personalDaysNum,
       });
 
       toast({ title: 'Settings updated' });
