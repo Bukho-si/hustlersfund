@@ -174,24 +174,22 @@ export default function Emergencies() {
                   </p>
                 )}
 
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amount due</span>
-                    <span className="font-medium">{formatCurrency(Number(due.amount_due))}</span>
-                  </div>
+                <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
+                  <span className="text-muted-foreground">Amount due</span>
+                  <span className="font-medium text-right">{formatCurrency(Number(due.amount_due))}</span>
                   {Number(due.amount_paid) > 0 && (
-                    <div className="flex justify-between text-success">
-                      <span>Amount paid</span>
-                      <span>{formatCurrency(Number(due.amount_paid))}</span>
-                    </div>
+                    <>
+                      <span className="text-success">Amount paid</span>
+                      <span className="text-success text-right">{formatCurrency(Number(due.amount_paid))}</span>
+                    </>
                   )}
                   {due.status === 'unpaid' && (
-                    <div className="flex justify-between font-semibold pt-1">
-                      <span>Remaining</span>
-                      <span className="text-warning">
+                    <>
+                      <span className="font-semibold pt-1">Remaining</span>
+                      <span className="font-semibold text-warning text-right pt-1">
                         {formatCurrency(Number(due.amount_due) - Number(due.amount_paid))}
                       </span>
-                    </div>
+                    </>
                   )}
                 </div>
 

@@ -129,7 +129,7 @@ export default function MyWallet() {
       </Card>
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         {balanceCards.map((card) => (
           <Card key={card.label} className="animate-fade-in">
             <CardContent className="p-4">

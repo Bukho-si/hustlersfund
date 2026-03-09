@@ -157,11 +157,12 @@ export default function Loans() {
                       <span className="font-medium text-right">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
                     </>
                   )}
-                {(loan.status === 'approved' || loan.status === 'disbursed') && (
-                    <div className="flex justify-between pt-1 border-t mt-1">
+                  {(loan.status === 'approved' || loan.status === 'disbursed') && (
+                    <>
+                      <span className="text-muted-foreground pt-1 border-t col-span-2" />
                       <span className="text-muted-foreground">Outstanding balance</span>
-                      <span className="font-semibold text-accent">{formatCurrency(Number(loan.outstanding_balance))}</span>
-                    </div>
+                      <span className="font-semibold text-accent text-right">{formatCurrency(Number(loan.outstanding_balance))}</span>
+                    </>
                   )}
                 </div>
 
