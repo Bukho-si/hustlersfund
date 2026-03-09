@@ -14,7 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { useContributionSettings } from '@/hooks/useContributionSettings';
-import { Plus, AlertTriangle, Car, Heart, Loader2, Calendar } from 'lucide-react';
+import { Plus, Car, Heart, Loader2, Calendar, Clock } from 'lucide-react';
+import { addDays, format } from 'date-fns';
 
 interface EmergencyEvent {
   id: string;
@@ -25,6 +26,7 @@ interface EmergencyEvent {
   amount_per_member: number;
   status: string;
   created_at: string;
+  payment_deadline: string | null;
 }
 
 interface EmergencyEventsFilteredProps {
@@ -43,14 +45,23 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
+  const [amountPerMember, setAmountPerMember] = useState('');
+  const [paymentWindow, setPaymentWindow] = useState('14');
 
   const typeLabel = emergencyType === 'funeral' ? 'Funeral' : 'Accident';
   const TypeIcon = emergencyType === 'funeral' ? Heart : Car;
-  const amountPerMember = emergencyType === 'funeral' 
+  const defaultAmount = emergencyType === 'funeral' 
     ? settings.funeral_emergency_amount 
     : settings.accident_emergency_amount;
 
   useEffect(() => { fetchEvents(); }, []);
+
+  // Set default amount when settings load
+  useEffect(() => {
+    if (!amountPerMember) {
+      setAmountPerMember(String(defaultAmount));
+    }
+  }, [defaultAmount]);
 
   const fetchEvents = async () => {
     const { data, error } = await supabase
@@ -59,18 +70,21 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
       .eq('type', emergencyType)
       .order('created_at', { ascending: false });
 
-    if (!error) setEvents(data || []);
+    if (!error) setEvents((data || []) as EmergencyEvent[]);
     setIsLoading(false);
   };
 
   const createEvent = async () => {
-    if (!user || !title.trim() || !eventDate) {
+    if (!user || !title.trim() || !eventDate || !amountPerMember) {
       toast({ title: 'Missing information', description: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
 
     setIsCreating(true);
     try {
+      const amount = Number(amountPerMember);
+      const deadline = format(addDays(new Date(eventDate), Number(paymentWindow)), 'yyyy-MM-dd');
+      
       const { data: event, error: eventError } = await supabase
         .from('emergency_events')
         .insert({
@@ -78,7 +92,8 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
           title: title.trim(),
           description: description.trim() || null,
           event_date: eventDate,
-          amount_per_member: amountPerMember,
+          amount_per_member: amount,
+          payment_deadline: deadline,
           status: 'active',
           created_by: user.id,
         })
@@ -97,7 +112,7 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
         const dues = members.map(m => ({
           event_id: event.id,
           member_user_id: m.user_id,
-          amount_due: amountPerMember,
+          amount_due: amount,
           amount_paid: 0,
           status: 'unpaid' as const,
         }));
@@ -105,18 +120,17 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
         if (duesError) throw duesError;
       }
 
-      // Audit log
       await supabase.from('audit_log').insert({
         actor_user_id: user.id,
         action: `${emergencyType}_event_created`,
         entity_type: 'emergency_event',
         entity_id: event.id,
-        metadata_json: { title: title.trim(), type: emergencyType, amount_per_member: amountPerMember },
+        metadata_json: { title: title.trim(), type: emergencyType, amount_per_member: amount, payment_deadline: deadline },
       });
 
       toast({ title: 'Event created', description: `${typeLabel} dues created for ${members?.length || 0} members` });
       setIsDialogOpen(false);
-      setTitle(''); setDescription(''); setEventDate('');
+      setTitle(''); setDescription(''); setEventDate(''); setAmountPerMember(String(defaultAmount)); setPaymentWindow('14');
       fetchEvents();
     } catch (error: any) {
       toast({ title: 'Creation failed', description: error.message, variant: 'destructive' });
@@ -155,15 +169,24 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
               <div className="space-y-4 pt-4">
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
                   <TypeIcon className="h-5 w-5" />
-                  <span className="text-sm font-medium">{typeLabel} — {formatCurrency(amountPerMember)}/member</span>
+                  <span className="text-sm font-medium">{typeLabel} Emergency Event</span>
                 </div>
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Event Name</Label>
                   <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder={`e.g., ${typeLabel} support for member`} className="mt-1.5" />
+                </div>
+                <div>
+                  <Label htmlFor="amountPerMember">Contribution Amount per Member (R)</Label>
+                  <Input id="amountPerMember" type="number" value={amountPerMember} onChange={e => setAmountPerMember(e.target.value)} placeholder={String(defaultAmount)} className="mt-1.5" />
                 </div>
                 <div>
                   <Label htmlFor="eventDate">Event Date</Label>
                   <Input id="eventDate" type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-1.5" />
+                </div>
+                <div>
+                  <Label htmlFor="paymentWindow">Payment Window (days)</Label>
+                  <Input id="paymentWindow" type="number" value={paymentWindow} onChange={e => setPaymentWindow(e.target.value)} placeholder="14" className="mt-1.5" />
+                  <p className="text-xs text-muted-foreground mt-1">Default: 14 days from event date</p>
                 </div>
                 <div>
                   <Label htmlFor="description">Description (optional)</Label>
@@ -211,12 +234,19 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
                 </div>
                 {event.description && <p className="text-sm text-muted-foreground mb-3">{event.description}</p>}
                 <div className="flex items-center justify-between">
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">Amount per member: </span>
-                    <span className="font-semibold">{formatCurrency(Number(event.amount_per_member))}</span>
-                  </p>
+                  <div>
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Per member: </span>
+                      <span className="font-semibold">{formatCurrency(Number(event.amount_per_member))}</span>
+                    </p>
+                    {event.payment_deadline && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                        <Clock className="h-3 w-3" />Deadline: {formatDate(event.payment_deadline)}
+                      </p>
+                    )}
+                  </div>
                   {event.status === 'active' && (
-                    <Button variant="outline" size="sm" onClick={() => closeEvent(event.id)}>Close Event</Button>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); closeEvent(event.id); }}>Close Event</Button>
                   )}
                 </div>
               </CardContent>
