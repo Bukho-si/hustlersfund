@@ -36,6 +36,8 @@ export default function AdminReports() {
   const { data: memberBalances, isLoading: balancesLoading } = useMemberBalances();
   const { data: paymentsLedger } = usePaymentsLedger();
   const { data: loansLedger } = useLoansLedger();
+  const { data: ledgerSummary, isLoading: ledgerSummaryLoading } = useMemberLedgerSummary();
+  const { data: ledgerEntries, isLoading: ledgerEntriesLoading } = useLedgerEntries({ limit: 50 });
 
   useEffect(() => {
     if (summaryUpdated) {
