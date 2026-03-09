@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -14,6 +14,7 @@ import {
 import { ContributionsChart } from '@/components/reports/ContributionsChart';
 import { LoanDistributionChart } from '@/components/reports/LoanDistributionChart';
 import { useWeeklyContributions, useLoanDistribution } from '@/hooks/useFinancialReports';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 interface Stats {
   activeMembers: number;
@@ -36,9 +37,13 @@ export default function SuperAdminDashboard() {
   const [currentCycle, setCurrentCycle] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const stableFetchAll = useCallback(() => { fetchAll(); }, []);
+
   useEffect(() => {
     fetchAll();
   }, []);
+
+  useRealtimeRefresh(['payments', 'loans', 'loan_repayments', 'emergency_events', 'member_profiles'], stableFetchAll);
 
   const fetchAll = async () => {
     try {
