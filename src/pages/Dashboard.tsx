@@ -26,7 +26,9 @@ import {
   Users,
   Calendar,
   RefreshCw,
-  Info
+  Info,
+  Fuel,
+  DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 
