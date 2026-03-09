@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/constants';
 import {
-  Loader2, CheckCircle2, XCircle, Shield, Database, ArrowRight, RefreshCw
+  Loader2, CheckCircle2, XCircle, Shield, Database, ArrowRight, RefreshCw, Wrench
 } from 'lucide-react';
 
 interface MemberValidation {
@@ -39,6 +39,8 @@ interface MigrationStats {
 export default function AdminMigrationValidation() {
   const { toast } = useToast();
   const [isRunning, setIsRunning] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
+  const [fixedCount, setFixedCount] = useState<number | null>(null);
   const [validations, setValidations] = useState<MemberValidation[]>([]);
   const [stats, setStats] = useState<MigrationStats | null>(null);
   const [auditCheck, setAuditCheck] = useState<{ total: number; types: Record<string, number> } | null>(null);
@@ -172,6 +174,41 @@ export default function AdminMigrationValidation() {
     }
   };
 
+  const fixMismatches = async () => {
+    const mismatched = validations.filter(v => !v.match);
+    if (mismatched.length === 0) {
+      toast({ title: 'No mismatches to fix' });
+      return;
+    }
+
+    setIsFixing(true);
+    setFixedCount(null);
+    let fixed = 0;
+
+    try {
+      for (const member of mismatched) {
+        const { error } = await supabase.rpc('recalculate_wallet_balance', {
+          _member_user_id: member.member_user_id,
+        });
+        if (error) {
+          console.error(`Failed to fix ${member.member_name}:`, error);
+        } else {
+          fixed++;
+        }
+      }
+
+      setFixedCount(fixed);
+      toast({ title: `Fixed ${fixed} of ${mismatched.length} wallets` });
+
+      // Re-run validation to show updated results
+      await runValidation();
+    } catch (err: any) {
+      toast({ title: 'Fix failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
   return (
     <AppLayout requireAdmin>
       <PageHeader
@@ -189,6 +226,30 @@ export default function AdminMigrationValidation() {
           {isRunning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
           Run Validation
         </Button>
+
+        {/* Fix Mismatches Button */}
+        {stats && stats.mismatchedMembers > 0 && (
+          <Button
+            onClick={fixMismatches}
+            disabled={isFixing || isRunning}
+            variant="destructive"
+            className="w-full"
+          >
+            {isFixing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wrench className="h-4 w-4 mr-2" />}
+            Fix {stats.mismatchedMembers} Mismatched Wallets
+          </Button>
+        )}
+
+        {fixedCount !== null && (
+          <Card className="ring-2 ring-success">
+            <CardContent className="p-3 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <p className="text-sm font-medium text-success">
+                Recalculated {fixedCount} wallet balances from transaction history
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Stats */}
         {stats && (
