@@ -37,9 +37,13 @@ export default function SuperAdminDashboard() {
   const [currentCycle, setCurrentCycle] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const stableFetchAll = useCallback(() => { fetchAll(); }, []);
+
   useEffect(() => {
     fetchAll();
   }, []);
+
+  useRealtimeRefresh(['payments', 'loans', 'loan_repayments', 'emergency_events', 'member_profiles'], stableFetchAll);
 
   const fetchAll = async () => {
     try {
