@@ -64,20 +64,23 @@ export function useMyWallet(memberUserId?: string) {
     queryKey: ['member-wallet', memberUserId],
     queryFn: async (): Promise<MemberWallet | null> => {
       if (!memberUserId) return null;
-      const { data, error } = await supabase
-        .from('member_wallets' as any)
+      const { data, error } = await (supabase as any)
+        .from('member_wallets')
         .select('*')
         .eq('member_user_id', memberUserId)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
+      const d = data as any;
       return {
-        ...data,
-        contribution_balance: Number(data.contribution_balance),
-        petrol_loan_balance: Number(data.petrol_loan_balance),
-        personal_loan_balance: Number(data.personal_loan_balance),
-        emergency_contributions_total: Number(data.emergency_contributions_total),
-        joining_fee_balance: Number(data.joining_fee_balance),
+        id: d.id,
+        member_user_id: d.member_user_id,
+        contribution_balance: Number(d.contribution_balance),
+        petrol_loan_balance: Number(d.petrol_loan_balance),
+        personal_loan_balance: Number(d.personal_loan_balance),
+        emergency_contributions_total: Number(d.emergency_contributions_total),
+        joining_fee_balance: Number(d.joining_fee_balance),
+        updated_at: d.updated_at,
       } as MemberWallet;
     },
     enabled: !!memberUserId,
