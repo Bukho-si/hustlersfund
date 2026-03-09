@@ -151,14 +151,10 @@ export default function Loans() {
                   <span className="font-medium text-right">{formatCurrency(Number(loan.amount))}</span>
                   {loan.interest_rate_percent !== null && loan.interest_rate_percent > 0 && (
                     <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
-                        <span className="font-medium text-warning">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total repayable</span>
-                        <span className="font-medium">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
-                      </div>
+                      <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
+                      <span className="font-medium text-warning text-right">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
+                      <span className="text-muted-foreground">Total repayable</span>
+                      <span className="font-medium text-right">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
                     </>
                   )}
                 {(loan.status === 'approved' || loan.status === 'disbursed') && (
