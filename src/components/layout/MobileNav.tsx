@@ -3,6 +3,7 @@ import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminModule } from '@/lib/roles';
+import { getDashboardRoute } from '@/lib/roleRedirect';
 
 interface NavItem {
   href: string;
