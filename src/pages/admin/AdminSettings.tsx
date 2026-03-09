@@ -62,9 +62,11 @@ export default function AdminSettings() {
     ]);
 
     if (settingsRes.data) {
-      setSettings(settingsRes.data);
+      setSettings(settingsRes.data as any);
       setPetrolRate(String(settingsRes.data.petrol_interest_rate_percent));
       setPersonalRate(String(settingsRes.data.personal_interest_rate_percent));
+      setPetrolRepayDays(String((settingsRes.data as any).petrol_repayment_days ?? 7));
+      setPersonalRepayDays(String((settingsRes.data as any).personal_repayment_days ?? 30));
     }
 
     if (windowRes.data) {
