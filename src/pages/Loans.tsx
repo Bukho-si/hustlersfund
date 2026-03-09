@@ -4,12 +4,15 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { Plus, Wallet, Fuel, User, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
+import { Plus, Wallet, Fuel, User, ChevronDown, ChevronUp, CreditCard, AlertTriangle, Clock, Calendar } from 'lucide-react';
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
+import { format, isPast, differenceInDays } from 'date-fns';
 
 interface Loan {
   id: string;
@@ -23,6 +26,9 @@ interface Loan {
   interest_amount: number | null;
   total_repayable: number | null;
   repayment_period: string | null;
+  due_date: string | null;
+  approved_at: string | null;
+  disbursed_at: string | null;
 }
 
 export default function Loans() {
@@ -36,14 +42,11 @@ export default function Loans() {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchLoans();
-    }
+    if (user) fetchLoans();
   }, [user]);
 
   const fetchLoans = async () => {
     if (!user) return;
-
     const { data, error } = await supabase
       .from('loans')
       .select('*')
@@ -53,7 +56,7 @@ export default function Loans() {
     if (error) {
       console.error('Error fetching loans:', error);
     } else {
-      setLoans(data || []);
+      setLoans((data as any[]) || []);
     }
     setIsLoading(false);
   };
@@ -66,14 +69,29 @@ export default function Loans() {
     );
   };
 
+  const isOverdue = (loan: Loan) => {
+    if (!loan.due_date) return false;
+    if (loan.status !== 'approved' && loan.status !== 'disbursed') return false;
+    if (Number(loan.outstanding_balance) <= 0) return false;
+    return isPast(new Date(loan.due_date));
+  };
+
+  const getRepaymentProgress = (loan: Loan) => {
+    const total = Number(loan.total_repayable || loan.amount);
+    const outstanding = Number(loan.outstanding_balance);
+    if (total <= 0) return 100;
+    const paid = total - outstanding;
+    return Math.min(100, Math.max(0, (paid / total) * 100));
+  };
+
   const totalOutstanding = loans
     .filter(l => l.status === 'approved' || l.status === 'disbursed')
     .reduce((sum, l) => sum + Number(l.outstanding_balance), 0);
 
   return (
     <AppLayout>
-      <PageHeader 
-        title="Loans" 
+      <PageHeader
+        title="Loans"
         subtitle="Request and manage loans"
         action={
           <Link to="/loans/request">
@@ -85,7 +103,6 @@ export default function Loans() {
         }
       />
 
-      {/* Outstanding Balance Card */}
       {totalOutstanding > 0 && (
         <Card className="mb-4 bg-primary text-primary-foreground">
           <CardContent className="p-4">
@@ -94,8 +111,6 @@ export default function Loans() {
           </CardContent>
         </Card>
       )}
-
-      {/* Per-Loan Submit Payment Buttons - moved into each loan card */}
 
       <div className="space-y-3">
         {isLoading ? (
@@ -124,93 +139,139 @@ export default function Loans() {
             </CardContent>
           </Card>
         ) : (
-          loans.map((loan, index) => (
-            <Card 
-              key={loan.id} 
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {getLoanIcon(loan.type)}
-                    <div>
-                      <p className="font-medium capitalize">
-                        {loan.type} Loan
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(loan.requested_at)}
-                      </p>
+          loans.map((loan, index) => {
+            const overdue = isOverdue(loan);
+            const progress = getRepaymentProgress(loan);
+            const isActive = loan.status === 'approved' || loan.status === 'disbursed';
+
+            return (
+              <Card
+                key={loan.id}
+                className={`animate-fade-in ${overdue ? 'border-destructive/50' : ''}`}
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <CardContent className="p-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {getLoanIcon(loan.type)}
+                      <div>
+                        <p className="font-medium capitalize">{loan.type} Loan</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(loan.requested_at)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {overdue && (
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                          <AlertTriangle className="h-3 w-3 mr-0.5" />
+                          Overdue
+                        </Badge>
+                      )}
+                      <StatusBadge status={loan.status} variant="loan" />
                     </div>
                   </div>
-                  <StatusBadge status={loan.status} variant="loan" />
-                </div>
 
-                <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
-                  <span className="text-muted-foreground">Principal amount</span>
-                  <span className="font-medium text-right">{formatCurrency(Number(loan.amount))}</span>
-                  {loan.interest_rate_percent !== null && loan.interest_rate_percent > 0 && (
-                    <>
-                      <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
-                      <span className="font-medium text-warning text-right">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
-                      <span className="text-muted-foreground">Total repayable</span>
-                      <span className="font-medium text-right">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
-                    </>
+                  {/* Overdue warning */}
+                  {overdue && (
+                    <div className="bg-destructive/10 rounded-lg p-2.5 flex items-center gap-2 mb-3">
+                      <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                      <p className="text-xs text-destructive font-medium">
+                        This loan is overdue by {differenceInDays(new Date(), new Date(loan.due_date!))} days. Please settle your balance.
+                      </p>
+                    </div>
                   )}
-                  {(loan.status === 'approved' || loan.status === 'disbursed') && (
-                    <>
-                      <span className="text-muted-foreground pt-1 border-t col-span-2" />
-                      <span className="text-muted-foreground">Outstanding balance</span>
-                      <span className="font-semibold text-accent text-right">{formatCurrency(Number(loan.outstanding_balance))}</span>
-                    </>
-                  )}
-                </div>
 
-                {loan.reason && (
-                  <p className="text-xs text-muted-foreground mt-2 italic">
-                    "{loan.reason}"
-                  </p>
-                )}
+                  {/* Financial details */}
+                  <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
+                    <span className="text-muted-foreground">Loan Amount</span>
+                    <span className="font-medium text-right">{formatCurrency(Number(loan.amount))}</span>
 
-                {(loan.status === 'approved' || loan.status === 'disbursed') && Number(loan.outstanding_balance) > 0 && (
-                  <Link to={`/payments/submit?type=loan_repayment&amount=${loan.outstanding_balance}&loanType=${loan.type}&interest=${loan.interest_amount || 0}&loanId=${loan.id}`}>
-                    <Button className="w-full mt-3 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" size="sm">
-                      <CreditCard className="h-4 w-4" />
-                      Submit Payment ({formatCurrency(Number(loan.outstanding_balance))})
-                    </Button>
-                  </Link>
-                )}
+                    {loan.interest_rate_percent !== null && loan.interest_rate_percent > 0 && (
+                      <>
+                        <span className="text-muted-foreground">Interest ({loan.interest_rate_percent}%)</span>
+                        <span className="font-medium text-warning text-right">+{formatCurrency(Number(loan.interest_amount || 0))}</span>
+                        <span className="text-muted-foreground">Total Repayable</span>
+                        <span className="font-medium text-right">{formatCurrency(Number(loan.total_repayable || loan.amount))}</span>
+                      </>
+                    )}
 
-                {(loan.status === 'approved' || loan.status === 'disbursed') && (
-                  <div className="mt-3 pt-3 border-t">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground p-0 h-auto w-full justify-start"
-                      onClick={() => toggleExpanded(loan.id)}
-                    >
-                      {expandedLoanId === loan.id ? (
-                        <>
-                          <ChevronUp className="h-4 w-4 mr-1" />
-                          Hide Repayment History
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="h-4 w-4 mr-1" />
-                          View Repayment History
-                        </>
-                      )}
-                    </Button>
-                    {expandedLoanId === loan.id && (
-                      <div className="mt-2">
-                        <RepaymentHistory loanId={loan.id} />
-                      </div>
+                    {isActive && (
+                      <>
+                        <span className="text-muted-foreground pt-1 border-t col-span-2" />
+                        <span className="text-muted-foreground">Outstanding Balance</span>
+                        <span className="font-semibold text-accent text-right">{formatCurrency(Number(loan.outstanding_balance))}</span>
+                      </>
+                    )}
+
+                    {/* Repayment deadline */}
+                    {loan.due_date && isActive && (
+                      <>
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          Repayment Deadline
+                        </span>
+                        <span className={`font-medium text-right ${overdue ? 'text-destructive' : 'text-foreground'}`}>
+                          {format(new Date(loan.due_date), 'dd MMM yyyy')}
+                        </span>
+                      </>
                     )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
+
+                  {/* Repayment progress */}
+                  {isActive && Number(loan.outstanding_balance) > 0 && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Repayment Progress</span>
+                        <span className="font-medium">{Math.round(progress)}%</span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                  )}
+
+                  {loan.reason && (
+                    <p className="text-xs text-muted-foreground mt-2 italic">"{loan.reason}"</p>
+                  )}
+
+                  {isActive && Number(loan.outstanding_balance) > 0 && (
+                    <Link to={`/payments/submit?type=loan_repayment&amount=${loan.outstanding_balance}&loanType=${loan.type}&interest=${loan.interest_amount || 0}&loanId=${loan.id}`}>
+                      <Button className="w-full mt-3 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" size="sm">
+                        <CreditCard className="h-4 w-4" />
+                        Submit Payment ({formatCurrency(Number(loan.outstanding_balance))})
+                      </Button>
+                    </Link>
+                  )}
+
+                  {isActive && (
+                    <div className="mt-3 pt-3 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground p-0 h-auto w-full justify-start"
+                        onClick={() => toggleExpanded(loan.id)}
+                      >
+                        {expandedLoanId === loan.id ? (
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            Hide Repayment History
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            View Repayment History
+                          </>
+                        )}
+                      </Button>
+                      {expandedLoanId === loan.id && (
+                        <div className="mt-2">
+                          <RepaymentHistory loanId={loan.id} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
     </AppLayout>

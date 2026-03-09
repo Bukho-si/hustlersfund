@@ -30,6 +30,8 @@ export default function AdminSettings() {
   
   const [petrolRate, setPetrolRate] = useState('');
   const [personalRate, setPersonalRate] = useState('');
+  const [petrolRepayDays, setPetrolRepayDays] = useState('7');
+  const [personalRepayDays, setPersonalRepayDays] = useState('30');
 
   // Petrol request window
   const [windowStart, setWindowStart] = useState('06:00');
