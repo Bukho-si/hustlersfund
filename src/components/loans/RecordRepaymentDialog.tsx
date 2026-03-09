@@ -82,13 +82,8 @@ export function RecordRepaymentDialog({
 
       if (repaymentError) throw repaymentError;
 
-      const newBalance = outstandingBalance - repaymentAmount;
-      const { error: loanError } = await supabase
-        .from('loans')
-        .update({ outstanding_balance: newBalance })
-        .eq('id', loanId);
-
-      if (loanError) throw loanError;
+      // outstanding_balance and status are auto-updated by the
+      // recalculate_loan_on_repayment database trigger — no manual update needed.
 
       const typeLabel = repaymentType === 'interest_only' ? 'Interest payment' 
         : repaymentType === 'full_payment' ? 'Full settlement' 
