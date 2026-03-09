@@ -234,7 +234,28 @@ export default function AdminLoanManagement() {
 
   return (
     <AppLayout requireAdmin>
-      <PageHeader title="Loan Management" subtitle="Centralized loan overview for all loan types" />
+      <PageHeader
+        title="Loan Management"
+        subtitle="Centralized loan overview for all loan types"
+        action={
+          <LoanExportButton data={{
+            applications,
+            activeLoans,
+            repayments: filteredRepayments.map(r => {
+              const loan = loans.find(l => l.id === r.loan_id);
+              return {
+                ...r,
+                _memberName: loan ? getName(loan.member_user_id) : '—',
+                _loanType: loan?.type || '—',
+                _recordedByName: getName(r.recorded_by),
+              };
+            }),
+            ledgerTxns: filteredTxns,
+            getName,
+            metrics: { totalApplications, totalActive, totalOutstanding, totalRepaid, overdueLoans },
+          }} />
+        }
+      />
 
       {/* Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
