@@ -306,12 +306,22 @@ export default function AdminDashboard() {
               )}
             </Link>
             <Link 
-              to="/admin/loans" 
+              to="/admin/petrol-loans" 
               className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-info" />
-                <span className="text-sm font-medium">Manage Loans</span>
+                <span className="text-sm font-medium">Petrol Loans</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link 
+              to="/admin/personal-loans" 
+              className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Personal Loans</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
