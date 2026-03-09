@@ -214,7 +214,7 @@ export default function Emergencies() {
                       className="h-2"
                     />
                   </div>
-                )
+                )}
 
                 {due.status === 'unpaid' && (
                   <p className="text-xs text-muted-foreground mt-3 italic">
