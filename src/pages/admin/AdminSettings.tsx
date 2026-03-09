@@ -144,6 +144,21 @@ export default function AdminSettings() {
         }
       }
 
+      // Update personal loan fund
+      if (personalFundId) {
+        const pBalanceNum = parseFloat(personalFundBalance);
+        const pThresholdNum = parseFloat(personalFundThreshold);
+        if (!isNaN(pBalanceNum) && !isNaN(pThresholdNum)) {
+          await supabase
+            .from('personal_loan_fund')
+            .update({
+              current_balance: pBalanceNum,
+              low_balance_threshold: pThresholdNum,
+            })
+            .eq('id', personalFundId);
+        }
+      }
+
       // Audit log
       await supabase.from('audit_log').insert({
         action: 'update_settings',
