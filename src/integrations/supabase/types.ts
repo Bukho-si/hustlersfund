@@ -297,9 +297,13 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           created_at: string
+          disbursed_at: string | null
+          disbursed_by: string | null
           id: string
           interest_amount: number | null
           interest_rate_percent: number | null
+          locked_at: string | null
+          locked_by: string | null
           member_user_id: string
           outstanding_balance: number
           reason: string | null
@@ -317,9 +321,13 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           created_at?: string
+          disbursed_at?: string | null
+          disbursed_by?: string | null
           id?: string
           interest_amount?: number | null
           interest_rate_percent?: number | null
+          locked_at?: string | null
+          locked_by?: string | null
           member_user_id: string
           outstanding_balance: number
           reason?: string | null
@@ -337,9 +345,13 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           created_at?: string
+          disbursed_at?: string | null
+          disbursed_by?: string | null
           id?: string
           interest_amount?: number | null
           interest_rate_percent?: number | null
+          locked_at?: string | null
+          locked_by?: string | null
           member_user_id?: string
           outstanding_balance?: number
           reason?: string | null
@@ -539,6 +551,41 @@ export type Database = {
           },
         ]
       }
+      petrol_loan_activity: {
+        Row: {
+          action: string
+          actor_user_id: string
+          created_at: string
+          details: string | null
+          id: string
+          loan_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          loan_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          loan_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petrol_loan_activity_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -631,7 +678,14 @@ export type Database = {
         | "emergency_contribution"
         | "late_fee"
         | "cash_fee"
-      loan_status: "pending" | "approved" | "rejected"
+      loan_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "requested"
+        | "under_review"
+        | "disbursed"
+        | "repaid"
       loan_type: "petrol" | "personal"
       member_status: "pending" | "active" | "suspended" | "exited"
       payment_method: "eft" | "cash_atm"
@@ -804,7 +858,15 @@ export const Constants = {
         "late_fee",
         "cash_fee",
       ],
-      loan_status: ["pending", "approved", "rejected"],
+      loan_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "requested",
+        "under_review",
+        "disbursed",
+        "repaid",
+      ],
       loan_type: ["petrol", "personal"],
       member_status: ["pending", "active", "suspended", "exited"],
       payment_method: ["eft", "cash_atm"],

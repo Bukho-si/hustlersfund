@@ -67,7 +67,7 @@ export default function Loans() {
   };
 
   const totalOutstanding = loans
-    .filter(l => l.status === 'approved')
+    .filter(l => l.status === 'approved' || l.status === 'disbursed')
     .reduce((sum, l) => sum + Number(l.outstanding_balance), 0);
 
   return (
@@ -163,7 +163,7 @@ export default function Loans() {
                       </div>
                     </>
                   )}
-                  {loan.status === 'approved' && (
+                {(loan.status === 'approved' || loan.status === 'disbursed') && (
                     <div className="flex justify-between pt-1 border-t mt-1">
                       <span className="text-muted-foreground">Outstanding balance</span>
                       <span className="font-semibold text-accent">{formatCurrency(Number(loan.outstanding_balance))}</span>
@@ -177,7 +177,7 @@ export default function Loans() {
                   </p>
                 )}
 
-                {loan.status === 'approved' && Number(loan.outstanding_balance) > 0 && (
+                {(loan.status === 'approved' || loan.status === 'disbursed') && Number(loan.outstanding_balance) > 0 && (
                   <Link to={`/payments/submit?type=loan_repayment&amount=${loan.outstanding_balance}&loanType=${loan.type}&interest=${loan.interest_amount || 0}&loanId=${loan.id}`}>
                     <Button className="w-full mt-3 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" size="sm">
                       <CreditCard className="h-4 w-4" />
@@ -186,7 +186,7 @@ export default function Loans() {
                   </Link>
                 )}
 
-                {loan.status === 'approved' && (
+                {(loan.status === 'approved' || loan.status === 'disbursed') && (
                   <div className="mt-3 pt-3 border-t">
                     <Button
                       variant="ghost"
