@@ -139,8 +139,8 @@ export function useAllWallets() {
   return useQuery({
     queryKey: ['all-wallets'],
     queryFn: async (): Promise<(MemberWallet & { memberName: string })[]> => {
-      const { data, error } = await supabase
-        .from('member_wallets' as any)
+      const { data, error } = await (supabase as any)
+        .from('member_wallets')
         .select('*')
         .order('updated_at', { ascending: false });
       if (error) throw error;
