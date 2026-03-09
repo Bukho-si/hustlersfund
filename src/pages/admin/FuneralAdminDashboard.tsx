@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import {
@@ -11,17 +12,28 @@ import {
 } from 'lucide-react';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
+interface EventBreakdown {
+  id: string;
+  title: string;
+  totalMembers: number;
+  paidMembers: number;
+  unpaidMembers: number;
+  collected: number;
+  target: number;
+}
+
 interface Stats {
   activeEvents: number;
   collected: number;
   pendingPayments: number;
   paidMembers: number;
   unpaidMembers: number;
+  events: EventBreakdown[];
 }
 
 export default function FuneralAdminDashboard() {
   const [stats, setStats] = useState<Stats>({
-    activeEvents: 0, collected: 0, pendingPayments: 0, paidMembers: 0, unpaidMembers: 0,
+    activeEvents: 0, collected: 0, pendingPayments: 0, paidMembers: 0, unpaidMembers: 0, events: [],
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,7 +45,7 @@ export default function FuneralAdminDashboard() {
     try {
       const { data: funeralEvents } = await supabase
         .from('emergency_events')
-        .select('id')
+        .select('id, title, amount_per_member')
         .eq('status', 'active')
         .eq('type', 'funeral');
 
@@ -43,7 +55,7 @@ export default function FuneralAdminDashboard() {
       if (eventIds.length > 0) {
         const { data } = await supabase
           .from('emergency_dues')
-          .select('amount_due, amount_paid, status')
+          .select('event_id, amount_due, amount_paid, status')
           .in('event_id', eventIds);
         allDues = data || [];
       }
@@ -52,12 +64,31 @@ export default function FuneralAdminDashboard() {
       const paid = allDues.filter(d => d.status === 'paid').length;
       const unpaid = allDues.filter(d => d.status === 'unpaid').length;
 
+      // Per-event breakdowns
+      const events: EventBreakdown[] = (funeralEvents || []).map(evt => {
+        const eventDues = allDues.filter(d => d.event_id === evt.id);
+        const evtPaid = eventDues.filter(d => d.status === 'paid').length;
+        const evtUnpaid = eventDues.filter(d => d.status === 'unpaid').length;
+        const evtCollected = eventDues.reduce((s, d) => s + Number(d.amount_paid), 0);
+        const evtTarget = eventDues.reduce((s, d) => s + Number(d.amount_due), 0);
+        return {
+          id: evt.id,
+          title: evt.title,
+          totalMembers: eventDues.length,
+          paidMembers: evtPaid,
+          unpaidMembers: evtUnpaid,
+          collected: evtCollected,
+          target: evtTarget,
+        };
+      });
+
       setStats({
         activeEvents: funeralEvents?.length || 0,
         collected,
         pendingPayments: unpaid,
         paidMembers: paid,
         unpaidMembers: unpaid,
+        events,
       });
     } catch (err) {
       console.error('Error:', err);
@@ -133,6 +164,50 @@ export default function FuneralAdminDashboard() {
           </Link>
         ))}
       </div>
+
+      {/* Per-Event Breakdown */}
+      {stats.events.length > 0 && (
+        <div className="space-y-3 mb-4">
+          <h3 className="text-sm font-semibold text-muted-foreground">Active Events</h3>
+          {stats.events.map((evt) => {
+            const pct = evt.target > 0 ? Math.round((evt.collected / evt.target) * 100) : 0;
+            return (
+              <Link key={evt.id} to="/admin/funeral-payments" className="block">
+                <Card className="animate-fade-in hover:shadow-card-hover transition-shadow">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">{evt.title}</p>
+                        <p className="text-xs text-muted-foreground">Members: {evt.totalMembers}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    </div>
+
+                    <div className="flex gap-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <CheckCircle className="h-3.5 w-3.5 text-success" />
+                        <span>Paid: <span className="font-semibold">{evt.paidMembers}</span></span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <XCircle className="h-3.5 w-3.5 text-destructive" />
+                        <span>Outstanding: <span className="font-semibold">{evt.unpaidMembers}</span></span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Collected</span>
+                        <span className="font-semibold">{formatCurrency(evt.collected)} / {formatCurrency(evt.target)}</span>
+                      </div>
+                      <Progress value={pct} className="h-2.5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       <Card className="animate-fade-in">
         <CardContent className="p-4">
