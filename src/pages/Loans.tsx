@@ -67,7 +67,7 @@ export default function Loans() {
   };
 
   const totalOutstanding = loans
-    .filter(l => l.status === 'approved')
+    .filter(l => l.status === 'approved' || l.status === 'disbursed')
     .reduce((sum, l) => sum + Number(l.outstanding_balance), 0);
 
   return (
