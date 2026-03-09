@@ -14,6 +14,7 @@ import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { usePersonalFund } from '@/hooks/usePersonalFund';
 import { PersonalFundLowBanner } from '@/components/personal-loans/PersonalFundBanner';
 import { AddFundsDialog } from '@/components/funds/AddFundsDialog';
+import { FundHistoryDialog } from '@/components/funds/FundHistoryDialog';
 
 interface Stats {
   loansIssuedToday: number;
