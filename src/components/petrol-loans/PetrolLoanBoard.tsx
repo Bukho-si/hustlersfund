@@ -85,5 +85,6 @@ export function PetrolLoanBoard({
         </div>
       ))}
     </div>
+    </div>
   );
 }

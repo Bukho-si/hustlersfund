@@ -89,5 +89,6 @@ export function PersonalLoanBoard({
         </div>
       ))}
     </div>
+    </div>
   );
 }
