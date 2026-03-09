@@ -100,8 +100,8 @@ export function useWalletTransactions(options?: {
   return useQuery({
     queryKey: ['wallet-transactions', memberUserId, dateFrom, dateTo, transactionType, limit],
     queryFn: async (): Promise<WalletTransaction[]> => {
-      let query = supabase
-        .from('wallet_transactions' as any)
+      let query = (supabase as any)
+        .from('wallet_transactions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);
