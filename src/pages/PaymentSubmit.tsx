@@ -206,7 +206,7 @@ export default function PaymentSubmit() {
           joining_fee_amount: joiningFeeAmount,
           late_fine_amount: 0,
           cash_fee_amount: cashFeeAmount,
-          emergency_total_amount: emergencyDuesTotal,
+          emergency_total_amount: 0,
           total_amount: totalAmount,
           proof_file_url: publicUrl,
           notes: notes || null,
