@@ -195,7 +195,7 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
           </Card>
         ) : (
           events.map((event, index) => (
-            <Card key={event.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+            <Card key={event.id} className="animate-fade-in cursor-pointer hover:border-accent/50 transition-colors" style={{ animationDelay: `${index * 0.05}s` }} onClick={() => navigate(`/admin/emergency-event/${event.id}`)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
