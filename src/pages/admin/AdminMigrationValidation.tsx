@@ -39,6 +39,8 @@ interface MigrationStats {
 export default function AdminMigrationValidation() {
   const { toast } = useToast();
   const [isRunning, setIsRunning] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
+  const [fixedCount, setFixedCount] = useState<number | null>(null);
   const [validations, setValidations] = useState<MemberValidation[]>([]);
   const [stats, setStats] = useState<MigrationStats | null>(null);
   const [auditCheck, setAuditCheck] = useState<{ total: number; types: Record<string, number> } | null>(null);
