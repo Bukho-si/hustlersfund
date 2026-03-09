@@ -10,6 +10,7 @@ import {
   Fuel, ChevronRight, Wallet, FileCheck, BarChart3,
   Clock, CheckCircle, TrendingUp
 } from 'lucide-react';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 interface Stats {
   loansIssuedToday: number;
@@ -29,9 +30,13 @@ export default function PetrolLoanDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const stableFetch = useCallback(() => { fetchStats(); }, []);
+
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useRealtimeRefresh(['loans', 'loan_repayments'], stableFetch);
 
   const fetchStats = async () => {
     try {

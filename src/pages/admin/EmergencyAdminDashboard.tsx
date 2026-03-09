@@ -9,6 +9,7 @@ import {
   AlertTriangle, ChevronRight, Shield, FileCheck, BarChart3,
   Users, CheckCircle, XCircle, PlusCircle
 } from 'lucide-react';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 interface Stats {
   activeEvents: number;
@@ -28,9 +29,13 @@ export default function EmergencyAdminDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const stableFetch = useCallback(() => { fetchStats(); }, []);
+
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useRealtimeRefresh(['emergency_events', 'emergency_dues', 'payments'], stableFetch);
 
   const fetchStats = async () => {
     try {
