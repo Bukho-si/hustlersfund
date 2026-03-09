@@ -252,6 +252,23 @@ export default function AdminSettings() {
                   <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="petrol-repay-days" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-warning" />
+                  Petrol Loan Repayment Period (days)
+                </Label>
+                <Input id="petrol-repay-days" type="number" value={petrolRepayDays} onChange={(e) => setPetrolRepayDays(e.target.value)} min="1" max="365" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personal-repay-days" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-info" />
+                  Personal Loan Repayment Period (days)
+                </Label>
+                <Input id="personal-repay-days" type="number" value={personalRepayDays} onChange={(e) => setPersonalRepayDays(e.target.value)} min="1" max="365" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Repayment deadlines are auto-calculated from the loan issue date.
+              </p>
             </CardContent>
           </Card>
 
