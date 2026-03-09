@@ -38,12 +38,11 @@ interface EmergencyDue {
 export default function Emergencies() {
   const { user } = useAuth();
   const [dues, setDues] = useState<EmergencyDue[]>([]);
+  const [eventProgress, setEventProgress] = useState<Record<string, EventProgress>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchEmergencyDues();
-    }
+    if (user) fetchEmergencyDues();
   }, [user]);
 
   const fetchEmergencyDues = async () => {
@@ -62,6 +61,25 @@ export default function Emergencies() {
       console.error('Error fetching emergency dues:', error);
     } else {
       setDues(data || []);
+
+      // Fetch progress for active events
+      const activeEventIds = [...new Set((data || []).filter(d => d.event?.status === 'active').map(d => d.event_id))];
+      if (activeEventIds.length > 0) {
+        const { data: allDues } = await supabase
+          .from('emergency_dues')
+          .select('event_id, status')
+          .in('event_id', activeEventIds);
+
+        const progress: Record<string, EventProgress> = {};
+        activeEventIds.forEach(eid => {
+          const eventDues = (allDues || []).filter(d => d.event_id === eid);
+          progress[eid] = {
+            totalMembers: eventDues.length,
+            paidMembers: eventDues.filter(d => d.status === 'paid').length,
+          };
+        });
+        setEventProgress(progress);
+      }
     }
     setIsLoading(false);
   };
