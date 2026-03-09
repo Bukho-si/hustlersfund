@@ -110,16 +110,7 @@ export default function PaymentSubmit() {
       setMembershipSlots(profile.membership_slots || 1);
       setJoiningFeePaidTotal(profile.joining_fee_paid_total || 0);
     }
-
-    // Get emergency dues
-    const { data: dues } = await supabase
-      .from('emergency_dues')
-      .select('amount_due, amount_paid')
-      .eq('member_user_id', user.id)
-      .eq('status', 'unpaid');
-
-    const total = dues?.reduce((sum, due) => sum + (Number(due.amount_due) - Number(due.amount_paid)), 0) || 0;
-    setEmergencyDuesTotal(total);
+    // Emergency dues are NOT included in weekly subscriptions
   };
 
   // Calculate totals
