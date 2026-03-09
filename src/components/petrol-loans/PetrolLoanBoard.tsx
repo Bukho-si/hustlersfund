@@ -1,8 +1,7 @@
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { PetrolLoanCard } from './PetrolLoanCard';
 import type { PetrolLoanWithProfile } from '@/hooks/usePetrolLoanBoard';
-import { Clock, Eye, CheckCircle2, Send } from 'lucide-react';
+import { Clock, CheckCircle2, Archive } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -36,57 +35,54 @@ export function PetrolLoanBoard({
   onLock, onUnlock, onApprove, onReject, onDisburse,
   onRepaymentSuccess, refreshTrigger,
 }: Props) {
+  const pending = [...columns.requested, ...columns.underReview];
+  const active = [...columns.approved, ...columns.disbursed];
+
   const columnDefs: Column[] = [
-    { key: 'requested', label: 'Requested', icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', loans: columns.requested },
-    { key: 'underReview', label: 'Under Review', icon: Eye, color: 'text-info', bgColor: 'bg-info/10', loans: columns.underReview },
-    { key: 'approved', label: 'Approved', icon: CheckCircle2, color: 'text-success', bgColor: 'bg-success/10', loans: columns.approved },
-    { key: 'disbursed', label: 'Disbursed', icon: Send, color: 'text-primary', bgColor: 'bg-primary/10', loans: columns.disbursed },
+    { key: 'pending', label: 'Pending', icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', loans: pending },
+    { key: 'active', label: 'Active', icon: CheckCircle2, color: 'text-success', bgColor: 'bg-success/10', loans: active },
+    { key: 'closed', label: 'Closed', icon: Archive, color: 'text-muted-foreground', bgColor: 'bg-muted/50', loans: [] },
   ];
 
   return (
-    <ScrollArea className="w-full">
-      <div className="flex gap-3 pb-4 min-w-[900px]">
-        {columnDefs.map((col) => (
-          <div key={col.key} className="flex-1 min-w-[220px]">
-            {/* Column header */}
-            <div className={`flex items-center gap-2 p-2 rounded-lg ${col.bgColor} mb-2`}>
-              <col.icon className={`h-4 w-4 ${col.color}`} />
-              <span className="text-xs font-semibold">{col.label}</span>
-              <span className={`ml-auto text-xs font-bold ${col.color}`}>
-                {col.loans.length}
-              </span>
-            </div>
-
-            {/* Cards */}
-            <div className="space-y-2">
-              {col.loans.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground">No loans</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                col.loans.map((loan) => (
-                  <PetrolLoanCard
-                    key={loan.id}
-                    loan={loan}
-                    userId={userId}
-                    processingId={processingId}
-                    onLock={onLock}
-                    onUnlock={onUnlock}
-                    onApprove={onApprove}
-                    onReject={onReject}
-                    onDisburse={onDisburse}
-                    onRepaymentSuccess={onRepaymentSuccess}
-                    refreshTrigger={refreshTrigger}
-                  />
-                ))
-              )}
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {columnDefs.map((col) => (
+        <div key={col.key} className="min-w-0">
+          <div className={`flex items-center gap-2 p-2 rounded-lg ${col.bgColor} mb-2`}>
+            <col.icon className={`h-4 w-4 ${col.color}`} />
+            <span className="text-xs font-semibold">{col.label}</span>
+            <span className={`ml-auto text-xs font-bold ${col.color}`}>
+              {col.loans.length}
+            </span>
           </div>
-        ))}
-      </div>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+
+          <div className="space-y-2">
+            {col.loans.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground">No loans</p>
+                </CardContent>
+              </Card>
+            ) : (
+              col.loans.map((loan) => (
+                <PetrolLoanCard
+                  key={loan.id}
+                  loan={loan}
+                  userId={userId}
+                  processingId={processingId}
+                  onLock={onLock}
+                  onUnlock={onUnlock}
+                  onApprove={onApprove}
+                  onReject={onReject}
+                  onDisburse={onDisburse}
+                  onRepaymentSuccess={onRepaymentSuccess}
+                  refreshTrigger={refreshTrigger}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
