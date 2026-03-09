@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -12,15 +12,11 @@ import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useContributionCycles';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency, formatDateTime } from '@/lib/constants';
-import { useMyWallet, useWalletTransactions, getWalletTransactionLabel, isWalletDebitTransaction } from '@/hooks/useWallet';
+import { formatCurrency } from '@/lib/constants';
 import { useContributionSettings, getWeeklySubscription, getJoiningFeeRemaining } from '@/hooks/useContributionSettings';
-import { 
-  CreditCard, 
-  Wallet, 
-  AlertTriangle, 
-  ChevronRight,
-  TrendingUp,
+import {
+  CreditCard,
+  AlertTriangle,
   Clock,
   CheckCircle2,
   Shield,
@@ -28,16 +24,9 @@ import {
   Calendar,
   RefreshCw,
   Info,
-  Fuel,
-  DollarSign,
-  PiggyBank,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownLeft,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Joining fee only week - no subscriptions collected
 const JOINING_FEE_ONLY_WEEK_START = '2026-02-02';
 
 interface DashboardData {
@@ -52,7 +41,6 @@ interface DashboardData {
     status: string;
     total_amount: number;
   } | null;
-  totalLoansOutstanding: number;
   emergencyDuesCount: number;
   emergencyDuesTotal: number;
 }
@@ -61,12 +49,10 @@ export default function Dashboard() {
   const { user, isAdmin } = useAuth();
   const { settings } = useContributionSettings();
   const queryClient = useQueryClient();
-  const { data: wallet } = useMyWallet(user?.id);
   const { data: currentCycle, refetch: refetchCycle } = useCurrentCycle();
   const [data, setData] = useState<DashboardData>({
     profile: null,
     currentWeekPayment: null,
-    totalLoansOutstanding: 0,
     emergencyDuesCount: 0,
     emergencyDuesTotal: 0,
   });
@@ -74,47 +60,19 @@ export default function Dashboard() {
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
 
-  // Fetch active loans for accurate totals
-  const { data: activeLoans } = useQuery({
-    queryKey: ['dashboard-active-loans', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('loans')
-        .select('id, type, amount, outstanding_balance, interest_amount, total_repayable, status')
-        .eq('member_user_id', user.id)
-        .in('status', ['approved', 'disbursed']);
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id,
-  });
-
-  // Recent activity from wallet transactions
-  const { data: recentTransactions } = useWalletTransactions({
-    memberUserId: user?.id,
-    limit: 5,
-  });
-
-  const totalLoansOwed = activeLoans?.reduce((sum, l) => sum + Number(l.outstanding_balance), 0) || 0;
-
   // Auto-refresh when deadline is reached
   useEffect(() => {
     if (!currentCycle?.deadline) return;
-
     const deadlineTime = new Date(currentCycle.deadline).getTime();
     const now = Date.now();
     const timeUntilDeadline = deadlineTime - now;
-
     if (timeUntilDeadline > 0) {
       const timer = setTimeout(() => {
         refetchCycle();
         queryClient.invalidateQueries({ queryKey: ['current-contribution-cycle'] });
       }, timeUntilDeadline + 1000);
-
       return () => clearTimeout(timer);
     }
-    
     setIsDeadlinePassed(true);
   }, [currentCycle?.deadline, refetchCycle, queryClient]);
 
@@ -132,22 +90,17 @@ export default function Dashboard() {
   // Realtime subscriptions
   useEffect(() => {
     if (!user) return;
-
     const refreshData = () => fetchDashboardData(currentCycle?.id);
-
     const channel = supabase
       .channel('dashboard-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: `member_user_id=eq.${user.id}` }, refreshData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'loans', filter: `member_user_id=eq.${user.id}` }, refreshData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'emergency_dues', filter: `member_user_id=eq.${user.id}` }, refreshData)
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user, currentCycle?.id]);
 
   const fetchDashboardData = async (cycleId?: string) => {
     if (!user) return;
-
     try {
       const { data: profile } = await supabase
         .from('member_profiles')
@@ -164,9 +117,7 @@ export default function Dashboard() {
           .eq('cycle_id', cycleId)
           .order('submitted_at', { ascending: false })
           .limit(1);
-        
         currentWeekPayment = cyclePayments?.[0] || null;
-        
         if (!currentWeekPayment && currentCycle?.week_start_date) {
           const { data: recentPayments } = await supabase
             .from('payments')
@@ -188,14 +139,6 @@ export default function Dashboard() {
         currentWeekPayment = payments?.[0] || null;
       }
 
-      const { data: loans } = await supabase
-        .from('loans')
-        .select('outstanding_balance')
-        .eq('member_user_id', user.id)
-        .in('status', ['approved', 'disbursed']);
-
-      const totalLoansOutstanding = loans?.reduce((sum, loan) => sum + Number(loan.outstanding_balance), 0) || 0;
-
       const { data: emergencyDues } = await supabase
         .from('emergency_dues')
         .select('amount_due, amount_paid')
@@ -205,7 +148,7 @@ export default function Dashboard() {
       const emergencyDuesCount = emergencyDues?.length || 0;
       const emergencyDuesTotal = emergencyDues?.reduce((sum, due) => sum + (Number(due.amount_due) - Number(due.amount_paid)), 0) || 0;
 
-      setData({ profile, currentWeekPayment, totalLoansOutstanding, emergencyDuesCount, emergencyDuesTotal });
+      setData({ profile, currentWeekPayment, emergencyDuesCount, emergencyDuesTotal });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -216,13 +159,13 @@ export default function Dashboard() {
   const calculateWeeklyDues = () => {
     const slots = data.profile?.membership_slots || 1;
     const weeklyAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(slots, settings);
-    const joiningFeeRemaining = data.profile 
+    const joiningFeeRemaining = data.profile
       ? getJoiningFeeRemaining(slots, data.profile.joining_fee_paid_total, settings)
       : 0;
 
     let total = weeklyAmount;
     const breakdown: { label: string; amount: number; detail?: string }[] = [];
-    
+
     if (!isJoiningFeeOnlyWeek) {
       if (slots > 1) {
         breakdown.push({ label: 'Weekly subscription', amount: weeklyAmount, detail: `R${settings.weekly_subscription_amount} × ${slots}` });
@@ -253,11 +196,10 @@ export default function Dashboard() {
   const slots = data.profile?.membership_slots || 1;
   const isPaid = data.currentWeekPayment?.status === 'verified';
   const initials = data.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
-  const totalContributions = (wallet?.contribution_balance || 0) + (wallet?.joining_fee_balance || 0);
 
   return (
     <AppLayout>
-      {/* ── Section 1: Header ── */}
+      {/* Header */}
       <div className="mb-5">
         <div className="flex items-center gap-3 mb-1">
           <Avatar className="h-12 w-12 border-2 border-primary/20">
@@ -267,9 +209,9 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <h1 className="text-xl font-bold text-foreground">Hey, {firstName}! 👋</h1>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-8 w-8"
                   onClick={() => {
                     if ('caches' in window) {
@@ -307,76 +249,9 @@ export default function Dashboard() {
 
       <InstallBanner />
 
-      {/* ── Section 2: Quick Actions ── */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <Link to="/loans/request?type=petrol" className="block animate-fade-in">
-          <Card className="h-full hover:shadow-card-hover transition-shadow">
-            <CardContent className="p-3 text-center">
-              <div className="h-10 w-10 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-2">
-                <Fuel className="h-5 w-5 text-warning" />
-              </div>
-              <p className="text-[11px] font-medium">Petrol Loan</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to="/loans/request?type=personal" className="block animate-fade-in" style={{ animationDelay: '0.05s' }}>
-          <Card className="h-full hover:shadow-card-hover transition-shadow">
-            <CardContent className="p-3 text-center">
-              <div className="h-10 w-10 rounded-full bg-info/10 flex items-center justify-center mx-auto mb-2">
-                <DollarSign className="h-5 w-5 text-info" />
-              </div>
-              <p className="text-[11px] font-medium">Personal Loan</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to="/wallet" className="block animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <Card className="h-full hover:shadow-card-hover transition-shadow">
-            <CardContent className="p-3 text-center">
-              <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-2">
-                <Wallet className="h-5 w-5 text-success" />
-              </div>
-              <p className="text-[11px] font-medium">View Wallet</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* ── Section 3: Financial Summary ── */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <Card className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <PiggyBank className="h-3.5 w-3.5 text-success" />
-              <p className="text-[10px] text-muted-foreground">Contributions</p>
-            </div>
-            <p className="text-sm font-bold text-success">{formatCurrency(totalContributions)}</p>
-          </CardContent>
-        </Card>
-        <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <TrendingDown className="h-3.5 w-3.5 text-destructive" />
-              <p className="text-[10px] text-muted-foreground">Loans Owed</p>
-            </div>
-            <p className={`text-sm font-bold ${totalLoansOwed > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-              {totalLoansOwed > 0 ? formatCurrency(totalLoansOwed) : 'R0.00'}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="animate-fade-in" style={{ animationDelay: '0.25s' }}>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-              <p className="text-[10px] text-muted-foreground">Emergency</p>
-            </div>
-            <p className="text-sm font-bold">{formatCurrency(wallet?.emergency_contributions_total || 0)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Section 4: This Week's Cycle ── */}
+      {/* Payment Cycle + Weekly Subscription */}
       {currentCycle && !isPaid && (
-        <Card className="mb-4 animate-fade-in border-accent/30" style={{ animationDelay: '0.3s' }}>
+        <Card className="mb-4 animate-fade-in border-accent/30">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center">
@@ -388,7 +263,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Deadline indicator */}
+            {/* Deadline */}
             {isDeadlinePassed ? (
               <div className="bg-destructive/10 rounded-lg p-3 flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -413,7 +288,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Weekly breakdown */}
+            {/* Joining fee only week notice */}
             {isJoiningFeeOnlyWeek && (
               <Alert className="mb-3 border-info/30 bg-info/10">
                 <Info className="h-4 w-4 text-info" />
@@ -422,6 +297,8 @@ export default function Dashboard() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Weekly breakdown */}
             <div className="space-y-2">
               {weeklyDues.breakdown.map((item, index) => (
                 <div key={index} className="flex justify-between text-sm">
@@ -437,7 +314,8 @@ export default function Dashboard() {
                 <span className="text-accent">{formatCurrency(weeklyDues.total)}</span>
               </div>
             </div>
-            
+
+            {/* Payment status or submit button */}
             {data.currentWeekPayment ? (
               <div className="mt-4 p-3 rounded-lg flex items-center justify-between bg-muted">
                 <div className="flex items-center gap-2">
@@ -458,7 +336,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Paid confirmation card */}
+      {/* Paid confirmation */}
       {isPaid && (
         <Card className="mb-4 animate-fade-in border-success/30">
           <CardContent className="p-4">
@@ -477,51 +355,16 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* ── Section 5: Recent Activity ── */}
-      <Card className="animate-fade-in" style={{ animationDelay: '0.35s' }}>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              Recent Activity
-            </CardTitle>
-            <Link to="/wallet" className="text-xs text-accent font-medium">
-              View all
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {recentTransactions && recentTransactions.length > 0 ? (
-            <div className="space-y-1">
-              {recentTransactions.map((txn) => {
-                const isDebit = isWalletDebitTransaction(txn.transaction_type);
-                return (
-                  <div key={txn.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${isDebit ? 'bg-destructive/10' : 'bg-success/10'}`}>
-                        {isDebit ? (
-                          <ArrowDownLeft className="h-3.5 w-3.5 text-destructive" />
-                        ) : (
-                          <ArrowUpRight className="h-3.5 w-3.5 text-success" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium">{getWalletTransactionLabel(txn.transaction_type)}</p>
-                        <p className="text-[10px] text-muted-foreground">{formatDateTime(txn.created_at)}</p>
-                      </div>
-                    </div>
-                    <p className={`text-sm font-semibold ${isDebit ? 'text-destructive' : 'text-success'}`}>
-                      {isDebit ? '-' : '+'}{formatCurrency(txn.amount)}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">No recent activity</p>
-          )}
-        </CardContent>
-      </Card>
+      {/* No active cycle */}
+      {!currentCycle && !isLoading && (
+        <Card className="animate-fade-in">
+          <CardContent className="p-6 text-center">
+            <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="font-medium text-foreground">No active cycle</p>
+            <p className="text-sm text-muted-foreground mt-1">The next contribution cycle hasn't started yet.</p>
+          </CardContent>
+        </Card>
+      )}
     </AppLayout>
   );
 }
