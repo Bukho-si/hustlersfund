@@ -208,6 +208,42 @@ export default function Profile() {
         </Card>
       )}
 
+      {/* Ledger Balances */}
+      {ledgerSummary && (
+        <Card className="mb-4">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-3 pb-3 border-b">
+              <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="font-medium">Ledger Balances</p>
+                <p className="text-xs text-muted-foreground">Calculated from ledger entries</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Total Contributions</span>
+                <span className="font-medium">{formatCurrency(ledgerSummary.totalContributions + ledgerSummary.totalJoiningFees)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Loans Outstanding</span>
+                <span className="font-medium">{formatCurrency(ledgerSummary.totalLoansIssued - ledgerSummary.totalLoanRepayments)}</span>
+              </div>
+              <div className="flex justify-between text-sm border-t pt-2 font-semibold">
+                <span>Net Position</span>
+                <span className="text-accent">{formatCurrency(ledgerSummary.netPosition)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Transaction History */}
+      <div className="mb-4">
+        <LedgerTable entries={ledgerEntries} isLoading={ledgerLoading} title="Transaction History" showMemberName={false} />
+      </div>
+
       {/* Profile Form */}
       <div className="space-y-4">
         <Card>
