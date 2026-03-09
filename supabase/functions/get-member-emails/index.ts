@@ -38,15 +38,14 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    // Check if user is admin
-    const { data: adminRole } = await supabaseAdmin
+    // Check if user has any admin role
+    const { data: adminRoles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .in("role", ["admin", "super_admin", "emergency_admin", "petrol_loan_admin", "personal_loan_admin"]);
 
-    if (!adminRole) {
+    if (!adminRoles || adminRoles.length === 0) {
       throw new Error("Admin access required");
     }
 
