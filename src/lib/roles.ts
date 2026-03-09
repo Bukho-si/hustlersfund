@@ -49,20 +49,25 @@ const ROLE_MODULES: Record<string, AdminModule[]> = {
   ],
   // Legacy emergency_admin gets both accident and funeral
   emergency_admin: [
+    'dashboard',
     'emergency_events', 'emergency_payments', 'emergency_reports',
     'accident_events', 'accident_payments', 'accident_reports',
     'funeral_events', 'funeral_payments', 'funeral_reports',
   ],
   accident_admin: [
+    'dashboard',
     'accident_events', 'accident_payments', 'accident_reports',
   ],
   funeral_admin: [
+    'dashboard',
     'funeral_events', 'funeral_payments', 'funeral_reports',
   ],
   petrol_loan_admin: [
+    'dashboard',
     'petrol_loans', 'petrol_loan_reports',
   ],
   personal_loan_admin: [
+    'dashboard',
     'personal_loans', 'personal_loan_reports',
   ],
 };
