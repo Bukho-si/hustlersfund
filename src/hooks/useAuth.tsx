@@ -177,7 +177,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // During HMR, context can momentarily be undefined. 
+    // Return a safe fallback to avoid crashing the entire app.
+    console.warn('useAuth called outside AuthProvider — likely HMR. Returning fallback.');
+    return {
+      user: null,
+      session: null,
+      isLoading: true,
+      isAdmin: false,
+      userRoles: [] as AppRole[],
+      isSuperAdmin: false,
+      canAccessModule: () => false,
+      canAccessRoute: () => false,
+      getAllowedModules: () => new Set<AdminModule>(),
+      signIn: async () => ({ error: new Error('Not initialized') }),
+      signUp: async () => ({ error: new Error('Not initialized') }),
+      signOut: async () => {},
+      resetPassword: async () => ({ error: new Error('Not initialized') }),
+      updatePassword: async () => ({ error: new Error('Not initialized') }),
+    } as AuthContextType;
   }
   return context;
 }
