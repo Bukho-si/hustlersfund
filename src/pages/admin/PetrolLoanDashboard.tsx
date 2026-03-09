@@ -8,9 +8,11 @@ import { formatCurrency } from '@/lib/constants';
 import { format } from 'date-fns';
 import {
   Fuel, ChevronRight, Wallet, FileCheck, BarChart3,
-  Clock, CheckCircle, TrendingUp
+  Clock, CheckCircle, TrendingUp, Banknote, Settings
 } from 'lucide-react';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+import { usePetrolFund } from '@/hooks/usePetrolFund';
+import { PetrolFundLowBanner } from '@/components/petrol-loans/PetrolFundBanner';
 
 interface Stats {
   loansIssuedToday: number;
@@ -29,6 +31,7 @@ export default function PetrolLoanDashboard() {
     repaymentAmountToday: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const { fund, isLowBalance } = usePetrolFund();
 
   const stableFetch = useCallback(() => { fetchStats(); }, []);
 
@@ -52,7 +55,6 @@ export default function PetrolLoanDashboard() {
       const totalBalance = approvedLoans.reduce((s, l) => s + Number(l.outstanding_balance), 0);
       const issuedToday = approvedLoans.filter(l => l.approved_at && l.approved_at.startsWith(today)).length;
 
-      // Filter repayments for petrol loans today
       const allRepayments = repayments.data || [];
       const todayRepayments = allRepayments.filter(r => r.paid_at.startsWith(today));
 
@@ -71,10 +73,11 @@ export default function PetrolLoanDashboard() {
   };
 
   const statCards = [
-    { label: 'Issued Today', value: stats.loansIssuedToday.toString(), icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', href: '/admin/petrol-loans' },
-    { label: 'Total Balance', value: formatCurrency(stats.totalBalance), icon: Wallet, color: 'text-info', bgColor: 'bg-info/10', href: '/admin/petrol-loans' },
+    { label: 'Petrol Fund', value: formatCurrency(fund?.current_balance ?? 0), icon: Banknote, color: 'text-accent', bgColor: 'bg-accent/10', href: '/admin/settings', span: true },
     { label: 'Pending Requests', value: stats.pendingRequests.toString(), icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', href: '/admin/petrol-loans', urgent: stats.pendingRequests > 0 },
+    { label: 'Issued Today', value: stats.loansIssuedToday.toString(), icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', href: '/admin/petrol-loans' },
     { label: 'Repayments Today', value: formatCurrency(stats.repaymentAmountToday), icon: TrendingUp, color: 'text-primary', bgColor: 'bg-primary/10', href: '/admin/petrol-loans' },
+    { label: 'Total Outstanding', value: formatCurrency(stats.totalBalance), icon: Wallet, color: 'text-info', bgColor: 'bg-info/10', href: '/admin/petrol-loans' },
   ];
 
   return (
@@ -97,10 +100,15 @@ export default function PetrolLoanDashboard() {
         </CardContent>
       </Card>
 
+      {/* Low fund warning */}
+      {fund && isLowBalance && (
+        <PetrolFundLowBanner balance={fund.current_balance} threshold={fund.low_balance_threshold} />
+      )}
+
       <div className="grid grid-cols-2 gap-3 mb-4">
         {statCards.map((stat, i) => (
-          <Link key={stat.label} to={stat.href} className="block animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
-            <Card className={`h-full hover:shadow-card-hover transition-shadow ${stat.urgent ? 'ring-2 ring-warning' : ''}`}>
+          <Link key={stat.label} to={stat.href} className={`block animate-fade-in ${(stat as any).span ? 'col-span-2' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
+            <Card className={`h-full hover:shadow-card-hover transition-shadow ${(stat as any).urgent ? 'ring-2 ring-warning' : ''}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className={`h-8 w-8 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
@@ -124,6 +132,7 @@ export default function PetrolLoanDashboard() {
               { to: '/admin/petrol-loans', icon: FileCheck, label: 'Approve Petrol Loans', color: 'text-success' },
               { to: '/admin/petrol-loans', icon: Wallet, label: 'Record Petrol Repayments', color: 'text-info' },
               { to: '/admin/petrol-loan-reports', icon: BarChart3, label: 'View Petrol Loan Reports', color: 'text-primary' },
+              { to: '/admin/settings', icon: Settings, label: 'Fund & Window Settings', color: 'text-accent' },
             ].map((a) => (
               <Link key={a.label} to={a.to} className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
                 <div className="flex items-center gap-2">

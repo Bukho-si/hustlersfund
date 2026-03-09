@@ -551,6 +551,27 @@ export type Database = {
           },
         ]
       }
+      petrol_fund: {
+        Row: {
+          current_balance: number
+          id: string
+          last_updated: string
+          low_balance_threshold: number
+        }
+        Insert: {
+          current_balance?: number
+          id?: string
+          last_updated?: string
+          low_balance_threshold?: number
+        }
+        Update: {
+          current_balance?: number
+          id?: string
+          last_updated?: string
+          low_balance_threshold?: number
+        }
+        Relationships: []
+      }
       petrol_loan_activity: {
         Row: {
           action: string
@@ -585,6 +606,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      petrol_request_window: {
+        Row: {
+          active: boolean
+          end_time: string
+          id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          end_time?: string
+          id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          end_time?: string
+          id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

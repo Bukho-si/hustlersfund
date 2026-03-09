@@ -306,6 +306,22 @@ export function usePetrolLoanBoard() {
         return;
       }
 
+      // Check petrol fund balance
+      const { data: fundData } = await supabase
+        .from('petrol_fund')
+        .select('current_balance')
+        .limit(1)
+        .maybeSingle();
+
+      if (fundData && loan && Number(loan.amount) > Number(fundData.current_balance)) {
+        toast({
+          title: 'Insufficient petrol fund balance',
+          description: 'Insufficient petrol fund balance to approve this loan.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('loans')
         .update({

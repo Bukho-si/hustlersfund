@@ -12,9 +12,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, getPetrolLoanMax, getPersonalLoanMax, PETROL_LOAN_MAX, PERSONAL_LOAN_MAX } from '@/lib/constants';
-import { Fuel, User, Loader2, AlertCircle, Users } from 'lucide-react';
+import { Fuel, User, Loader2, AlertCircle, Users, Clock } from 'lucide-react';
 import { InterestCalculator } from '@/components/loans/InterestCalculator';
 import { useLoanSettings } from '@/hooks/useLoanSettings';
+import { usePetrolRequestWindow } from '@/hooks/usePetrolFund';
 
 export default function LoanRequest() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function LoanRequest() {
   const { toast } = useToast();
   
   const { getInterestRate, isLoading: settingsLoading } = useLoanSettings();
+  const { window: requestWindow, isWithinWindow } = usePetrolRequestWindow();
   
   const [type, setType] = useState<'petrol' | 'personal'>('petrol');
   const [amount, setAmount] = useState('');
@@ -30,6 +32,8 @@ export default function LoanRequest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [membershipSlots, setMembershipSlots] = useState(1);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  
+  const petrolWindowOpen = type === 'petrol' ? isWithinWindow() : true;
 
   useEffect(() => {
     if (user) {
@@ -77,6 +81,15 @@ export default function LoanRequest() {
       toast({
         title: 'Reason required',
         description: 'Please provide a reason for your loan request',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (type === 'petrol' && !isWithinWindow()) {
+      toast({
+        title: 'Outside request window',
+        description: `Petrol loan requests are only allowed between ${requestWindow?.start_time?.slice(0, 5) || '06:00'} and ${requestWindow?.end_time?.slice(0, 5) || '10:00'}.`,
         variant: 'destructive',
       });
       return;
@@ -269,11 +282,26 @@ export default function LoanRequest() {
           </CardContent>
         </Card>
 
+        {/* Time window warning for petrol */}
+        {type === 'petrol' && !petrolWindowOpen && requestWindow && (
+          <Card className="border-warning/30 bg-warning/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Clock className="h-5 w-5 text-warning shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-warning">Outside Request Window</p>
+                <p className="text-xs text-muted-foreground">
+                  Petrol loan requests are only allowed between {requestWindow.start_time.slice(0, 5)} and {requestWindow.end_time.slice(0, 5)}.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Submit Button */}
         <Button 
           type="submit" 
           className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
-          disabled={isSubmitting || !isValidAmount || isLoadingProfile}
+          disabled={isSubmitting || !isValidAmount || isLoadingProfile || (type === 'petrol' && !petrolWindowOpen)}
         >
           {isSubmitting ? (
             <Loader2 className="h-5 w-5 animate-spin" />

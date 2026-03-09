@@ -2,23 +2,26 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { usePetrolLoanBoard } from '@/hooks/usePetrolLoanBoard';
+import { usePetrolFund } from '@/hooks/usePetrolFund';
 import { PetrolLoanMetrics } from '@/components/petrol-loans/PetrolLoanMetrics';
 import { PetrolLoanBoard } from '@/components/petrol-loans/PetrolLoanBoard';
 import { PetrolLoanActivityFeed } from '@/components/petrol-loans/PetrolLoanActivityFeed';
-import { Loader2, Fuel } from 'lucide-react';
+import { PetrolBatchReview } from '@/components/petrol-loans/PetrolBatchReview';
+import { PetrolFundLowBanner } from '@/components/petrol-loans/PetrolFundBanner';
+import { Loader2, Fuel, ListChecks, Activity } from 'lucide-react';
 
 export default function AdminPetrolLoans() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('board');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { fund, isLowBalance } = usePetrolFund();
 
   const {
     columns, activities, metrics, isLoading, processingId,
     lockLoan, unlockLoan, approveLoan, rejectLoan, disburseLoan,
-    refreshLoans,
+    refreshLoans, loans,
   } = usePetrolLoanBoard();
 
   const handleRepaymentSuccess = () => {
@@ -36,6 +39,9 @@ export default function AdminPetrolLoans() {
     );
   }
 
+  // Pending loans for batch review (requested + under_review)
+  const batchLoans = loans.filter(l => l.status === 'requested' || l.status === 'under_review');
+
   return (
     <AppLayout requireAdmin>
       <PageHeader
@@ -44,18 +50,28 @@ export default function AdminPetrolLoans() {
         showBack
       />
 
-      {/* Dashboard Metrics */}
-      <PetrolLoanMetrics metrics={metrics} />
+      {/* Low fund warning */}
+      {fund && isLowBalance && (
+        <PetrolFundLowBanner balance={fund.current_balance} threshold={fund.low_balance_threshold} />
+      )}
 
-      {/* Tabs: Board + Activity */}
+      {/* Dashboard Metrics - now includes fund balance */}
+      <PetrolLoanMetrics metrics={metrics} fundBalance={fund?.current_balance ?? 0} />
+
+      {/* Tabs: Board + Batch + Activity */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full mb-4">
           <TabsTrigger value="board" className="flex-1">
             <Fuel className="h-3.5 w-3.5 mr-1" />
-            Queue Board
+            Board
+          </TabsTrigger>
+          <TabsTrigger value="batch" className="flex-1">
+            <ListChecks className="h-3.5 w-3.5 mr-1" />
+            Batch
           </TabsTrigger>
           <TabsTrigger value="activity" className="flex-1">
-            Activity Feed
+            <Activity className="h-3.5 w-3.5 mr-1" />
+            Feed
           </TabsTrigger>
         </TabsList>
 
@@ -71,6 +87,16 @@ export default function AdminPetrolLoans() {
             onDisburse={disburseLoan}
             onRepaymentSuccess={handleRepaymentSuccess}
             refreshTrigger={refreshTrigger}
+          />
+        </TabsContent>
+
+        <TabsContent value="batch">
+          <PetrolBatchReview
+            loans={batchLoans}
+            onApprove={approveLoan}
+            onReject={rejectLoan}
+            processingId={processingId}
+            fundBalance={fund?.current_balance ?? 0}
           />
         </TabsContent>
 
