@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ContributionsChart } from '@/components/reports/ContributionsChart';
 import { LoanDistributionChart } from '@/components/reports/LoanDistributionChart';
+import { useWeeklyContributions, useLoanDistribution } from '@/hooks/useFinancialReports';
 
 interface Stats {
   activeMembers: number;
