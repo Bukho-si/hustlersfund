@@ -14,6 +14,7 @@ import {
 import { ContributionsChart } from '@/components/reports/ContributionsChart';
 import { LoanDistributionChart } from '@/components/reports/LoanDistributionChart';
 import { useWeeklyContributions, useLoanDistribution } from '@/hooks/useFinancialReports';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 interface Stats {
   activeMembers: number;
