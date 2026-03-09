@@ -38,7 +38,6 @@ export default function PaymentSubmit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [membershipSlots, setMembershipSlots] = useState(1);
   const [joiningFeePaidTotal, setJoiningFeePaidTotal] = useState(0);
-  const [emergencyDuesTotal, setEmergencyDuesTotal] = useState(0);
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
   const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
   const [loanInterest, setLoanInterest] = useState(loanInterestParam);
@@ -111,16 +110,7 @@ export default function PaymentSubmit() {
       setMembershipSlots(profile.membership_slots || 1);
       setJoiningFeePaidTotal(profile.joining_fee_paid_total || 0);
     }
-
-    // Get emergency dues
-    const { data: dues } = await supabase
-      .from('emergency_dues')
-      .select('amount_due, amount_paid')
-      .eq('member_user_id', user.id)
-      .eq('status', 'unpaid');
-
-    const total = dues?.reduce((sum, due) => sum + (Number(due.amount_due) - Number(due.amount_paid)), 0) || 0;
-    setEmergencyDuesTotal(total);
+    // Emergency dues are NOT included in weekly subscriptions
   };
 
   // Calculate totals
@@ -142,7 +132,7 @@ export default function PaymentSubmit() {
   } else {
     baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
     joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
-    totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount + emergencyDuesTotal;
+    totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount;
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,7 +206,7 @@ export default function PaymentSubmit() {
           joining_fee_amount: joiningFeeAmount,
           late_fine_amount: 0,
           cash_fee_amount: cashFeeAmount,
-          emergency_total_amount: emergencyDuesTotal,
+          emergency_total_amount: 0,
           total_amount: totalAmount,
           proof_file_url: publicUrl,
           notes: notes || null,
@@ -426,12 +416,7 @@ export default function PaymentSubmit() {
                       <span>{formatCurrency(cashFeeAmount)}</span>
                     </div>
                   )}
-                  {emergencyDuesTotal > 0 && (
-                    <div className="flex justify-between text-warning">
-                      <span>Emergency dues</span>
-                      <span>{formatCurrency(emergencyDuesTotal)}</span>
-                    </div>
-                  )}
+                  {/* Emergency dues are paid separately via the Emergency tab */}
                   <div className="flex justify-between font-bold text-lg pt-3 border-t">
                     <span>Total</span>
                     <span className="text-accent">{formatCurrency(totalAmount)}</span>

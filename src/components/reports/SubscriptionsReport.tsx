@@ -58,8 +58,8 @@ function useSubscriptionsData() {
         joiningFee: Number(p.joining_fee_amount),
         lateFine: Number(p.late_fine_amount),
         cashFee: Number(p.cash_fee_amount),
-        emergencyAmount: Number(p.emergency_total_amount),
-        totalAmount: Number(p.total_amount),
+        emergencyAmount: 0, // Emergency contributions are tracked separately
+        totalAmount: Number(p.total_amount) - Number(p.emergency_total_amount), // Exclude emergency from weekly total
         status: p.status,
         method: p.method,
         submittedAt: p.submitted_at,
