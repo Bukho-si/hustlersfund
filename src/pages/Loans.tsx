@@ -163,7 +163,7 @@ export default function Loans() {
                       </div>
                     </>
                   )}
-                  {loan.status === 'approved' && (
+                {(loan.status === 'approved' || loan.status === 'disbursed') && (
                     <div className="flex justify-between pt-1 border-t mt-1">
                       <span className="text-muted-foreground">Outstanding balance</span>
                       <span className="font-semibold text-accent">{formatCurrency(Number(loan.outstanding_balance))}</span>
