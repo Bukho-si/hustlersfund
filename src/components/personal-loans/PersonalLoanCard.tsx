@@ -219,11 +219,11 @@ export function PersonalLoanCard({
 
         {loan.status === 'approved' && Number(loan.outstanding_balance) > 0 && isAdmin && (
           <div className="space-y-2 pt-2 border-t">
-            <div className="flex items-center justify-between">
-              <Button variant="ghost" size="sm" className="text-muted-foreground p-0 h-auto text-xs" onClick={() => setIsExpanded(!isExpanded)}>
-                {isExpanded ? <><ChevronUp className="h-3 w-3 mr-1" /> Hide</> : <><History className="h-3 w-3 mr-1" /> View History</>}
-              </Button>
+            <div className="flex flex-col gap-2">
               <RecordRepaymentDialog loanId={loan.id} outstandingBalance={Number(loan.outstanding_balance)} memberName={loan.profile?.full_name || 'Unknown'} onSuccess={onRepaymentSuccess} userId={userId} interestAmount={loan.interest_amount} />
+              <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs" onClick={() => setIsExpanded(!isExpanded)}>
+                {isExpanded ? <><ChevronUp className="h-3 w-3 mr-1" /> Hide History</> : <><History className="h-3 w-3 mr-1" /> View History</>}
+              </Button>
             </div>
             {isExpanded && <RepaymentHistory loanId={loan.id} refreshTrigger={refreshTrigger} />}
           </div>
