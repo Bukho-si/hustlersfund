@@ -13,6 +13,7 @@ import {
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { usePersonalFund } from '@/hooks/usePersonalFund';
 import { PersonalFundLowBanner } from '@/components/personal-loans/PersonalFundBanner';
+import { AddFundsDialog } from '@/components/funds/AddFundsDialog';
 
 interface Stats {
   loansIssuedToday: number;
