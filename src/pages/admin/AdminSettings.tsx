@@ -16,6 +16,8 @@ interface LoanSettings {
   petrol_interest_rate_percent: number;
   personal_interest_rate_percent: number;
   interest_type: string;
+  petrol_repayment_days: number;
+  personal_repayment_days: number;
 }
 
 export default function AdminSettings() {
