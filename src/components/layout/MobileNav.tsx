@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, UserCog, RefreshCw, BarChart3, Settings, DollarSign, Heart, Car } from 'lucide-react';
+import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, UserCog, RefreshCw, BarChart3, Settings, DollarSign, Heart, Car, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminModule } from '@/lib/roles';
