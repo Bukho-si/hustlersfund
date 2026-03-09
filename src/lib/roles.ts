@@ -68,6 +68,7 @@ export const ROUTE_MODULE_MAP: Record<string, AdminModule> = {
   '/admin/roles': 'roles',
   '/admin/settings': 'settings',
   '/admin/contribution-settings': 'contribution_settings',
+  '/admin/ledger': 'ledger',
 };
 
 export function getAllowedModules(roles: AppRole[]): Set<AdminModule> {
