@@ -1,8 +1,7 @@
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { PersonalLoanCard } from './PersonalLoanCard';
 import type { PersonalLoanWithProfile } from '@/hooks/usePersonalLoanBoard';
-import { Clock, Eye, CheckCircle2, Send, XCircle, CheckCheck } from 'lucide-react';
+import { Clock, Eye, CheckCircle2, XCircle, CheckCheck, ChevronRight } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -47,31 +46,37 @@ export function PersonalLoanBoard({
   ];
 
   return (
-    <ScrollArea className="w-full">
-      <div className="flex gap-3 pb-4" style={{ minWidth: `${columnDefs.length * 380}px` }}>
-        {columnDefs.map((col) => (
-          <div key={col.key} className="flex-1" style={{ minWidth: '360px' }}>
-            <div className={`flex items-center gap-2 p-2 rounded-lg ${col.bgColor} mb-2`}>
-              <col.icon className={`h-4 w-4 ${col.color}`} />
-              <span className="text-xs font-semibold">{col.label}</span>
-              <span className={`ml-auto text-xs font-bold ${col.color}`}>{col.loans.length}</span>
-            </div>
-            <div className="space-y-2">
-              {col.loans.length === 0 ? (
-                <Card className="border-dashed"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">No loans</p></CardContent></Card>
-              ) : (
-                col.loans.map((loan) => (
-                  <PersonalLoanCard key={loan.id} loan={loan} userId={userId} processingId={processingId}
-                    isAdmin={isAdmin}
-                    onLock={onLock} onUnlock={onUnlock} onApprove={onApprove} onReject={onReject} onDisburse={onDisburse}
-                    onRepaymentSuccess={onRepaymentSuccess} refreshTrigger={refreshTrigger} />
-                ))
-              )}
-            </div>
-          </div>
-        ))}
+    <div className="relative">
+      {/* Scroll hint */}
+      <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-2 md:hidden">
+        <span>Swipe to see all columns</span>
+        <ChevronRight className="h-3 w-3" />
       </div>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+      <div className="overflow-x-auto pb-4 -mx-2 px-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-3" style={{ minWidth: `${columnDefs.length * 380}px` }}>
+          {columnDefs.map((col) => (
+            <div key={col.key} className="flex-1" style={{ minWidth: '360px' }}>
+              <div className={`flex items-center gap-2 p-2 rounded-lg ${col.bgColor} mb-2 sticky top-0 z-10`}>
+                <col.icon className={`h-4 w-4 ${col.color}`} />
+                <span className="text-xs font-semibold">{col.label}</span>
+                <span className={`ml-auto text-xs font-bold ${col.color}`}>{col.loans.length}</span>
+              </div>
+              <div className="space-y-2">
+                {col.loans.length === 0 ? (
+                  <Card className="border-dashed"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">No loans</p></CardContent></Card>
+                ) : (
+                  col.loans.map((loan) => (
+                    <PersonalLoanCard key={loan.id} loan={loan} userId={userId} processingId={processingId}
+                      isAdmin={isAdmin}
+                      onLock={onLock} onUnlock={onUnlock} onApprove={onApprove} onReject={onReject} onDisburse={onDisburse}
+                      onRepaymentSuccess={onRepaymentSuccess} refreshTrigger={refreshTrigger} />
+                  ))
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
