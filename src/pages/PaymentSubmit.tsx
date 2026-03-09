@@ -132,7 +132,7 @@ export default function PaymentSubmit() {
   } else {
     baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
     joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
-    totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount + emergencyDuesTotal;
+    totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount;
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
