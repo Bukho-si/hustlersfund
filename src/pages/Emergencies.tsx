@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { AlertTriangle, Heart, Car, CreditCard } from 'lucide-react';
+import { AlertTriangle, Heart, Car, CreditCard, Users, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
