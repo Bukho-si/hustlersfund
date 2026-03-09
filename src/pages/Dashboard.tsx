@@ -516,39 +516,74 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {/* Loans Card */}
-        <Link to="/loans" className="block animate-fade-in" style={{ animationDelay: '0.2s' }}>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <Link to="/loans/request?type=petrol" className="block animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <Card className="h-full hover:shadow-card-hover transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Wallet className="h-5 w-5 text-info" />
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <CardContent className="p-3 text-center">
+              <div className="h-10 w-10 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-2">
+                <Fuel className="h-5 w-5 text-warning" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Loan Balance</p>
-              <p className="text-lg font-bold">{formatCurrency(data.totalLoansOutstanding)}</p>
+              <p className="text-[11px] font-medium">Petrol Loan</p>
             </CardContent>
           </Card>
         </Link>
 
-        {/* Emergency Card */}
-        <Link to="/emergencies" className="block animate-fade-in" style={{ animationDelay: '0.3s' }}>
+        <Link to="/loans/request?type=personal" className="block animate-fade-in" style={{ animationDelay: '0.25s' }}>
           <Card className="h-full hover:shadow-card-hover transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <CardContent className="p-3 text-center">
+              <div className="h-10 w-10 rounded-full bg-info/10 flex items-center justify-center mx-auto mb-2">
+                <DollarSign className="h-5 w-5 text-info" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Emergency Dues</p>
-              <p className="text-lg font-bold">
-                {data.emergencyDuesCount > 0 
-                  ? formatCurrency(data.emergencyDuesTotal)
-                  : 'None'}
-              </p>
+              <p className="text-[11px] font-medium">Personal Loan</p>
             </CardContent>
           </Card>
         </Link>
+
+        <Link to="/wallet" className="block animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <Card className="h-full hover:shadow-card-hover transition-shadow">
+            <CardContent className="p-3 text-center">
+              <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-2">
+                <Wallet className="h-5 w-5 text-success" />
+              </div>
+              <p className="text-[11px] font-medium">View Wallet</p>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Financial Summary Cards */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <Card className="animate-fade-in" style={{ animationDelay: '0.35s' }}>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Contributions</p>
+            <p className="text-lg font-bold text-success">
+              {formatCurrency((wallet?.contribution_balance || 0) + (wallet?.joining_fee_balance || 0))}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Fuel className="h-3 w-3" /> Petrol Loan</p>
+            <p className={`text-lg font-bold ${(wallet?.petrol_loan_balance || 0) > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {(wallet?.petrol_loan_balance || 0) > 0 ? `-${formatCurrency(wallet!.petrol_loan_balance)}` : formatCurrency(0)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="animate-fade-in" style={{ animationDelay: '0.45s' }}>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><DollarSign className="h-3 w-3" /> Personal Loan</p>
+            <p className={`text-lg font-bold ${(wallet?.personal_loan_balance || 0) > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {(wallet?.personal_loan_balance || 0) > 0 ? `-${formatCurrency(wallet!.personal_loan_balance)}` : formatCurrency(0)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Emergency</p>
+            <p className="text-lg font-bold">{formatCurrency(wallet?.emergency_contributions_total || 0)}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Payment History Preview */}
