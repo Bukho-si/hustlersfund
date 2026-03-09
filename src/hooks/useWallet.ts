@@ -146,7 +146,7 @@ export function useAllWallets() {
       if (error) throw error;
       if (!data || data.length === 0) return [];
 
-      const memberIds = data.map((w: any) => w.member_user_id);
+      const memberIds = data.map((w: any) => w.member_user_id) as string[];
       const { data: profiles } = await supabase
         .from('member_profiles')
         .select('user_id, full_name')

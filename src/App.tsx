@@ -70,6 +70,7 @@ const App = () => (
             <Route path="/loans/request" element={<LoanRequest />} />
             <Route path="/emergencies" element={<Emergencies />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/wallet" element={<MyWallet />} />
             <Route path="/install" element={<Install />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             

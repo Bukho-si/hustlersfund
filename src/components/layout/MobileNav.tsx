@@ -15,7 +15,7 @@ interface NavItem {
 const memberNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/payments', label: 'Payments', icon: CreditCard },
-  { href: '/loans', label: 'Loans', icon: Wallet },
+  { href: '/wallet', label: 'Wallet', icon: Wallet },
   { href: '/emergencies', label: 'Emergency', icon: AlertTriangle },
   { href: '/profile', label: 'Profile', icon: User },
 ];
