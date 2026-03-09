@@ -40,6 +40,11 @@ export default function AdminSettings() {
   const [fundThreshold, setFundThreshold] = useState('');
   const [fundId, setFundId] = useState<string | null>(null);
 
+  // Personal loan fund
+  const [personalFundBalance, setPersonalFundBalance] = useState('');
+  const [personalFundThreshold, setPersonalFundThreshold] = useState('');
+  const [personalFundId, setPersonalFundId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchAll();
   }, []);
