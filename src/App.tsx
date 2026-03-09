@@ -49,6 +49,7 @@ import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLedger from "./pages/admin/AdminLedger";
 import AdminMigrationValidation from "./pages/admin/AdminMigrationValidation";
+import AdminEmergencyEventDetail from "./pages/admin/AdminEmergencyEventDetail";
 
 import NotFound from "./pages/NotFound";
 
@@ -106,6 +107,7 @@ const App = () => (
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/ledger" element={<AdminLedger />} />
             <Route path="/admin/migration-validation" element={<AdminMigrationValidation />} />
+            <Route path="/admin/emergency-event/:eventId" element={<AdminEmergencyEventDetail />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

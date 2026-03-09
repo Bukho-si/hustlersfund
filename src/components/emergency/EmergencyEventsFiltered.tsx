@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +35,7 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
   const { user } = useAuth();
   const { toast } = useToast();
   const { settings } = useContributionSettings();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<EmergencyEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -193,7 +195,7 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
           </Card>
         ) : (
           events.map((event, index) => (
-            <Card key={event.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+            <Card key={event.id} className="animate-fade-in cursor-pointer hover:border-accent/50 transition-colors" style={{ animationDelay: `${index * 0.05}s` }} onClick={() => navigate(`/admin/emergency-event/${event.id}`)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
