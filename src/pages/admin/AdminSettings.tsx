@@ -78,6 +78,13 @@ export default function AdminSettings() {
       setFundThreshold(String(f.low_balance_threshold));
     }
 
+    if (personalFundRes.data) {
+      const pf = personalFundRes.data as any;
+      setPersonalFundId(pf.id);
+      setPersonalFundBalance(String(pf.current_balance));
+      setPersonalFundThreshold(String(pf.low_balance_threshold));
+    }
+
     setIsLoading(false);
   };
 
