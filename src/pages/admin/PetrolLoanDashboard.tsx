@@ -1,0 +1,136 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/lib/constants';
+import { format } from 'date-fns';
+import {
+  Fuel, ChevronRight, Wallet, FileCheck, BarChart3,
+  Clock, CheckCircle, TrendingUp
+} from 'lucide-react';
+
+interface Stats {
+  loansIssuedToday: number;
+  totalBalance: number;
+  pendingRequests: number;
+  repaymentsToday: number;
+  repaymentAmountToday: number;
+}
+
+export default function PetrolLoanDashboard() {
+  const [stats, setStats] = useState<Stats>({
+    loansIssuedToday: 0,
+    totalBalance: 0,
+    pendingRequests: 0,
+    repaymentsToday: 0,
+    repaymentAmountToday: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+
+      const [approved, pending, repayments] = await Promise.all([
+        supabase.from('loans').select('outstanding_balance, approved_at').eq('type', 'petrol').eq('status', 'approved'),
+        supabase.from('loans').select('*', { count: 'exact', head: true }).eq('type', 'petrol').eq('status', 'pending'),
+        supabase.from('loan_repayments').select('amount, paid_at, loan_id'),
+      ]);
+
+      const approvedLoans = approved.data || [];
+      const totalBalance = approvedLoans.reduce((s, l) => s + Number(l.outstanding_balance), 0);
+      const issuedToday = approvedLoans.filter(l => l.approved_at && l.approved_at.startsWith(today)).length;
+
+      // Filter repayments for petrol loans today
+      const allRepayments = repayments.data || [];
+      const todayRepayments = allRepayments.filter(r => r.paid_at.startsWith(today));
+
+      setStats({
+        loansIssuedToday: issuedToday,
+        totalBalance,
+        pendingRequests: pending.count || 0,
+        repaymentsToday: todayRepayments.length,
+        repaymentAmountToday: todayRepayments.reduce((s, r) => s + Number(r.amount), 0),
+      });
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const statCards = [
+    { label: 'Issued Today', value: stats.loansIssuedToday.toString(), icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', href: '/admin/petrol-loans' },
+    { label: 'Total Balance', value: formatCurrency(stats.totalBalance), icon: Wallet, color: 'text-info', bgColor: 'bg-info/10', href: '/admin/petrol-loans' },
+    { label: 'Pending Requests', value: stats.pendingRequests.toString(), icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', href: '/admin/petrol-loans', urgent: stats.pendingRequests > 0 },
+    { label: 'Repayments Today', value: formatCurrency(stats.repaymentAmountToday), icon: TrendingUp, color: 'text-primary', bgColor: 'bg-primary/10', href: '/admin/petrol-loans' },
+  ];
+
+  return (
+    <AppLayout requireAdmin>
+      <PageHeader
+        title="Petrol Loan Dashboard"
+        subtitle="Manage petrol loan operations"
+        action={<Link to="/dashboard" className="text-xs text-muted-foreground hover:text-foreground">← Member View</Link>}
+      />
+
+      <Card className="mb-4 bg-info/90 text-info-foreground">
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-card flex items-center justify-center">
+            <Fuel className="h-6 w-6 text-info" />
+          </div>
+          <div>
+            <h2 className="font-bold text-lg">Petrol Loan Admin</h2>
+            <p className="text-info-foreground/70 text-sm">Petrol Loan Operations</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {statCards.map((stat, i) => (
+          <Link key={stat.label} to={stat.href} className="block animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
+            <Card className={`h-full hover:shadow-card-hover transition-shadow ${stat.urgent ? 'ring-2 ring-warning' : ''}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`h-8 w-8 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
+                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-0.5">{stat.label}</p>
+                <p className="text-lg font-bold">{stat.value}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      <Card className="animate-fade-in">
+        <CardContent className="p-4">
+          <h3 className="font-medium text-sm mb-3">Quick Actions</h3>
+          <div className="space-y-2">
+            {[
+              { to: '/admin/petrol-loans', icon: FileCheck, label: 'Approve Petrol Loans', color: 'text-success' },
+              { to: '/admin/petrol-loans', icon: Wallet, label: 'Record Petrol Repayments', color: 'text-info' },
+              { to: '/admin/petrol-loan-reports', icon: BarChart3, label: 'View Petrol Loan Reports', color: 'text-primary' },
+            ].map((a) => (
+              <Link key={a.label} to={a.to} className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                <div className="flex items-center gap-2">
+                  <a.icon className={`h-4 w-4 ${a.color}`} />
+                  <span className="text-sm font-medium">{a.label}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </AppLayout>
+  );
+}

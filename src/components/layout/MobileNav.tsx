@@ -3,6 +3,7 @@ import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminModule } from '@/lib/roles';
+import { getDashboardRoute } from '@/lib/roleRedirect';
 
 interface NavItem {
   href: string;
@@ -20,7 +21,7 @@ const memberNavItems: NavItem[] = [
 ];
 
 const allAdminNavItems: NavItem[] = [
-  { href: '/admin', label: 'Dashboard', icon: Home, module: 'dashboard' },
+  { href: '__admin_dash__', label: 'Dashboard', icon: Home, module: 'dashboard' },
   { href: '/admin/members', label: 'Members', icon: Users, module: 'members' },
   { href: '/admin/verify', label: 'Verify', icon: FileCheck, module: 'verify' },
   { href: '/admin/cycles', label: 'Cycles', icon: RefreshCw, module: 'cycles' },
@@ -34,17 +35,16 @@ const allAdminNavItems: NavItem[] = [
 
 export function MobileNav() {
   const location = useLocation();
-  const { isAdmin, canAccessModule } = useAuth();
+  const { isAdmin, canAccessModule, userRoles } = useAuth();
   
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const adminDashRoute = getDashboardRoute(userRoles);
   
   let navItems: NavItem[];
   if (isAdminRoute && isAdmin) {
-    // Filter admin nav items by role permissions, limit to 5 for mobile
-    const allowed = allAdminNavItems.filter(item => 
-      !item.module || canAccessModule(item.module)
-    );
-    // Show first 5 items that the user has access to
+    const allowed = allAdminNavItems
+      .filter(item => !item.module || canAccessModule(item.module))
+      .map(item => item.href === '__admin_dash__' ? { ...item, href: adminDashRoute } : item);
     navItems = allowed.slice(0, 5);
   } else {
     navItems = memberNavItems;

@@ -19,6 +19,10 @@ import ResetPassword from "./pages/ResetPassword";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
+import EmergencyAdminDashboard from "./pages/admin/EmergencyAdminDashboard";
+import PetrolLoanDashboard from "./pages/admin/PetrolLoanDashboard";
+import PersonalLoanDashboard from "./pages/admin/PersonalLoanDashboard";
 import AdminMembers from "./pages/admin/AdminMembers";
 import AdminVerify from "./pages/admin/AdminVerify";
 import AdminLoans from "./pages/admin/AdminLoans";
@@ -61,6 +65,10 @@ const App = () => (
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/admin/emergency-dashboard" element={<EmergencyAdminDashboard />} />
+            <Route path="/admin/petrol-dashboard" element={<PetrolLoanDashboard />} />
+            <Route path="/admin/personal-loan-dashboard" element={<PersonalLoanDashboard />} />
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/verify" element={<AdminVerify />} />
             <Route path="/admin/loans" element={<AdminLoans />} />

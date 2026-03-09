@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { getDashboardRoute } from '@/lib/roleRedirect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -32,7 +33,7 @@ const LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, userRoles } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -52,7 +53,8 @@ export default function Auth() {
 
   // Redirect if already logged in
   if (user) {
-    navigate('/dashboard', { replace: true });
+    const dest = getDashboardRoute(userRoles);
+    navigate(dest, { replace: true });
     return null;
   }
 
@@ -114,7 +116,7 @@ export default function Auth() {
       title: 'Welcome back!',
       description: 'You have successfully logged in.',
     });
-    navigate('/dashboard');
+    navigate(getDashboardRoute(userRoles));
   };
 
   const handleSignup = async (e: React.FormEvent) => {
