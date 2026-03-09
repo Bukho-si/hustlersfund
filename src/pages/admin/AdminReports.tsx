@@ -79,6 +79,7 @@ export default function AdminReports() {
           <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex-1">Weekly Subs</TabsTrigger>
           <TabsTrigger value="loans" className="flex-1">Loans</TabsTrigger>
+          <TabsTrigger value="ledger" className="flex-1">Ledger</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab - existing content */}
