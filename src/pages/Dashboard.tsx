@@ -56,6 +56,7 @@ export default function Dashboard() {
   const { user, isAdmin } = useAuth();
   const { settings } = useContributionSettings();
   const queryClient = useQueryClient();
+  const { data: wallet } = useMyWallet(user?.id);
   const { data: currentCycle, refetch: refetchCycle } = useCurrentCycle();
   const [data, setData] = useState<DashboardData>({
     profile: null,
