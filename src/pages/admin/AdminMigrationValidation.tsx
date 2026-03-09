@@ -227,6 +227,30 @@ export default function AdminMigrationValidation() {
           Run Validation
         </Button>
 
+        {/* Fix Mismatches Button */}
+        {stats && stats.mismatchedMembers > 0 && (
+          <Button
+            onClick={fixMismatches}
+            disabled={isFixing || isRunning}
+            variant="destructive"
+            className="w-full"
+          >
+            {isFixing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wrench className="h-4 w-4 mr-2" />}
+            Fix {stats.mismatchedMembers} Mismatched Wallets
+          </Button>
+        )}
+
+        {fixedCount !== null && (
+          <Card className="ring-2 ring-success">
+            <CardContent className="p-3 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <p className="text-sm font-medium text-success">
+                Recalculated {fixedCount} wallet balances from transaction history
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Summary Stats */}
         {stats && (
           <div className="grid grid-cols-2 gap-3">
