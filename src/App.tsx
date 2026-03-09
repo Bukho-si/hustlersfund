@@ -16,6 +16,7 @@ import Emergencies from "./pages/Emergencies";
 import Profile from "./pages/Profile";
 import Install from "./pages/Install";
 import ResetPassword from "./pages/ResetPassword";
+import MyWallet from "./pages/MyWallet";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
