@@ -113,12 +113,17 @@ export default function AdminSettings() {
 
     try {
       // Update loan settings
+      const petrolDaysNum = parseInt(petrolRepayDays) || 7;
+      const personalDaysNum = parseInt(personalRepayDays) || 30;
+
       const { error: updateError } = await supabase
         .from('loan_settings')
         .update({
           petrol_interest_rate_percent: petrolRateNum,
           personal_interest_rate_percent: personalRateNum,
-        })
+          petrol_repayment_days: petrolDaysNum,
+          personal_repayment_days: personalDaysNum,
+        } as any)
         .eq('id', settings.id);
 
       if (updateError) throw updateError;
