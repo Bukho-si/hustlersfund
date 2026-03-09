@@ -196,6 +196,39 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          member_user_id: string
+          reference_id: string | null
+          transaction_type: Database["public"]["Enums"]["ledger_transaction_type"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          member_user_id: string
+          reference_id?: string | null
+          transaction_type: Database["public"]["Enums"]["ledger_transaction_type"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          member_user_id?: string
+          reference_id?: string | null
+          transaction_type?: Database["public"]["Enums"]["ledger_transaction_type"]
+        }
+        Relationships: []
+      }
       loan_repayments: {
         Row: {
           amount: number
@@ -520,6 +553,16 @@ export type Database = {
       emergency_due_status: "unpaid" | "paid"
       emergency_event_status: "active" | "closed"
       emergency_type: "funeral" | "accident"
+      ledger_transaction_type:
+        | "joining_fee"
+        | "weekly_contribution"
+        | "petrol_loan_issued"
+        | "petrol_loan_repayment"
+        | "personal_loan_issued"
+        | "personal_loan_repayment"
+        | "emergency_contribution"
+        | "late_fee"
+        | "cash_fee"
       loan_status: "pending" | "approved" | "rejected"
       loan_type: "petrol" | "personal"
       member_status: "pending" | "active" | "suspended" | "exited"
@@ -668,6 +711,17 @@ export const Constants = {
       emergency_due_status: ["unpaid", "paid"],
       emergency_event_status: ["active", "closed"],
       emergency_type: ["funeral", "accident"],
+      ledger_transaction_type: [
+        "joining_fee",
+        "weekly_contribution",
+        "petrol_loan_issued",
+        "petrol_loan_repayment",
+        "personal_loan_issued",
+        "personal_loan_repayment",
+        "emergency_contribution",
+        "late_fee",
+        "cash_fee",
+      ],
       loan_status: ["pending", "approved", "rejected"],
       loan_type: ["petrol", "personal"],
       member_status: ["pending", "active", "suspended", "exited"],

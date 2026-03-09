@@ -17,7 +17,8 @@ export type AdminModule =
   | 'reports'
   | 'roles'
   | 'settings'
-  | 'contribution_settings';
+  | 'contribution_settings'
+  | 'ledger';
 
 // Which modules each role can access
 const ROLE_MODULES: Record<string, AdminModule[]> = {
@@ -26,7 +27,7 @@ const ROLE_MODULES: Record<string, AdminModule[]> = {
     'petrol_loans', 'personal_loans',
     'emergency_events', 'emergency_payments', 'emergency_reports',
     'petrol_loan_reports', 'personal_loan_reports',
-    'reports', 'roles', 'settings', 'contribution_settings',
+    'reports', 'roles', 'settings', 'contribution_settings', 'ledger',
   ],
   // Legacy admin role treated as super_admin
   admin: [
@@ -34,7 +35,7 @@ const ROLE_MODULES: Record<string, AdminModule[]> = {
     'petrol_loans', 'personal_loans',
     'emergency_events', 'emergency_payments', 'emergency_reports',
     'petrol_loan_reports', 'personal_loan_reports',
-    'reports', 'roles', 'settings', 'contribution_settings',
+    'reports', 'roles', 'settings', 'contribution_settings', 'ledger',
   ],
   emergency_admin: [
     'emergency_events', 'emergency_payments', 'emergency_reports',
@@ -69,6 +70,7 @@ export const ROUTE_MODULE_MAP: Record<string, AdminModule> = {
   '/admin/roles': 'roles',
   '/admin/settings': 'settings',
   '/admin/contribution-settings': 'contribution_settings',
+  '/admin/ledger': 'ledger',
 };
 
 export function getAllowedModules(roles: AppRole[]): Set<AdminModule> {

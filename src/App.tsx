@@ -38,6 +38,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
+import AdminLedger from "./pages/admin/AdminLedger";
 
 import NotFound from "./pages/NotFound";
 
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             <Route path="/admin/cycles" element={<AdminCycles />} />
             <Route path="/admin/roles" element={<AdminRoles />} />
+            <Route path="/admin/ledger" element={<AdminLedger />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

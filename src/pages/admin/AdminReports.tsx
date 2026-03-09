@@ -12,6 +12,10 @@ import { MemberBalancesTable } from '@/components/reports/MemberBalancesTable';
 import { ExportButton } from '@/components/reports/ExportButton';
 import { SubscriptionsReport } from '@/components/reports/SubscriptionsReport';
 import { LoansReport } from '@/components/reports/LoansReport';
+import { LedgerTable } from '@/components/reports/LedgerTable';
+import { LedgerSummaryCards } from '@/components/reports/LedgerSummaryCards';
+import { LedgerExportButton } from '@/components/reports/LedgerExportButton';
+import { useLedgerEntries, useMemberLedgerSummary } from '@/hooks/useFinancialLedger';
 import {
   useFinancialSummary,
   useWeeklyContributions,
@@ -32,6 +36,8 @@ export default function AdminReports() {
   const { data: memberBalances, isLoading: balancesLoading } = useMemberBalances();
   const { data: paymentsLedger } = usePaymentsLedger();
   const { data: loansLedger } = useLoansLedger();
+  const { data: ledgerSummary, isLoading: ledgerSummaryLoading } = useMemberLedgerSummary();
+  const { data: ledgerEntries, isLoading: ledgerEntriesLoading } = useLedgerEntries({ limit: 50 });
 
   useEffect(() => {
     if (summaryUpdated) {
@@ -73,6 +79,7 @@ export default function AdminReports() {
           <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex-1">Weekly Subs</TabsTrigger>
           <TabsTrigger value="loans" className="flex-1">Loans</TabsTrigger>
+          <TabsTrigger value="ledger" className="flex-1">Ledger</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab - existing content */}
@@ -106,6 +113,15 @@ export default function AdminReports() {
         {/* Loans Tab */}
         <TabsContent value="loans">
           <LoansReport />
+        </TabsContent>
+
+        {/* Ledger Tab */}
+        <TabsContent value="ledger" className="space-y-4">
+          <div className="flex justify-end">
+            <LedgerExportButton entries={ledgerEntries} />
+          </div>
+          <LedgerSummaryCards summary={ledgerSummary} isLoading={ledgerSummaryLoading} />
+          <LedgerTable entries={ledgerEntries} isLoading={ledgerEntriesLoading} title="Recent Ledger Entries" />
         </TabsContent>
       </Tabs>
     </AppLayout>
