@@ -50,6 +50,7 @@ import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLedger from "./pages/admin/AdminLedger";
+import AdminLoanManagement from "./pages/admin/AdminLoanManagement";
 import AdminMigrationValidation from "./pages/admin/AdminMigrationValidation";
 import AdminEmergencyEventDetail from "./pages/admin/AdminEmergencyEventDetail";
 
