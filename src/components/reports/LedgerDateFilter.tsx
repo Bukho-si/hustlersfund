@@ -102,11 +102,13 @@ export function LedgerDateFilter({ onFilter }: LedgerDateFilterProps) {
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="weekly_contribution">Weekly Contribution</SelectItem>
-              <SelectItem value="joining_fee">Joining Fee</SelectItem>
+              <SelectItem value="joining_fee_payment">Joining Fee</SelectItem>
               <SelectItem value="petrol_loan_issued">Petrol Loan Issued</SelectItem>
               <SelectItem value="petrol_loan_repayment">Petrol Loan Repayment</SelectItem>
               <SelectItem value="personal_loan_issued">Personal Loan Issued</SelectItem>
               <SelectItem value="personal_loan_repayment">Personal Loan Repayment</SelectItem>
+              <SelectItem value="funeral_contribution">Funeral Contribution</SelectItem>
+              <SelectItem value="accident_contribution">Accident Contribution</SelectItem>
               <SelectItem value="emergency_contribution">Emergency Contribution</SelectItem>
               <SelectItem value="late_fee">Late Fee</SelectItem>
               <SelectItem value="cash_fee">Cash/ATM Fee</SelectItem>
