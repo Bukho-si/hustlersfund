@@ -17,6 +17,7 @@ import {
   FileText, CheckCircle, XCircle, Wallet, TrendingUp,
   AlertTriangle, Clock, Filter, Search
 } from 'lucide-react';
+import { LoanExportButton } from '@/components/loans/LoanExportButton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
