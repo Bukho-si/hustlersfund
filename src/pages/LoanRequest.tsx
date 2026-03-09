@@ -282,11 +282,26 @@ export default function LoanRequest() {
           </CardContent>
         </Card>
 
+        {/* Time window warning for petrol */}
+        {type === 'petrol' && !petrolWindowOpen && requestWindow && (
+          <Card className="border-warning/30 bg-warning/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Clock className="h-5 w-5 text-warning shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-warning">Outside Request Window</p>
+                <p className="text-xs text-muted-foreground">
+                  Petrol loan requests are only allowed between {requestWindow.start_time.slice(0, 5)} and {requestWindow.end_time.slice(0, 5)}.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Submit Button */}
         <Button 
           type="submit" 
           className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
-          disabled={isSubmitting || !isValidAmount || isLoadingProfile}
+          disabled={isSubmitting || !isValidAmount || isLoadingProfile || (type === 'petrol' && !petrolWindowOpen)}
         >
           {isSubmitting ? (
             <Loader2 className="h-5 w-5 animate-spin" />
