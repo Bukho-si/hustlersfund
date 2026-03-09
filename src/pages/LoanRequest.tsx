@@ -97,7 +97,7 @@ export default function LoanRequest() {
           amount: amountNum,
           reason: reason.trim(),
           repayment_plan: repaymentPlan.trim() || null,
-          status: 'pending',
+          status: type === 'petrol' ? 'requested' : 'pending',
           outstanding_balance: totalRepayable,
           interest_rate_percent: interestRate,
           interest_amount: interestAmount,

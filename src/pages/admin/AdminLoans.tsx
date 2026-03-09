@@ -164,9 +164,9 @@ export default function AdminLoans() {
     );
   };
 
-  const pendingLoans = loans.filter(l => l.status === 'pending');
-  const activeLoans = loans.filter(l => l.status === 'approved' && Number(l.outstanding_balance) > 0);
-  const historyLoans = loans.filter(l => l.status !== 'pending' && !(l.status === 'approved' && Number(l.outstanding_balance) > 0));
+  const pendingLoans = loans.filter(l => l.status === 'pending' || l.status === 'requested' || l.status === 'under_review');
+  const activeLoans = loans.filter(l => (l.status === 'approved' || l.status === 'disbursed') && Number(l.outstanding_balance) > 0);
+  const historyLoans = loans.filter(l => !['pending', 'requested', 'under_review'].includes(l.status) && !((l.status === 'approved' || l.status === 'disbursed') && Number(l.outstanding_balance) > 0));
 
   const handleRepaymentSuccess = () => {
     setRefreshTrigger(prev => prev + 1);

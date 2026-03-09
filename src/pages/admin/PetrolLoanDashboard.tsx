@@ -43,8 +43,8 @@ export default function PetrolLoanDashboard() {
       const today = format(new Date(), 'yyyy-MM-dd');
 
       const [approved, pending, repayments] = await Promise.all([
-        supabase.from('loans').select('outstanding_balance, approved_at').eq('type', 'petrol').eq('status', 'approved'),
-        supabase.from('loans').select('*', { count: 'exact', head: true }).eq('type', 'petrol').eq('status', 'pending'),
+        supabase.from('loans').select('outstanding_balance, approved_at').eq('type', 'petrol').in('status', ['approved', 'disbursed']),
+        supabase.from('loans').select('*', { count: 'exact', head: true }).eq('type', 'petrol').eq('status', 'requested'),
         supabase.from('loan_repayments').select('amount, paid_at, loan_id'),
       ]);
 

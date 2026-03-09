@@ -194,7 +194,7 @@ export default function Dashboard() {
         .from('loans')
         .select('outstanding_balance')
         .eq('member_user_id', user.id)
-        .eq('status', 'approved');
+        .in('status', ['approved', 'disbursed']);
 
       const totalLoansOutstanding = loans?.reduce((sum, loan) => sum + Number(loan.outstanding_balance), 0) || 0;
 

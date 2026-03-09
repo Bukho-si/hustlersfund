@@ -45,7 +45,14 @@ const getStatusStyles = (status: string, variant: string) => {
       case 'approved':
         return 'bg-success/10 text-success border-success/20';
       case 'pending':
+      case 'requested':
         return 'bg-warning/10 text-warning border-warning/20';
+      case 'under review':
+        return 'bg-info/10 text-info border-info/20';
+      case 'disbursed':
+        return 'bg-primary/10 text-primary border-primary/20';
+      case 'repaid':
+        return 'bg-muted text-muted-foreground border-muted';
       case 'rejected':
         return 'bg-destructive/10 text-destructive border-destructive/20';
       default:

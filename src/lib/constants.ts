@@ -86,7 +86,14 @@ export const getLoanStatusColor = (status: string) => {
     case 'approved':
       return 'bg-success text-success-foreground';
     case 'pending':
+    case 'requested':
       return 'bg-warning text-warning-foreground';
+    case 'under_review':
+      return 'bg-info text-info-foreground';
+    case 'disbursed':
+      return 'bg-primary text-primary-foreground';
+    case 'repaid':
+      return 'bg-muted text-muted-foreground';
     case 'rejected':
       return 'bg-destructive text-destructive-foreground';
     default:
