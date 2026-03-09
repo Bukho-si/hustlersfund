@@ -48,7 +48,7 @@ export function PersonalLoanBoard({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       {columnDefs.map((col) => (
         <div key={col.key} className="min-w-0">
           <div className={`flex items-center gap-2 p-2 rounded-lg ${col.bgColor} mb-2`}>
