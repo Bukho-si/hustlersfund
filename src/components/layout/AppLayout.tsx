@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { MobileNav } from './MobileNav';
 import { AppBrandWidget } from './AppBrandWidget';
+import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
