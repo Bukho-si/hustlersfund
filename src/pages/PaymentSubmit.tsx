@@ -38,7 +38,6 @@ export default function PaymentSubmit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [membershipSlots, setMembershipSlots] = useState(1);
   const [joiningFeePaidTotal, setJoiningFeePaidTotal] = useState(0);
-  const [emergencyDuesTotal, setEmergencyDuesTotal] = useState(0);
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
   const [currentCycleId, setCurrentCycleId] = useState<string | null>(null);
   const [loanInterest, setLoanInterest] = useState(loanInterestParam);
