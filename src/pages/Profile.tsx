@@ -128,6 +128,12 @@ export default function Profile() {
   const joiningFeeRemaining = getJoiningFeeRemaining(slots, joiningFeePaid);
   const joiningFeeProgress = (joiningFeePaid / joiningFeeTotal) * 100;
 
+  const { data: ledgerEntries, isLoading: ledgerLoading } = useLedgerEntries({
+    memberUserId: user?.id,
+    limit: 20,
+  });
+  const { data: ledgerSummary } = useMemberLedgerSummary(user?.id);
+
   return (
     <AppLayout>
       <PageHeader title="Profile" subtitle="Manage your account" />
