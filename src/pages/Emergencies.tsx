@@ -21,6 +21,11 @@ interface EmergencyEvent {
   status: string;
 }
 
+interface EventProgress {
+  totalMembers: number;
+  paidMembers: number;
+}
+
 interface EmergencyDue {
   id: string;
   event_id: string;
