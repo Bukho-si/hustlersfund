@@ -180,8 +180,8 @@ export function useWalletSummary() {
   return useQuery({
     queryKey: ['wallet-summary'],
     queryFn: async (): Promise<WalletSummary> => {
-      const { data, error } = await supabase
-        .from('member_wallets' as any)
+      const { data, error } = await (supabase as any)
+        .from('member_wallets')
         .select('contribution_balance, petrol_loan_balance, personal_loan_balance, emergency_contributions_total, joining_fee_balance');
       if (error) throw error;
 
