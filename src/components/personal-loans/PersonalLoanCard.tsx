@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -9,8 +10,8 @@ import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog'
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 import type { PersonalLoanWithProfile } from '@/hooks/usePersonalLoanBoard';
 import {
-  DollarSign, Lock, Eye, CheckCircle2, XCircle, Loader2,
-  ChevronDown, ChevronUp, Send, AlertTriangle, Users, Calendar
+  Lock, Eye, CheckCircle2, XCircle, Loader2,
+  ChevronDown, ChevronUp, AlertTriangle, Calendar, CheckCircle
 } from 'lucide-react';
 
 interface Props {
@@ -40,61 +41,101 @@ export function PersonalLoanCard({
 
   return (
     <Card className="animate-fade-in">
-      <CardContent className="p-3">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <DollarSign className="h-4 w-4 text-primary shrink-0" />
-            <div className="min-w-0">
-              <p className="font-medium text-sm truncate">{loan.profile?.full_name || 'Unknown'}</p>
-              <p className="text-[10px] text-muted-foreground">{formatDate(loan.requested_at)}</p>
+      <CardContent className="p-3.5 space-y-2">
+        {/* Member Header */}
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-base truncate text-foreground">
+              {loan.profile?.full_name || 'Unknown'}
+            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-sm font-medium text-foreground">
+                {formatCurrency(Number(loan.amount))}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground">{formatDate(loan.requested_at)}</span>
             </div>
           </div>
-          <StatusBadge status={loan.status} variant="loan" className="text-[10px]" />
+          <StatusBadge status={loan.status} variant="loan" className="text-xs font-semibold px-3 py-1" />
         </div>
 
+        {/* Locked warning */}
         {isLockedByOther && (
-          <div className="flex items-center gap-1.5 mb-2 p-1.5 rounded bg-warning/10 border border-warning/20">
+          <div className="flex items-center gap-1.5 p-1.5 rounded bg-warning/10 border border-warning/20">
             <Lock className="h-3 w-3 text-warning" />
             <span className="text-[10px] text-warning font-medium">Reviewed by {loan.locker_name}</span>
           </div>
         )}
 
-        <div className="space-y-1 text-xs mb-2">
-          <div className="flex justify-between"><span className="text-muted-foreground">Requested</span><span className="font-semibold">{formatCurrency(Number(loan.amount))}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground"><Users className="h-3 w-3 inline mr-0.5" />Slots</span><span>{loan.profile?.membership_slots || 1}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Limit</span><span>{formatCurrency(loan.personal_loan_limit)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Existing debt</span><span className={loan.existing_outstanding > 0 ? 'text-destructive font-medium' : ''}>{formatCurrency(loan.existing_outstanding)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Eligible</span><span className={exceedsLimit ? 'text-destructive font-bold' : 'text-success font-medium'}>{formatCurrency(loan.eligible_amount)}</span></div>
+        {/* Financial Details - 2 column grid */}
+        <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs">
+          <span className="text-muted-foreground">Requested</span>
+          <span className="font-semibold text-right">{formatCurrency(Number(loan.amount))}</span>
+
+          <span className="text-muted-foreground">Limit</span>
+          <span className="text-right">{formatCurrency(loan.personal_loan_limit)}</span>
+
+          <span className="text-muted-foreground">Existing Debt</span>
+          <span className={`text-right ${loan.existing_outstanding > 0 ? 'text-destructive font-medium' : ''}`}>
+            {formatCurrency(loan.existing_outstanding)}
+          </span>
+
+          <span className="text-muted-foreground">Eligible</span>
+          <span className={`text-right text-sm font-bold ${exceedsLimit ? 'text-destructive' : 'text-success'}`}>
+            {formatCurrency(loan.eligible_amount)}
+          </span>
+
           {(loan.status === 'disbursed' || loan.status === 'approved') && Number(loan.outstanding_balance) > 0 && (
-            <div className="flex justify-between pt-1 border-t"><span className="text-muted-foreground">Outstanding</span><span className="font-semibold text-accent">{formatCurrency(Number(loan.outstanding_balance))}</span></div>
+            <>
+              <span className="text-muted-foreground pt-1 border-t">Outstanding</span>
+              <span className="font-semibold text-accent text-right pt-1 border-t">
+                {formatCurrency(Number(loan.outstanding_balance))}
+              </span>
+            </>
           )}
         </div>
 
+        {/* Exceeds limit warning */}
         {exceedsLimit && !['disbursed', 'approved'].includes(loan.status) && (
-          <div className="flex items-center gap-1 p-1.5 rounded bg-destructive/10 border border-destructive/20 mb-2">
-            <AlertTriangle className="h-3 w-3 text-destructive shrink-0" /><span className="text-[10px] text-destructive">Exceeds eligible limit</span>
+          <div className="flex items-center gap-1 p-1.5 rounded bg-destructive/10 border border-destructive/20">
+            <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
+            <span className="text-[10px] text-destructive">Exceeds eligible limit</span>
           </div>
         )}
 
-        <div className="flex items-center gap-1 mb-2">
-          <span className="text-[10px] text-muted-foreground">Contributions:</span>
-          <span className={`text-[10px] font-medium ${loan.contribution_status === 'paid' ? 'text-success' : 'text-warning'}`}>
-            {loan.contribution_status === 'paid' ? 'Up to date' : 'Pending'}
-          </span>
+        {/* Purpose tag */}
+        {loan.reason && (
+          <div>
+            <Badge variant="secondary" className="text-[10px] font-normal">
+              Purpose: {loan.reason}
+            </Badge>
+          </div>
+        )}
+
+        {/* Contribution status + last repayment */}
+        <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center gap-1">
+            {loan.contribution_status === 'paid' ? (
+              <CheckCircle className="h-3.5 w-3.5 text-success" />
+            ) : (
+              <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+            )}
+            <span className={loan.contribution_status === 'paid' ? 'text-success font-medium' : 'text-warning font-medium'}>
+              {loan.contribution_status === 'paid' ? 'Contributions up to date' : 'Contributions pending'}
+            </span>
+          </div>
+          {loan.last_repayment_date && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              <span>{formatDate(loan.last_repayment_date)}</span>
+            </div>
+          )}
         </div>
 
-        {loan.last_repayment_date && (
-          <div className="flex items-center gap-1 mb-2">
-            <Calendar className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[10px] text-muted-foreground">Last repayment: {formatDate(loan.last_repayment_date)}</span>
-          </div>
-        )}
-
-        {loan.reason && <p className="text-[10px] text-muted-foreground mb-2 italic truncate" title={loan.reason}>"{loan.reason}"</p>}
-
+        {/* Actions */}
         {loan.status === 'requested' && !isLockedByOther && (
           <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => onLock(loan.id)} disabled={isProcessing}>
-            <Eye className="h-3 w-3 mr-1" /> Review
+            <Eye className="h-3 w-3 mr-1" /> Review Loan
           </Button>
         )}
 
