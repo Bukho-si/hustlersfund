@@ -17,7 +17,8 @@ export type AdminModule =
   | 'reports'
   | 'roles'
   | 'settings'
-  | 'contribution_settings';
+  | 'contribution_settings'
+  | 'ledger';
 
 // Which modules each role can access
 const ROLE_MODULES: Record<string, AdminModule[]> = {
