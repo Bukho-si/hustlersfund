@@ -53,7 +53,8 @@ export default function Auth() {
 
   // Redirect if already logged in
   if (user) {
-    navigate('/dashboard', { replace: true });
+    const dest = getDashboardRoute(userRoles);
+    navigate(dest, { replace: true });
     return null;
   }
 
