@@ -170,7 +170,7 @@ export default function SuperAdminDashboard() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
             Contributions Trend
           </h3>
-          <ContributionsChart />
+          <ContributionsChart data={contributionsData} isLoading={contribLoading} />
         </CardContent>
       </Card>
 
