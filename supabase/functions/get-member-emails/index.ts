@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -17,70 +16,40 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
-    // Create admin client with service role key
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify the caller is an admin
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
+    if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      throw new Error("Unauthorized");
-    }
+    if (authError || !user) throw new Error("Unauthorized");
 
-    // Check if user has any admin role
     const { data: adminRoles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .in("role", ["admin", "super_admin", "emergency_admin", "petrol_loan_admin", "personal_loan_admin"]);
+      .in("role", ["admin", "super_admin", "emergency_admin", "petrol_loan_admin", "personal_loan_admin", "accident_admin", "funeral_admin"]);
 
-    if (!adminRoles || adminRoles.length === 0) {
-      throw new Error("Admin access required");
-    }
+    if (!adminRoles || adminRoles.length === 0) throw new Error("Admin access required");
 
-    // Fetch all users with their emails
     const { data: users, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+    if (usersError) throw usersError;
 
-    if (usersError) {
-      throw usersError;
-    }
-
-    // Create a map of user_id to email
     const emailMap: Record<string, string> = {};
-    users.users.forEach(u => {
-      if (u.email) {
-        emailMap[u.id] = u.email;
-      }
+    users.users.forEach(u => { if (u.email) emailMap[u.id] = u.email; });
+
+    return new Response(JSON.stringify({ emails: emailMap }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-
-    console.log(`Fetched emails for ${Object.keys(emailMap).length} users`);
-
-    return new Response(
-      JSON.stringify({ emails: emailMap }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
   } catch (error: any) {
     console.error("Error in get-member-emails:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: error.message === "Unauthorized" || error.message === "Admin access required" ? 403 : 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: error.message === "Unauthorized" || error.message === "Admin access required" ? 403 : 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 });

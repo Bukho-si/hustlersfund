@@ -550,6 +550,8 @@ export type Database = {
         | "emergency_admin"
         | "petrol_loan_admin"
         | "personal_loan_admin"
+        | "accident_admin"
+        | "funeral_admin"
       emergency_due_status: "unpaid" | "paid"
       emergency_event_status: "active" | "closed"
       emergency_type: "funeral" | "accident"
@@ -707,6 +709,8 @@ export const Constants = {
         "emergency_admin",
         "petrol_loan_admin",
         "personal_loan_admin",
+        "accident_admin",
+        "funeral_admin",
       ],
       emergency_due_status: ["unpaid", "paid"],
       emergency_event_status: ["active", "closed"],

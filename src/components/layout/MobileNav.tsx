@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, UserCog, RefreshCw, BarChart3, Settings, DollarSign } from 'lucide-react';
+import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, UserCog, RefreshCw, BarChart3, Settings, DollarSign, Heart, Car } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminModule } from '@/lib/roles';
@@ -27,6 +27,8 @@ const allAdminNavItems: NavItem[] = [
   { href: '/admin/cycles', label: 'Cycles', icon: RefreshCw, module: 'cycles' },
   { href: '/admin/petrol-loans', label: 'Petrol', icon: Fuel, module: 'petrol_loans' },
   { href: '/admin/personal-loans', label: 'Personal', icon: DollarSign, module: 'personal_loans' },
+  { href: '/admin/accident-events', label: 'Accidents', icon: Car, module: 'accident_events' },
+  { href: '/admin/funeral-events', label: 'Funerals', icon: Heart, module: 'funeral_events' },
   { href: '/admin/events', label: 'Emergency', icon: AlertTriangle, module: 'emergency_events' },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3, module: 'reports' },
   { href: '/admin/roles', label: 'Roles', icon: UserCog, module: 'roles' },

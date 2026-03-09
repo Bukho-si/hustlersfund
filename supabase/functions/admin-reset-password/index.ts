@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -17,46 +16,29 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
-    // Create admin client with service role key
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify the caller is an admin
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
+    if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      throw new Error("Unauthorized");
-    }
+    if (authError || !user) throw new Error("Unauthorized");
 
-    // Check if user is admin
-    const { data: adminRole } = await supabaseAdmin
+    // Check if user has any admin role
+    const { data: adminRoles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .in("role", ["admin", "super_admin", "emergency_admin", "petrol_loan_admin", "personal_loan_admin", "accident_admin", "funeral_admin"]);
 
-    if (!adminRole) {
-      throw new Error("Admin access required");
-    }
+    if (!adminRoles || adminRoles.length === 0) throw new Error("Admin access required");
 
     const { email, redirectUrl } = await req.json();
+    if (!email) throw new Error("Email is required");
 
-    if (!email) {
-      throw new Error("Email is required");
-    }
-
-    // Generate password reset link
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: email,
@@ -65,31 +47,19 @@ serve(async (req) => {
       },
     });
 
-    if (error) {
-      console.error("Error generating reset link:", error);
-      throw error;
-    }
+    if (error) throw error;
 
     console.log(`Password reset email triggered for: ${email}`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Password reset email sent to ${email}` 
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      JSON.stringify({ success: true, message: `Password reset email sent to ${email}` }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
     console.error("Error in admin-reset-password:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: error.message === "Unauthorized" || error.message === "Admin access required" ? 403 : 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: error.message === "Unauthorized" || error.message === "Admin access required" ? 403 : 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 });

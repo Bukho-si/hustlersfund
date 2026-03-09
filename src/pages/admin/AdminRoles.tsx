@@ -28,7 +28,7 @@ interface MemberWithRoles {
   roles: AppRole[];
 }
 
-const ASSIGNABLE_ROLES: AppRole[] = ['super_admin', 'emergency_admin', 'petrol_loan_admin', 'personal_loan_admin'];
+const ASSIGNABLE_ROLES: AppRole[] = ['super_admin', 'accident_admin', 'funeral_admin', 'petrol_loan_admin', 'personal_loan_admin'];
 
 export default function AdminRoles() {
   const { user, isSuperAdmin } = useAuth();
