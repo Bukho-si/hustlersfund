@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { AlertTriangle, Heart, Car, CreditCard } from 'lucide-react';
+import { AlertTriangle, Heart, Car, CreditCard, Users, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -18,6 +19,11 @@ interface EmergencyEvent {
   event_date: string;
   amount_per_member: number;
   status: string;
+}
+
+interface EventProgress {
+  totalMembers: number;
+  paidMembers: number;
 }
 
 interface EmergencyDue {
@@ -32,12 +38,11 @@ interface EmergencyDue {
 export default function Emergencies() {
   const { user } = useAuth();
   const [dues, setDues] = useState<EmergencyDue[]>([]);
+  const [eventProgress, setEventProgress] = useState<Record<string, EventProgress>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchEmergencyDues();
-    }
+    if (user) fetchEmergencyDues();
   }, [user]);
 
   const fetchEmergencyDues = async () => {
@@ -56,6 +61,25 @@ export default function Emergencies() {
       console.error('Error fetching emergency dues:', error);
     } else {
       setDues(data || []);
+
+      // Fetch progress for active events
+      const activeEventIds = [...new Set((data || []).filter(d => d.event?.status === 'active').map(d => d.event_id))];
+      if (activeEventIds.length > 0) {
+        const { data: allDues } = await supabase
+          .from('emergency_dues')
+          .select('event_id, status')
+          .in('event_id', activeEventIds);
+
+        const progress: Record<string, EventProgress> = {};
+        activeEventIds.forEach(eid => {
+          const eventDues = (allDues || []).filter(d => d.event_id === eid);
+          progress[eid] = {
+            totalMembers: eventDues.length,
+            paidMembers: eventDues.filter(d => d.status === 'paid').length,
+          };
+        });
+        setEventProgress(progress);
+      }
     }
     setIsLoading(false);
   };
@@ -170,6 +194,27 @@ export default function Emergencies() {
                     </div>
                   )}
                 </div>
+
+                {/* Progress bar for active events */}
+                {due.event.status === 'active' && eventProgress[due.event_id] && (
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" /> Member Progress
+                      </span>
+                      <span className="font-medium flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-success" />
+                        {eventProgress[due.event_id].paidMembers} / {eventProgress[due.event_id].totalMembers} paid
+                      </span>
+                    </div>
+                    <Progress
+                      value={eventProgress[due.event_id].totalMembers > 0
+                        ? (eventProgress[due.event_id].paidMembers / eventProgress[due.event_id].totalMembers) * 100
+                        : 0}
+                      className="h-2"
+                    />
+                  </div>
+                )}
 
                 {due.status === 'unpaid' && (
                   <p className="text-xs text-muted-foreground mt-3 italic">

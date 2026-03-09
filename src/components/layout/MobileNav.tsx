@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, RefreshCw, BarChart3, Settings, DollarSign, Heart, Car, BookOpen } from 'lucide-react';
+import { Home, CreditCard, Wallet, AlertTriangle, User, Users, FileCheck, Fuel, RefreshCw, BarChart3, Settings, DollarSign, Heart, Car, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { AppRole } from '@/lib/roles';
@@ -12,10 +12,11 @@ interface NavItem {
 }
 
 const memberNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/payments', label: 'Payments', icon: CreditCard },
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/wallet', label: 'Wallet', icon: Wallet },
+  { href: '/loans', label: 'Loans', icon: DollarSign },
   { href: '/emergencies', label: 'Emergency', icon: AlertTriangle },
+  { href: '/activity', label: 'Activity', icon: Activity },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
