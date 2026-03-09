@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import Install from "./pages/Install";
 import ResetPassword from "./pages/ResetPassword";
 import MyWallet from "./pages/MyWallet";
+import Activity from "./pages/Activity";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
