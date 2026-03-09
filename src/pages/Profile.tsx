@@ -11,6 +11,8 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLedgerEntries, useMemberLedgerSummary } from '@/hooks/useFinancialLedger';
+import { LedgerTable } from '@/components/reports/LedgerTable';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
 import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
