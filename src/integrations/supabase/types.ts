@@ -402,6 +402,39 @@ export type Database = {
         }
         Relationships: []
       }
+      member_wallets: {
+        Row: {
+          contribution_balance: number
+          emergency_contributions_total: number
+          id: string
+          joining_fee_balance: number
+          member_user_id: string
+          personal_loan_balance: number
+          petrol_loan_balance: number
+          updated_at: string
+        }
+        Insert: {
+          contribution_balance?: number
+          emergency_contributions_total?: number
+          id?: string
+          joining_fee_balance?: number
+          member_user_id: string
+          personal_loan_balance?: number
+          petrol_loan_balance?: number
+          updated_at?: string
+        }
+        Update: {
+          contribution_balance?: number
+          emergency_contributions_total?: number
+          id?: string
+          joining_fee_balance?: number
+          member_user_id?: string
+          personal_loan_balance?: number
+          petrol_loan_balance?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -527,6 +560,39 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          member_user_id: string
+          reference_id: string | null
+          transaction_type: Database["public"]["Enums"]["wallet_transaction_type"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          member_user_id: string
+          reference_id?: string | null
+          transaction_type: Database["public"]["Enums"]["wallet_transaction_type"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          member_user_id?: string
+          reference_id?: string | null
+          transaction_type?: Database["public"]["Enums"]["wallet_transaction_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -575,6 +641,18 @@ export type Database = {
         | "verified"
         | "rejected"
         | "withdrawn"
+      wallet_transaction_type:
+        | "joining_fee_payment"
+        | "weekly_contribution"
+        | "petrol_loan_issued"
+        | "petrol_loan_repayment"
+        | "personal_loan_issued"
+        | "personal_loan_repayment"
+        | "funeral_contribution"
+        | "accident_contribution"
+        | "emergency_contribution"
+        | "late_fee"
+        | "cash_fee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -736,6 +814,19 @@ export const Constants = {
         "verified",
         "rejected",
         "withdrawn",
+      ],
+      wallet_transaction_type: [
+        "joining_fee_payment",
+        "weekly_contribution",
+        "petrol_loan_issued",
+        "petrol_loan_repayment",
+        "personal_loan_issued",
+        "personal_loan_repayment",
+        "funeral_contribution",
+        "accident_contribution",
+        "emergency_contribution",
+        "late_fee",
+        "cash_fee",
       ],
     },
   },
