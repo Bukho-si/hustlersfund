@@ -116,6 +116,54 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_contributor_payments: {
+        Row: {
+          amount: number
+          contributor_id: string
+          created_at: string
+          event_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          recorded_by: string
+        }
+        Insert: {
+          amount: number
+          contributor_id: string
+          created_at?: string
+          event_id: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          recorded_by: string
+        }
+        Update: {
+          amount?: number
+          contributor_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          recorded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contributor_payments_contributor_id_fkey"
+            columns: ["contributor_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_contributors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_contributor_payments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contributors: {
         Row: {
           amount_due: number
@@ -218,6 +266,7 @@ export type Database = {
           description: string | null
           event_date: string
           id: string
+          payment_deadline: string | null
           status: Database["public"]["Enums"]["emergency_event_status"]
           title: string
           type: Database["public"]["Enums"]["emergency_type"]
@@ -230,6 +279,7 @@ export type Database = {
           description?: string | null
           event_date: string
           id?: string
+          payment_deadline?: string | null
           status?: Database["public"]["Enums"]["emergency_event_status"]
           title: string
           type: Database["public"]["Enums"]["emergency_type"]
@@ -242,12 +292,64 @@ export type Database = {
           description?: string | null
           event_date?: string
           id?: string
+          payment_deadline?: string | null
           status?: Database["public"]["Enums"]["emergency_event_status"]
           title?: string
           type?: Database["public"]["Enums"]["emergency_type"]
           updated_at?: string
         }
         Relationships: []
+      }
+      emergency_payment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          due_id: string
+          event_id: string
+          id: string
+          member_user_id: string
+          notes: string | null
+          payment_date: string
+          recorded_by: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_id: string
+          event_id: string
+          id?: string
+          member_user_id: string
+          notes?: string | null
+          payment_date?: string
+          recorded_by: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_id?: string
+          event_id?: string
+          id?: string
+          member_user_id?: string
+          notes?: string | null
+          payment_date?: string
+          recorded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_payment_history_due_id_fkey"
+            columns: ["due_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_dues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_payment_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       financial_ledger: {
         Row: {
@@ -832,7 +934,7 @@ export type Database = {
         | "personal_loan_admin"
         | "accident_admin"
         | "funeral_admin"
-      emergency_due_status: "unpaid" | "paid"
+      emergency_due_status: "unpaid" | "paid" | "partially_paid" | "overdue"
       emergency_event_status: "active" | "closed"
       emergency_type: "funeral" | "accident"
       ledger_transaction_type:
@@ -1011,7 +1113,7 @@ export const Constants = {
         "accident_admin",
         "funeral_admin",
       ],
-      emergency_due_status: ["unpaid", "paid"],
+      emergency_due_status: ["unpaid", "paid", "partially_paid", "overdue"],
       emergency_event_status: ["active", "closed"],
       emergency_type: ["funeral", "accident"],
       ledger_transaction_type: [
