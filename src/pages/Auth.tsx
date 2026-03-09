@@ -116,7 +116,7 @@ export default function Auth() {
       title: 'Welcome back!',
       description: 'You have successfully logged in.',
     });
-    navigate('/dashboard');
+    navigate(getDashboardRoute(userRoles));
   };
 
   const handleSignup = async (e: React.FormEvent) => {

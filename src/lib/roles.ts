@@ -50,6 +50,10 @@ const ROLE_MODULES: Record<string, AdminModule[]> = {
 // Map routes to modules
 export const ROUTE_MODULE_MAP: Record<string, AdminModule> = {
   '/admin': 'dashboard',
+  '/admin/dashboard': 'dashboard',
+  '/admin/emergency-dashboard': 'emergency_events',
+  '/admin/petrol-dashboard': 'petrol_loans',
+  '/admin/personal-loan-dashboard': 'personal_loans',
   '/admin/members': 'members',
   '/admin/verify': 'verify',
   '/admin/cycles': 'cycles',
