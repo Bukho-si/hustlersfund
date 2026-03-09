@@ -178,10 +178,7 @@ export default function Dashboard() {
       }
     }
 
-    if (data.emergencyDuesTotal > 0) {
-      total += data.emergencyDuesTotal;
-      breakdown.push({ label: `Emergency dues (${data.emergencyDuesCount})`, amount: data.emergencyDuesTotal });
-    }
+    // Emergency dues are tracked separately in Emergency tab - NOT in weekly breakdown
 
     return { total, breakdown };
   };
