@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useContributionCycles';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
+import { useMyWallet } from '@/hooks/useWallet';
 import { useContributionSettings, getWeeklySubscription, getJoiningFeeRemaining } from '@/hooks/useContributionSettings';
 import { 
   CreditCard, 
