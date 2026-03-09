@@ -4,12 +4,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyWallet, useWalletTransactions, getWalletTransactionLabel, isWalletDebitTransaction } from '@/hooks/useWallet';
 import { formatCurrency, formatDateTime, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
-import { Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, Fuel, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, Fuel, DollarSign, AlertTriangle, CheckCircle, PiggyBank, TrendingDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 export default function MyWallet() {
   const { user } = useAuth();
@@ -31,10 +33,36 @@ export default function MyWallet() {
       .then(({ data }) => setProfile(data));
   }, [user]);
 
+  // Fetch active loans with interest for accurate loan totals
+  const { data: activeLoans } = useQuery({
+    queryKey: ['my-active-loans', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('loans')
+        .select('id, type, amount, outstanding_balance, interest_amount, total_repayable, status')
+        .eq('member_user_id', user.id)
+        .in('status', ['approved', 'disbursed']);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
+
+  const petrolLoans = activeLoans?.filter(l => l.type === 'petrol') || [];
+  const personalLoans = activeLoans?.filter(l => l.type === 'personal') || [];
+
+  const petrolLoanTotal = petrolLoans.reduce((sum, l) => sum + Number(l.outstanding_balance), 0);
+  const personalLoanTotal = personalLoans.reduce((sum, l) => sum + Number(l.outstanding_balance), 0);
+  const totalLoansOwed = petrolLoanTotal + personalLoanTotal;
+
   const slots = profile?.membership_slots || 1;
   const joiningFeeTotal = getJoiningFeeTotal(slots);
   const joiningFeePaid = wallet?.joining_fee_balance || profile?.joining_fee_paid_total || 0;
   const joiningFeeProgress = joiningFeeTotal > 0 ? Math.min((joiningFeePaid / joiningFeeTotal) * 100, 100) : 0;
+
+  const totalContributions = (wallet?.contribution_balance || 0) + (wallet?.joining_fee_balance || 0);
 
   if (walletLoading) {
     return (
@@ -49,66 +77,23 @@ export default function MyWallet() {
     );
   }
 
-  const balanceCards = [
-    {
-      label: 'Contributions',
-      value: wallet?.contribution_balance || 0,
-      icon: ArrowUpRight,
-      color: 'text-success',
-      bgColor: 'bg-success/10',
-    },
-    {
-      label: 'Petrol Loan',
-      value: wallet?.petrol_loan_balance || 0,
-      icon: Fuel,
-      color: 'text-warning',
-      bgColor: 'bg-warning/10',
-      isDebt: true,
-    },
-    {
-      label: 'Personal Loan',
-      value: wallet?.personal_loan_balance || 0,
-      icon: DollarSign,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
-      isDebt: true,
-    },
-    {
-      label: 'Emergency Fund',
-      value: wallet?.emergency_contributions_total || 0,
-      icon: AlertTriangle,
-      color: 'text-destructive',
-      bgColor: 'bg-destructive/10',
-    },
-  ];
-
   return (
     <AppLayout>
       <PageHeader title="My Wallet" subtitle="Your financial overview" />
 
-      {/* Wallet Hero */}
+      {/* Section 1: Contributions */}
       <Card className="mb-4 bg-primary text-primary-foreground">
         <CardContent className="p-5">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-1">
             <div className="h-12 w-12 rounded-xl bg-primary-foreground/10 flex items-center justify-center">
-              <Wallet className="h-6 w-6" />
+              <PiggyBank className="h-6 w-6" />
             </div>
             <div>
               <p className="text-primary-foreground/70 text-xs">Total Contributions</p>
-              <p className="text-2xl font-bold">{formatCurrency((wallet?.contribution_balance || 0) + (wallet?.joining_fee_balance || 0))}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalContributions)}</p>
             </div>
           </div>
-          {(wallet?.petrol_loan_balance || 0) > 0 || (wallet?.personal_loan_balance || 0) > 0 ? (
-            <div className="flex items-center gap-2 text-sm text-primary-foreground/80">
-              <CreditCard className="h-4 w-4" />
-              <span>Outstanding Loans: {formatCurrency((wallet?.petrol_loan_balance || 0) + (wallet?.personal_loan_balance || 0))}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-primary-foreground/80">
-              <CheckCircle className="h-4 w-4" />
-              <span>No outstanding loans</span>
-            </div>
-          )}
+          <p className="text-primary-foreground/60 text-[11px] mt-2">Your member savings — not affected by loans</p>
         </CardContent>
       </Card>
 
@@ -128,28 +113,64 @@ export default function MyWallet() {
         </CardContent>
       </Card>
 
-      {/* Balance Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {balanceCards.map((card) => (
-          <Card key={card.label} className="animate-fade-in">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`h-8 w-8 rounded-lg ${card.bgColor} flex items-center justify-center`}>
-                  <card.icon className={`h-4 w-4 ${card.color}`} />
+      {/* Section 2: Loans Owed */}
+      <Card className="mb-4 animate-fade-in">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total Loans Owed</p>
+              <p className="text-lg font-bold">{totalLoansOwed > 0 ? formatCurrency(totalLoansOwed) : 'R0.00'}</p>
+            </div>
+          </div>
+
+          {totalLoansOwed > 0 ? (
+            <div className="space-y-2">
+              <Separator />
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center gap-2">
+                  <Fuel className="h-4 w-4 text-warning" />
+                  <span className="text-sm">Petrol Loan</span>
                 </div>
+                <span className="text-sm font-semibold">
+                  {petrolLoanTotal > 0 ? formatCurrency(petrolLoanTotal) : 'R0.00'}
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground">{card.label}</p>
-              <p className="text-lg font-bold">
-                {card.isDebt && card.value > 0 && '-'}
-                {formatCurrency(Math.abs(card.value))}
-              </p>
-              {card.isDebt && card.value > 0 && (
-                <Badge variant="outline" className="text-[10px] mt-1 text-destructive border-destructive/30">Outstanding</Badge>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-info" />
+                  <span className="text-sm">Personal Loan</span>
+                </div>
+                <span className="text-sm font-semibold">
+                  {personalLoanTotal > 0 ? formatCurrency(personalLoanTotal) : 'R0.00'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle className="h-4 w-4 text-success" />
+              <span>No outstanding loans</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section 3: Emergency Contributions */}
+      <Card className="mb-4 animate-fade-in">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Emergency Contributions</p>
+              <p className="text-lg font-bold">{formatCurrency(wallet?.emergency_contributions_total || 0)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Transaction History */}
       <Card className="animate-fade-in">
