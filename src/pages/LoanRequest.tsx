@@ -12,9 +12,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, getPetrolLoanMax, getPersonalLoanMax, PETROL_LOAN_MAX, PERSONAL_LOAN_MAX } from '@/lib/constants';
-import { Fuel, User, Loader2, AlertCircle, Users } from 'lucide-react';
+import { Fuel, User, Loader2, AlertCircle, Users, Clock } from 'lucide-react';
 import { InterestCalculator } from '@/components/loans/InterestCalculator';
 import { useLoanSettings } from '@/hooks/useLoanSettings';
+import { usePetrolRequestWindow } from '@/hooks/usePetrolFund';
 
 export default function LoanRequest() {
   const navigate = useNavigate();
