@@ -14,6 +14,7 @@ import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { usePetrolFund } from '@/hooks/usePetrolFund';
 import { PetrolFundLowBanner } from '@/components/petrol-loans/PetrolFundBanner';
 import { AddFundsDialog } from '@/components/funds/AddFundsDialog';
+import { FundHistoryDialog } from '@/components/funds/FundHistoryDialog';
 
 interface Stats {
   loansIssuedToday: number;
