@@ -129,6 +129,11 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Standardized spacing system */
+.space-inner { gap: 0.5rem; }    /* 8px */
+.space-card { gap: 1rem; }       /* 16px */
+.space-section { gap: 1.5rem; }  /* 24px */
+
 @layer base {
   * {
     @apply border-border;

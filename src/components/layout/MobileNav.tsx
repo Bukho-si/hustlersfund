@@ -103,31 +103,33 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-bottom">
-      <div className={cn(
-        "flex items-center h-16 px-2",
-        isScrollable ? "overflow-x-auto gap-1 justify-start" : "justify-around"
-      )}>
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.href;
-          const Icon = item.icon;
-          
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center h-full gap-1 transition-colors",
-                isScrollable ? "min-w-[4rem] px-1.5" : "flex-1",
-                isActive 
-                  ? "text-accent" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className={cn("h-5 w-5", isActive && "text-accent")} />
-              <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
-            </Link>
-          );
-        })}
+      <div className="w-full max-w-[720px] mx-auto">
+        <div className={cn(
+          "flex items-center h-16 px-3",
+          isScrollable ? "overflow-x-auto gap-1 justify-start" : "justify-between"
+        )}>
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            const Icon = item.icon;
+            
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center h-full gap-1 transition-colors",
+                  isScrollable ? "min-w-[4rem] px-1.5" : "flex-1",
+                  isActive 
+                    ? "text-accent" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className={cn("h-5 w-5", isActive && "text-accent")} />
+                <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
