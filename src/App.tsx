@@ -23,6 +23,7 @@ import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import EmergencyAdminDashboard from "./pages/admin/EmergencyAdminDashboard";
 import PetrolLoanDashboard from "./pages/admin/PetrolLoanDashboard";
 import PersonalLoanDashboard from "./pages/admin/PersonalLoanDashboard";
+import AdminMembers from "./pages/admin/AdminMembers";
 import AdminVerify from "./pages/admin/AdminVerify";
 import AdminLoans from "./pages/admin/AdminLoans";
 import AdminPetrolLoans from "./pages/admin/AdminPetrolLoans";
