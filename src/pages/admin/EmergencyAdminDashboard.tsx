@@ -3,13 +3,25 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import {
   AlertTriangle, ChevronRight, Shield, FileCheck, BarChart3,
-  Users, CheckCircle, XCircle, PlusCircle
+  Users, CheckCircle, XCircle, PlusCircle, Car, Heart
 } from 'lucide-react';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+
+interface EventSummary {
+  id: string;
+  title: string;
+  type: 'funeral' | 'accident';
+  totalMembers: number;
+  paidMembers: number;
+  unpaidMembers: number;
+  collected: number;
+  target: number;
+}
 
 interface Stats {
   activeEvents: number;
@@ -17,6 +29,7 @@ interface Stats {
   pendingPayments: number;
   paidMembers: number;
   unpaidMembers: number;
+  events: EventSummary[];
 }
 
 export default function EmergencyAdminDashboard() {
@@ -26,6 +39,7 @@ export default function EmergencyAdminDashboard() {
     pendingPayments: 0,
     paidMembers: 0,
     unpaidMembers: 0,
+    events: [],
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,23 +53,38 @@ export default function EmergencyAdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const [events, dues, pendingPay] = await Promise.all([
-        supabase.from('emergency_events').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('emergency_dues').select('amount_due, amount_paid, status'),
+      const [eventsRes, duesRes, pendingPay] = await Promise.all([
+        supabase.from('emergency_events').select('id, title, type, amount_per_member').eq('status', 'active'),
+        supabase.from('emergency_dues').select('event_id, amount_due, amount_paid, status'),
         supabase.from('payments').select('*', { count: 'exact', head: true }).in('status', ['submitted', 'pending_verification']).gt('emergency_total_amount', 0),
       ]);
 
-      const allDues = dues.data || [];
+      const activeEvents = eventsRes.data || [];
+      const allDues = duesRes.data || [];
       const collected = allDues.reduce((s, d) => s + Number(d.amount_paid), 0);
       const paid = allDues.filter(d => d.status === 'paid').length;
       const unpaid = allDues.filter(d => d.status === 'unpaid').length;
 
+      const events: EventSummary[] = activeEvents.map(evt => {
+        const eventDues = allDues.filter(d => d.event_id === evt.id);
+        const evtPaid = eventDues.filter(d => d.status === 'paid').length;
+        const evtUnpaid = eventDues.filter(d => d.status === 'unpaid').length;
+        const evtCollected = eventDues.reduce((s, d) => s + Number(d.amount_paid), 0);
+        const evtTarget = eventDues.reduce((s, d) => s + Number(d.amount_due), 0);
+        return {
+          id: evt.id, title: evt.title, type: evt.type as 'funeral' | 'accident',
+          totalMembers: eventDues.length, paidMembers: evtPaid, unpaidMembers: evtUnpaid,
+          collected: evtCollected, target: evtTarget,
+        };
+      });
+
       setStats({
-        activeEvents: events.count || 0,
+        activeEvents: activeEvents.length,
         emergencyCollected: collected,
         pendingPayments: pendingPay.count || 0,
         paidMembers: paid,
         unpaidMembers: unpaid,
+        events,
       });
     } catch (err) {
       console.error('Error:', err);
@@ -70,6 +99,9 @@ export default function EmergencyAdminDashboard() {
     { label: 'Pending Payments', value: stats.pendingPayments.toString(), icon: FileCheck, color: 'text-warning', bgColor: 'bg-warning/10', href: '/admin/emergency-payments' },
     { label: 'Paid / Unpaid', value: `${stats.paidMembers} / ${stats.unpaidMembers}`, icon: Users, color: 'text-info', bgColor: 'bg-info/10', href: '/admin/emergency-payments' },
   ];
+
+  const funeralEvents = stats.events.filter(e => e.type === 'funeral');
+  const accidentEvents = stats.events.filter(e => e.type === 'accident');
 
   return (
     <AppLayout requireAdmin>
@@ -135,6 +167,30 @@ export default function EmergencyAdminDashboard() {
         ))}
       </div>
 
+      {/* Active Events Summary */}
+      {stats.events.length > 0 && (
+        <div className="space-y-4 mb-4">
+          {funeralEvents.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Heart className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-muted-foreground">Funeral Events ({funeralEvents.length})</h3>
+              </div>
+              {funeralEvents.map(renderEventCard)}
+            </div>
+          )}
+          {accidentEvents.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Car className="h-4 w-4 text-warning" />
+                <h3 className="text-sm font-semibold text-muted-foreground">Accident Events ({accidentEvents.length})</h3>
+              </div>
+              {accidentEvents.map(renderEventCard)}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Quick Actions */}
       <Card className="animate-fade-in">
         <CardContent className="p-4">
@@ -157,5 +213,42 @@ export default function EmergencyAdminDashboard() {
         </CardContent>
       </Card>
     </AppLayout>
+  );
+}
+
+function renderEventCard(evt: EventSummary) {
+  const pct = evt.target > 0 ? Math.round((evt.collected / evt.target) * 100) : 0;
+  const detailHref = evt.type === 'funeral' ? '/admin/funeral-payments' : '/admin/accident-payments';
+  return (
+    <Link key={evt.id} to={detailHref} className="block">
+      <Card className="animate-fade-in hover:shadow-card-hover transition-shadow">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-semibold text-sm">{evt.title}</p>
+              <p className="text-xs text-muted-foreground">Members: {evt.totalMembers}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground mt-0.5" />
+          </div>
+          <div className="flex gap-4 text-xs">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="h-3.5 w-3.5 text-success" />
+              <span>Paid: <span className="font-semibold">{evt.paidMembers}</span></span>
+            </div>
+            <div className="flex items-center gap-1">
+              <XCircle className="h-3.5 w-3.5 text-destructive" />
+              <span>Outstanding: <span className="font-semibold">{evt.unpaidMembers}</span></span>
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-muted-foreground">Collected</span>
+              <span className="font-semibold">{formatCurrency(evt.collected)} / {formatCurrency(evt.target)}</span>
+            </div>
+            <Progress value={pct} className="h-2.5" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
