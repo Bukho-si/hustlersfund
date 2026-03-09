@@ -42,11 +42,9 @@ export function MobileNav() {
   
   let navItems: NavItem[];
   if (isAdminRoute && isAdmin) {
-    // Filter admin nav items by role permissions, limit to 5 for mobile
-    const allowed = allAdminNavItems.filter(item => 
-      !item.module || canAccessModule(item.module)
-    );
-    // Show first 5 items that the user has access to
+    const allowed = allAdminNavItems
+      .filter(item => !item.module || canAccessModule(item.module))
+      .map(item => item.href === '__admin_dash__' ? { ...item, href: adminDashRoute } : item);
     navItems = allowed.slice(0, 5);
   } else {
     navItems = memberNavItems;
