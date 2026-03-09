@@ -116,6 +116,59 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_contributors: {
+        Row: {
+          amount_due: number
+          amount_paid: number
+          contributor_type: string
+          created_at: string
+          event_id: string
+          external_name: string | null
+          external_phone: string | null
+          id: string
+          member_user_id: string | null
+          payment_status: string
+          recorded_by_admin: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_due?: number
+          amount_paid?: number
+          contributor_type?: string
+          created_at?: string
+          event_id: string
+          external_name?: string | null
+          external_phone?: string | null
+          id?: string
+          member_user_id?: string | null
+          payment_status?: string
+          recorded_by_admin?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_due?: number
+          amount_paid?: number
+          contributor_type?: string
+          created_at?: string
+          event_id?: string
+          external_name?: string | null
+          external_phone?: string | null
+          id?: string
+          member_user_id?: string | null
+          payment_status?: string
+          recorded_by_admin?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contributors_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_dues: {
         Row: {
           amount_due: number
