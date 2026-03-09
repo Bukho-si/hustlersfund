@@ -114,6 +114,15 @@ export default function AdminReports() {
         <TabsContent value="loans">
           <LoansReport />
         </TabsContent>
+
+        {/* Ledger Tab */}
+        <TabsContent value="ledger" className="space-y-4">
+          <div className="flex justify-end">
+            <LedgerExportButton entries={ledgerEntries} />
+          </div>
+          <LedgerSummaryCards summary={ledgerSummary} isLoading={ledgerSummaryLoading} />
+          <LedgerTable entries={ledgerEntries} isLoading={ledgerEntriesLoading} title="Recent Ledger Entries" />
+        </TabsContent>
       </Tabs>
     </AppLayout>
   );

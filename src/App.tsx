@@ -85,6 +85,7 @@ const App = () => (
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             <Route path="/admin/cycles" element={<AdminCycles />} />
             <Route path="/admin/roles" element={<AdminRoles />} />
+            <Route path="/admin/ledger" element={<AdminLedger />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
