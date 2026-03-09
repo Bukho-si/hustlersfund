@@ -99,7 +99,10 @@ export default function PersonalLoanDashboard() {
               <p className="text-xs text-muted-foreground">Fund Balance</p>
               <p className="text-lg font-bold">{formatCurrency(fund.current_balance)}</p>
             </div>
-            <AddFundsDialog fundType="personal" fundId={fund.id} currentBalance={fund.current_balance} />
+            <div className="flex items-center gap-2">
+              <FundHistoryDialog fundType="personal" fundId={fund.id} />
+              <AddFundsDialog fundType="personal" fundId={fund.id} currentBalance={fund.current_balance} />
+            </div>
           </CardContent>
         </Card>
       )}

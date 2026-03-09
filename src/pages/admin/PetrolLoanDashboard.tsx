@@ -110,7 +110,10 @@ export default function PetrolLoanDashboard() {
               <p className="text-xs text-muted-foreground">Fund Balance</p>
               <p className="text-lg font-bold">{formatCurrency(fund.current_balance)}</p>
             </div>
-            <AddFundsDialog fundType="petrol" fundId={fund.id} currentBalance={fund.current_balance} />
+            <div className="flex items-center gap-2">
+              <FundHistoryDialog fundType="petrol" fundId={fund.id} />
+              <AddFundsDialog fundType="petrol" fundId={fund.id} currentBalance={fund.current_balance} />
+            </div>
           </CardContent>
         </Card>
       )}
