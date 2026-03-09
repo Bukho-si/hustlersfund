@@ -48,6 +48,7 @@ import AdminContributionSettings from "./pages/admin/AdminContributionSettings";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLedger from "./pages/admin/AdminLedger";
+import AdminMigrationValidation from "./pages/admin/AdminMigrationValidation";
 
 import NotFound from "./pages/NotFound";
 
@@ -104,6 +105,7 @@ const App = () => (
             <Route path="/admin/contribution-settings" element={<AdminContributionSettings />} />
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/ledger" element={<AdminLedger />} />
+            <Route path="/admin/migration-validation" element={<AdminMigrationValidation />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
