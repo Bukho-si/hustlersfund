@@ -107,6 +107,7 @@ const App = () => (
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/ledger" element={<AdminLedger />} />
             <Route path="/admin/migration-validation" element={<AdminMigrationValidation />} />
+            <Route path="/admin/emergency-event/:eventId" element={<AdminEmergencyEventDetail />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
