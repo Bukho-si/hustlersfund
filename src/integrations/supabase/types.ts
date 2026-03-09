@@ -323,7 +323,9 @@ export type Database = {
           id: string
           interest_type: string
           personal_interest_rate_percent: number
+          personal_repayment_days: number
           petrol_interest_rate_percent: number
+          petrol_repayment_days: number
           updated_at: string
         }
         Insert: {
@@ -331,7 +333,9 @@ export type Database = {
           id?: string
           interest_type?: string
           personal_interest_rate_percent?: number
+          personal_repayment_days?: number
           petrol_interest_rate_percent?: number
+          petrol_repayment_days?: number
           updated_at?: string
         }
         Update: {
@@ -339,7 +343,9 @@ export type Database = {
           id?: string
           interest_type?: string
           personal_interest_rate_percent?: number
+          personal_repayment_days?: number
           petrol_interest_rate_percent?: number
+          petrol_repayment_days?: number
           updated_at?: string
         }
         Relationships: []
@@ -352,6 +358,7 @@ export type Database = {
           created_at: string
           disbursed_at: string | null
           disbursed_by: string | null
+          due_date: string | null
           id: string
           interest_amount: number | null
           interest_rate_percent: number | null
@@ -376,6 +383,7 @@ export type Database = {
           created_at?: string
           disbursed_at?: string | null
           disbursed_by?: string | null
+          due_date?: string | null
           id?: string
           interest_amount?: number | null
           interest_rate_percent?: number | null
@@ -400,6 +408,7 @@ export type Database = {
           created_at?: string
           disbursed_at?: string | null
           disbursed_by?: string | null
+          due_date?: string | null
           id?: string
           interest_amount?: number | null
           interest_rate_percent?: number | null

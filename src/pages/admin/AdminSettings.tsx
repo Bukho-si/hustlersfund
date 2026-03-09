@@ -9,13 +9,15 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings, Percent, Fuel, User, Clock, Banknote, Wallet } from 'lucide-react';
+import { Loader2, Settings, Percent, Fuel, User, Clock, Banknote, Wallet, Calendar } from 'lucide-react';
 
 interface LoanSettings {
   id: string;
   petrol_interest_rate_percent: number;
   personal_interest_rate_percent: number;
   interest_type: string;
+  petrol_repayment_days: number;
+  personal_repayment_days: number;
 }
 
 export default function AdminSettings() {
@@ -28,6 +30,8 @@ export default function AdminSettings() {
   
   const [petrolRate, setPetrolRate] = useState('');
   const [personalRate, setPersonalRate] = useState('');
+  const [petrolRepayDays, setPetrolRepayDays] = useState('7');
+  const [personalRepayDays, setPersonalRepayDays] = useState('30');
 
   // Petrol request window
   const [windowStart, setWindowStart] = useState('06:00');
@@ -58,9 +62,11 @@ export default function AdminSettings() {
     ]);
 
     if (settingsRes.data) {
-      setSettings(settingsRes.data);
+      setSettings(settingsRes.data as any);
       setPetrolRate(String(settingsRes.data.petrol_interest_rate_percent));
       setPersonalRate(String(settingsRes.data.personal_interest_rate_percent));
+      setPetrolRepayDays(String((settingsRes.data as any).petrol_repayment_days ?? 7));
+      setPersonalRepayDays(String((settingsRes.data as any).personal_repayment_days ?? 30));
     }
 
     if (windowRes.data) {
@@ -107,12 +113,17 @@ export default function AdminSettings() {
 
     try {
       // Update loan settings
+      const petrolDaysNum = parseInt(petrolRepayDays) || 7;
+      const personalDaysNum = parseInt(personalRepayDays) || 30;
+
       const { error: updateError } = await supabase
         .from('loan_settings')
         .update({
           petrol_interest_rate_percent: petrolRateNum,
           personal_interest_rate_percent: personalRateNum,
-        })
+          petrol_repayment_days: petrolDaysNum,
+          personal_repayment_days: personalDaysNum,
+        } as any)
         .eq('id', settings.id);
 
       if (updateError) throw updateError;
@@ -241,6 +252,23 @@ export default function AdminSettings() {
                   <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="petrol-repay-days" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-warning" />
+                  Petrol Loan Repayment Period (days)
+                </Label>
+                <Input id="petrol-repay-days" type="number" value={petrolRepayDays} onChange={(e) => setPetrolRepayDays(e.target.value)} min="1" max="365" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personal-repay-days" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-info" />
+                  Personal Loan Repayment Period (days)
+                </Label>
+                <Input id="personal-repay-days" type="number" value={personalRepayDays} onChange={(e) => setPersonalRepayDays(e.target.value)} min="1" max="365" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Repayment deadlines are auto-calculated from the loan issue date.
+              </p>
             </CardContent>
           </Card>
 
