@@ -170,7 +170,7 @@ export default function SuperAdminDashboard() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
             Contributions Trend
           </h3>
-          <ContributionsChart data={contributionsData} isLoading={contribLoading} />
+          <ContributionsChart data={contributionsData} isLoading={contribLoading} data={contributionsData} isLoading={contribLoading} />
         </CardContent>
       </Card>
 
@@ -178,7 +178,7 @@ export default function SuperAdminDashboard() {
         <CardContent className="p-4">
           <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
             <Wallet className="h-4 w-4 text-muted-foreground" />
-            Loan Distribution
+            Loan Distributidata={loanDistData} isLoading={loanDistLoading} on
           </h3>
           <LoanDistributionChart />
         </CardContent>
