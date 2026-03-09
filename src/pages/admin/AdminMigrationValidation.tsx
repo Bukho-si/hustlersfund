@@ -174,6 +174,41 @@ export default function AdminMigrationValidation() {
     }
   };
 
+  const fixMismatches = async () => {
+    const mismatched = validations.filter(v => !v.match);
+    if (mismatched.length === 0) {
+      toast({ title: 'No mismatches to fix' });
+      return;
+    }
+
+    setIsFixing(true);
+    setFixedCount(null);
+    let fixed = 0;
+
+    try {
+      for (const member of mismatched) {
+        const { error } = await supabase.rpc('recalculate_wallet_balance', {
+          _member_user_id: member.member_user_id,
+        });
+        if (error) {
+          console.error(`Failed to fix ${member.member_name}:`, error);
+        } else {
+          fixed++;
+        }
+      }
+
+      setFixedCount(fixed);
+      toast({ title: `Fixed ${fixed} of ${mismatched.length} wallets` });
+
+      // Re-run validation to show updated results
+      await runValidation();
+    } catch (err: any) {
+      toast({ title: 'Fix failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
   return (
     <AppLayout requireAdmin>
       <PageHeader
