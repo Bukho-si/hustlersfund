@@ -115,7 +115,7 @@ export function useWalletTransactions(options?: {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const memberIds = [...new Set(data.map((e: any) => e.member_user_id))];
+        const memberIds = [...new Set(data.map((e: any) => e.member_user_id))] as string[];
         const { data: profiles } = await supabase
           .from('member_profiles')
           .select('user_id, full_name')
