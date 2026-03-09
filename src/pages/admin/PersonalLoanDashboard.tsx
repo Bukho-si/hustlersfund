@@ -13,6 +13,7 @@ import {
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { usePersonalFund } from '@/hooks/usePersonalFund';
 import { PersonalFundLowBanner } from '@/components/personal-loans/PersonalFundBanner';
+import { AddFundsDialog } from '@/components/funds/AddFundsDialog';
 
 interface Stats {
   loansIssuedToday: number;
@@ -89,6 +90,18 @@ export default function PersonalLoanDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {fund && (
+        <Card className="mb-4">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Fund Balance</p>
+              <p className="text-lg font-bold">{formatCurrency(fund.current_balance)}</p>
+            </div>
+            <AddFundsDialog fundType="personal" fundId={fund.id} currentBalance={fund.current_balance} />
+          </CardContent>
+        </Card>
+      )}
 
       {fund && isLowBalance && (
         <PersonalFundLowBanner balance={fund.current_balance} threshold={fund.low_balance_threshold} />
