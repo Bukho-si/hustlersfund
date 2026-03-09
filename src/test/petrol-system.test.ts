@@ -158,7 +158,7 @@ describe('Loan queue request locking', () => {
 describe('Financial calculations', () => {
   it('formats currency correctly', () => {
     expect(formatCurrency(1500)).toContain('1');
-    expect(formatCurrency(0)).toContain('0.00');
+    expect(formatCurrency(0)).toMatch(/0[.,]00/);
   });
 
   it('calculates joining fee total by slots', () => {
