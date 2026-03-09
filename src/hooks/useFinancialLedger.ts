@@ -1,13 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// These types now map to wallet_transactions
 export type LedgerTransactionType =
-  | 'joining_fee'
+  | 'joining_fee_payment'
   | 'weekly_contribution'
   | 'petrol_loan_issued'
   | 'petrol_loan_repayment'
   | 'personal_loan_issued'
   | 'personal_loan_repayment'
+  | 'funeral_contribution'
+  | 'accident_contribution'
   | 'emergency_contribution'
   | 'late_fee'
   | 'cash_fee';
@@ -36,12 +39,14 @@ export interface LedgerSummary {
 }
 
 const TRANSACTION_LABELS: Record<LedgerTransactionType, string> = {
-  joining_fee: 'Joining Fee',
+  joining_fee_payment: 'Joining Fee',
   weekly_contribution: 'Weekly Contribution',
   petrol_loan_issued: 'Petrol Loan Issued',
   petrol_loan_repayment: 'Petrol Loan Repayment',
   personal_loan_issued: 'Personal Loan Issued',
   personal_loan_repayment: 'Personal Loan Repayment',
+  funeral_contribution: 'Funeral Contribution',
+  accident_contribution: 'Accident Contribution',
   emergency_contribution: 'Emergency Contribution',
   late_fee: 'Late Fee',
   cash_fee: 'Cash/ATM Fee',
@@ -65,10 +70,10 @@ export function useLedgerEntries(options?: {
   const { memberUserId, dateFrom, dateTo, transactionType, limit = 100 } = options || {};
 
   return useQuery({
-    queryKey: ['financial-ledger', memberUserId, dateFrom, dateTo, transactionType, limit],
+    queryKey: ['wallet-ledger', memberUserId, dateFrom, dateTo, transactionType, limit],
     queryFn: async (): Promise<LedgerEntry[]> => {
       let query = supabase
-        .from('financial_ledger')
+        .from('wallet_transactions' as any)
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -81,7 +86,6 @@ export function useLedgerEntries(options?: {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch member names
       if (data && data.length > 0) {
         const memberIds = [...new Set(data.map((e: any) => e.member_user_id))];
         const { data: profiles } = await supabase
@@ -105,9 +109,9 @@ export function useLedgerEntries(options?: {
 
 export function useMemberLedgerSummary(memberUserId?: string) {
   return useQuery({
-    queryKey: ['ledger-summary', memberUserId],
+    queryKey: ['wallet-ledger-summary', memberUserId],
     queryFn: async (): Promise<LedgerSummary> => {
-      let query = supabase.from('financial_ledger').select('transaction_type, amount');
+      let query = supabase.from('wallet_transactions' as any).select('transaction_type, amount');
       if (memberUserId) query = query.eq('member_user_id', memberUserId);
 
       const { data, error } = await query;
@@ -130,7 +134,7 @@ export function useMemberLedgerSummary(memberUserId?: string) {
           case 'weekly_contribution':
             summary.totalContributions += amt;
             break;
-          case 'joining_fee':
+          case 'joining_fee_payment':
             summary.totalJoiningFees += amt;
             break;
           case 'petrol_loan_issued':
@@ -141,6 +145,8 @@ export function useMemberLedgerSummary(memberUserId?: string) {
           case 'personal_loan_repayment':
             summary.totalLoanRepayments += amt;
             break;
+          case 'funeral_contribution':
+          case 'accident_contribution':
           case 'emergency_contribution':
             summary.totalEmergencyContributions += amt;
             break;
@@ -153,7 +159,6 @@ export function useMemberLedgerSummary(memberUserId?: string) {
         }
       });
 
-      // Net = contributions + fees + repayments - loans issued
       summary.netPosition =
         summary.totalContributions +
         summary.totalJoiningFees +

@@ -11,10 +11,9 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useLedgerEntries, useMemberLedgerSummary } from '@/hooks/useFinancialLedger';
-import { LedgerTable } from '@/components/reports/LedgerTable';
+import { useMyWallet } from '@/hooks/useWallet';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
-import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard, Download } from 'lucide-react';
+import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard, Download, Wallet, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface MemberProfile {
@@ -38,21 +37,19 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   
-  // Form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [vehicleReg, setVehicleReg] = useState('');
   const [uberDriverId, setUberDriverId] = useState('');
 
+  const { data: wallet } = useMyWallet(user?.id);
+
   useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
+    if (user) fetchProfile();
   }, [user]);
 
   const fetchProfile = async () => {
     if (!user) return;
-
     const { data, error } = await supabase
       .from('member_profiles')
       .select('*')
@@ -73,9 +70,7 @@ export default function Profile() {
 
   const handleSave = async () => {
     if (!user) return;
-
     setIsSaving(true);
-
     try {
       const { error } = await supabase
         .from('member_profiles')
@@ -86,22 +81,11 @@ export default function Profile() {
           uber_driver_id: uberDriverId.trim() || null,
         })
         .eq('user_id', user.id);
-
       if (error) throw error;
-
-      toast({
-        title: 'Profile updated!',
-        description: 'Your changes have been saved',
-      });
-
+      toast({ title: 'Profile updated!', description: 'Your changes have been saved' });
       fetchProfile();
     } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: 'Update failed',
-        description: error.message || 'Please try again',
-        variant: 'destructive',
-      });
+      toast({ title: 'Update failed', description: error.message || 'Please try again', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -127,12 +111,6 @@ export default function Profile() {
   const joiningFeePaid = profile?.joining_fee_paid_total || 0;
   const joiningFeeRemaining = getJoiningFeeRemaining(slots, joiningFeePaid);
   const joiningFeeProgress = (joiningFeePaid / joiningFeeTotal) * 100;
-
-  const { data: ledgerEntries, isLoading: ledgerLoading } = useLedgerEntries({
-    memberUserId: user?.id,
-    limit: 20,
-  });
-  const { data: ledgerSummary } = useMemberLedgerSummary(user?.id);
 
   return (
     <AppLayout>
@@ -163,6 +141,29 @@ export default function Profile() {
           </CardContent>
         </Card>
       )}
+
+      {/* Wallet Quick View */}
+      <Link to="/wallet" className="block mb-4">
+        <Card className="hover:shadow-card-hover transition-shadow animate-fade-in">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="font-medium">My Wallet</p>
+                  <p className="text-xs text-muted-foreground">View balances & transactions</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-lg">{formatCurrency((wallet?.contribution_balance || 0) + (wallet?.joining_fee_balance || 0))}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Membership & Joining Fee Card */}
       {profile && (
@@ -208,42 +209,6 @@ export default function Profile() {
         </Card>
       )}
 
-      {/* Ledger Balances */}
-      {ledgerSummary && (
-        <Card className="mb-4">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
-                <CreditCard className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Ledger Balances</p>
-                <p className="text-xs text-muted-foreground">Calculated from ledger entries</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Contributions</span>
-                <span className="font-medium">{formatCurrency(ledgerSummary.totalContributions + ledgerSummary.totalJoiningFees)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Loans Outstanding</span>
-                <span className="font-medium">{formatCurrency(ledgerSummary.totalLoansIssued - ledgerSummary.totalLoanRepayments)}</span>
-              </div>
-              <div className="flex justify-between text-sm border-t pt-2 font-semibold">
-                <span>Net Position</span>
-                <span className="text-accent">{formatCurrency(ledgerSummary.netPosition)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Transaction History */}
-      <div className="mb-4">
-        <LedgerTable entries={ledgerEntries} isLoading={ledgerLoading} title="Transaction History" showMemberName={false} />
-      </div>
-
       {/* Profile Form */}
       <div className="space-y-4">
         <Card>
@@ -261,28 +226,14 @@ export default function Profile() {
             <div className="space-y-3">
               <div>
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your full name"
-                  className="mt-1.5"
-                />
+                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className="mt-1.5" />
               </div>
-
               <div>
                 <Label htmlFor="phone" className="flex items-center gap-1">
                   <Phone className="h-3 w-3" />
                   Phone Number
                 </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. 082 123 4567"
-                  className="mt-1.5"
-                />
+                <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 082 123 4567" className="mt-1.5" />
               </div>
             </div>
           </CardContent>
@@ -303,68 +254,28 @@ export default function Profile() {
             <div className="space-y-3">
               <div>
                 <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-                <Input
-                  id="vehicleReg"
-                  value={vehicleReg}
-                  onChange={(e) => setVehicleReg(e.target.value)}
-                  placeholder="e.g. CA 123 456"
-                  className="mt-1.5"
-                />
+                <Input id="vehicleReg" value={vehicleReg} onChange={(e) => setVehicleReg(e.target.value)} placeholder="e.g. CA 123 456" className="mt-1.5" />
               </div>
-
               <div>
                 <Label htmlFor="uberDriverId">Uber Driver ID</Label>
-                <Input
-                  id="uberDriverId"
-                  value={uberDriverId}
-                  onChange={(e) => setUberDriverId(e.target.value)}
-                  placeholder="Your Uber driver ID"
-                  className="mt-1.5"
-                />
+                <Input id="uberDriverId" value={uberDriverId} onChange={(e) => setUberDriverId(e.target.value)} placeholder="Your Uber driver ID" className="mt-1.5" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Button 
-          onClick={handleSave}
-          className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <>
-              <Save className="h-5 w-5 mr-2" />
-              Save Changes
-            </>
-          )}
+        <Button onClick={handleSave} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" disabled={isSaving}>
+          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Save className="h-5 w-5 mr-2" />Save Changes</>}
         </Button>
 
         <Link to="/install" className="block">
-          <Button 
-            variant="outline"
-            className="w-full h-12"
-          >
-            <Download className="h-5 w-5 mr-2" />
-            Install App
+          <Button variant="outline" className="w-full h-12">
+            <Download className="h-5 w-5 mr-2" />Install App
           </Button>
         </Link>
 
-        <Button 
-          variant="outline"
-          onClick={handleSignOut}
-          className="w-full h-12"
-          disabled={isSigningOut}
-        >
-          {isSigningOut ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <>
-              <LogOut className="h-5 w-5 mr-2" />
-              Sign Out
-            </>
-          )}
+        <Button variant="outline" onClick={handleSignOut} className="w-full h-12" disabled={isSigningOut}>
+          {isSigningOut ? <Loader2 className="h-5 w-5 animate-spin" /> : <><LogOut className="h-5 w-5 mr-2" />Sign Out</>}
         </Button>
       </div>
     </AppLayout>
