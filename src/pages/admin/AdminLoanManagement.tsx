@@ -17,6 +17,7 @@ import {
   FileText, CheckCircle, XCircle, Wallet, TrendingUp,
   AlertTriangle, Clock, Filter, Search
 } from 'lucide-react';
+import { LoanExportButton } from '@/components/loans/LoanExportButton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -233,7 +234,28 @@ export default function AdminLoanManagement() {
 
   return (
     <AppLayout requireAdmin>
-      <PageHeader title="Loan Management" subtitle="Centralized loan overview for all loan types" />
+      <PageHeader
+        title="Loan Management"
+        subtitle="Centralized loan overview for all loan types"
+        action={
+          <LoanExportButton data={{
+            applications,
+            activeLoans,
+            repayments: filteredRepayments.map(r => {
+              const loan = loans.find(l => l.id === r.loan_id);
+              return {
+                ...r,
+                _memberName: loan ? getName(loan.member_user_id) : '—',
+                _loanType: loan?.type || '—',
+                _recordedByName: getName(r.recorded_by),
+              };
+            }),
+            ledgerTxns: filteredTxns,
+            getName,
+            metrics: { totalApplications, totalActive, totalOutstanding, totalRepaid, overdueLoans },
+          }} />
+        }
+      />
 
       {/* Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
