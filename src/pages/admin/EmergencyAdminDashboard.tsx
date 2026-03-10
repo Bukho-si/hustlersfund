@@ -103,6 +103,8 @@ export default function EmergencyAdminDashboard() {
 
   const funeralEvents = stats.events.filter(e => e.type === 'funeral');
   const accidentEvents = stats.events.filter(e => e.type === 'accident');
+  const lossOfMemberEvents = stats.events.filter(e => e.type === 'loss_of_member');
+  const lossOfBeneficiaryEvents = stats.events.filter(e => e.type === 'loss_of_beneficiary');
 
   return (
     <AppLayout requireAdmin>
