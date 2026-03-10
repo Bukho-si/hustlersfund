@@ -8,8 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import {
   AlertTriangle, ChevronRight, Shield, FileCheck, BarChart3,
-  Users, CheckCircle, XCircle, PlusCircle, Car, Heart
+  Users, CheckCircle, XCircle, PlusCircle, Car, Heart, UserX
 } from 'lucide-react';
+import { getEmergencyTypeLabel } from '@/lib/emergencyTypes';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 interface EventSummary {
