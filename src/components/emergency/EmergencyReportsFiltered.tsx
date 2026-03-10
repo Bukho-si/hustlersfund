@@ -3,12 +3,14 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
 
+import { EmergencyType, getEmergencyTypeConfig } from '@/lib/emergencyTypes';
+
 interface EmergencyReportsFilteredProps {
-  emergencyType: 'accident' | 'funeral';
+  emergencyType: EmergencyType;
 }
 
 export default function EmergencyReportsFiltered({ emergencyType }: EmergencyReportsFilteredProps) {
-  const typeLabel = emergencyType === 'funeral' ? 'Funeral' : 'Accident';
+  const typeLabel = getEmergencyTypeConfig(emergencyType).label;
 
   return (
     <AppLayout requireAdmin>

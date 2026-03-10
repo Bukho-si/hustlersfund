@@ -7,7 +7,8 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { AlertTriangle, Heart, Car, Users, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, Heart, Car, Users, CheckCircle, Clock, UserX } from 'lucide-react';
+import { getEmergencyTypeConfig } from '@/lib/emergencyTypes';
 
 interface EmergencyEvent {
   id: string;
@@ -92,11 +93,9 @@ export default function Emergencies() {
   };
 
   const getEventIcon = (type: string) => {
-    return type === 'funeral' ? (
-      <Heart className="h-5 w-5 text-muted-foreground" />
-    ) : (
-      <Car className="h-5 w-5 text-warning" />
-    );
+    const config = getEmergencyTypeConfig(type);
+    const Icon = config.icon;
+    return <Icon className={`h-5 w-5 ${config.color}`} />;
   };
 
   const totalUnpaid = dues
@@ -165,7 +164,7 @@ export default function Emergencies() {
                       <div>
                         <p className="font-medium">{due.event.title}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {due.event.type} • {formatDate(due.event.event_date)}
+                          {getEmergencyTypeConfig(due.event.type).label} • {formatDate(due.event.event_date)}
                         </p>
                       </div>
                     </div>

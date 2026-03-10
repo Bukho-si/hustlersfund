@@ -14,6 +14,8 @@ export const PERSONAL_LOAN_MAX = 5000;
 // Emergency contribution defaults - FALLBACK DEFAULTS ONLY
 export const FUNERAL_CONTRIBUTION = 200;
 export const ACCIDENT_CONTRIBUTION = 50;
+export const LOSS_OF_MEMBER_CONTRIBUTION = 500;
+export const LOSS_OF_BENEFICIARY_CONTRIBUTION = 200;
 
 // Timezone
 export const TIMEZONE = 'Africa/Johannesburg';

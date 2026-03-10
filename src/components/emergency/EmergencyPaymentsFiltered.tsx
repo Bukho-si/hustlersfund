@@ -19,14 +19,16 @@ interface EmergencyPayment {
   profile: { full_name: string } | null;
 }
 
+import { EmergencyType, getEmergencyTypeConfig } from '@/lib/emergencyTypes';
+
 interface EmergencyPaymentsFilteredProps {
-  emergencyType: 'accident' | 'funeral';
+  emergencyType: EmergencyType;
 }
 
 export default function EmergencyPaymentsFiltered({ emergencyType }: EmergencyPaymentsFilteredProps) {
   const [dues, setDues] = useState<EmergencyPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const typeLabel = emergencyType === 'funeral' ? 'Funeral' : 'Accident';
+  const typeLabel = getEmergencyTypeConfig(emergencyType).label;
 
   useEffect(() => { fetchDues(); }, []);
 

@@ -315,7 +315,7 @@ export default function EmergencyEventDetail({ eventId }: Props) {
     <AppLayout requireAdmin>
       <PageHeader
         title={event.title}
-        subtitle={`${event.type === 'funeral' ? 'Funeral' : 'Accident'} Emergency`}
+        subtitle={`${event.type === 'funeral' ? 'Funeral' : event.type === 'accident' ? 'Accident' : event.type === 'loss_of_member' ? 'Loss of Member' : 'Loss of Beneficiary'} Emergency`}
         showBack
         action={
           <Dialog open={isAddingExternal} onOpenChange={setIsAddingExternal}>

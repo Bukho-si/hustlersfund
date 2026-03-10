@@ -83,6 +83,8 @@ export type Database = {
           id: string
           joining_fee_amount: number
           late_fine_amount: number
+          loss_of_beneficiary_amount: number
+          loss_of_member_amount: number
           personal_loan_monthly_cap: number
           petrol_loan_weekly_cap: number
           updated_at: string
@@ -96,6 +98,8 @@ export type Database = {
           id?: string
           joining_fee_amount?: number
           late_fine_amount?: number
+          loss_of_beneficiary_amount?: number
+          loss_of_member_amount?: number
           personal_loan_monthly_cap?: number
           petrol_loan_weekly_cap?: number
           updated_at?: string
@@ -109,6 +113,8 @@ export type Database = {
           id?: string
           joining_fee_amount?: number
           late_fine_amount?: number
+          loss_of_beneficiary_amount?: number
+          loss_of_member_amount?: number
           personal_loan_monthly_cap?: number
           petrol_loan_weekly_cap?: number
           updated_at?: string
@@ -936,7 +942,11 @@ export type Database = {
         | "funeral_admin"
       emergency_due_status: "unpaid" | "paid" | "partially_paid" | "overdue"
       emergency_event_status: "active" | "closed"
-      emergency_type: "funeral" | "accident"
+      emergency_type:
+        | "funeral"
+        | "accident"
+        | "loss_of_member"
+        | "loss_of_beneficiary"
       ledger_transaction_type:
         | "joining_fee"
         | "weekly_contribution"
@@ -1115,7 +1125,12 @@ export const Constants = {
       ],
       emergency_due_status: ["unpaid", "paid", "partially_paid", "overdue"],
       emergency_event_status: ["active", "closed"],
-      emergency_type: ["funeral", "accident"],
+      emergency_type: [
+        "funeral",
+        "accident",
+        "loss_of_member",
+        "loss_of_beneficiary",
+      ],
       ledger_transaction_type: [
         "joining_fee",
         "weekly_contribution",

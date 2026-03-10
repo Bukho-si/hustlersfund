@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDate, FUNERAL_CONTRIBUTION, ACCIDENT_CONTRIBUTION } from '@/lib/constants';
+import { formatCurrency, formatDate } from '@/lib/constants';
+import { useContributionSettings } from '@/hooks/useContributionSettings';
+import { EMERGENCY_TYPES, EmergencyType, getEmergencyTypeConfig } from '@/lib/emergencyTypes';
 import { 
   Plus, 
   AlertTriangle, 
@@ -42,7 +44,8 @@ export default function AdminEvents() {
   const [isCreating, setIsCreating] = useState(false);
 
   // Form state
-  const [eventType, setEventType] = useState<'funeral' | 'accident'>('funeral');
+  const [eventType, setEventType] = useState<EmergencyType>('funeral');
+  const { settings } = useContributionSettings();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -78,7 +81,8 @@ export default function AdminEvents() {
     setIsCreating(true);
 
     try {
-      const amountPerMember = eventType === 'funeral' ? FUNERAL_CONTRIBUTION : ACCIDENT_CONTRIBUTION;
+      const typeConfig = getEmergencyTypeConfig(eventType);
+      const amountPerMember = settings[typeConfig.settingsKey];
 
       // Create the event
       const { data: event, error: eventError } = await supabase
@@ -167,11 +171,9 @@ export default function AdminEvents() {
   };
 
   const getEventIcon = (type: string) => {
-    return type === 'funeral' ? (
-      <Heart className="h-5 w-5 text-muted-foreground" />
-    ) : (
-      <Car className="h-5 w-5 text-warning" />
-    );
+    const config = getEmergencyTypeConfig(type);
+    const Icon = config.icon;
+    return <Icon className={`h-5 w-5 ${config.color}`} />;
   };
 
   return (
@@ -197,23 +199,21 @@ export default function AdminEvents() {
                   <Label className="text-sm font-medium mb-2 block">Event Type</Label>
                   <RadioGroup 
                     value={eventType} 
-                    onValueChange={(v) => setEventType(v as 'funeral' | 'accident')}
+                    onValueChange={(v) => setEventType(v as EmergencyType)}
                     className="space-y-2"
                   >
-                    <div className="flex items-center space-x-2 p-2 rounded border hover:border-accent">
-                      <RadioGroupItem value="funeral" id="funeral" />
-                      <Label htmlFor="funeral" className="flex items-center gap-2 cursor-pointer flex-1">
-                        <Heart className="h-4 w-4" />
-                        <span>Funeral ({formatCurrency(FUNERAL_CONTRIBUTION)}/member)</span>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2 rounded border hover:border-accent">
-                      <RadioGroupItem value="accident" id="accident" />
-                      <Label htmlFor="accident" className="flex items-center gap-2 cursor-pointer flex-1">
-                        <Car className="h-4 w-4" />
-                        <span>Accident ({formatCurrency(ACCIDENT_CONTRIBUTION)}/member)</span>
-                      </Label>
-                    </div>
+                    {Object.entries(EMERGENCY_TYPES).map(([key, config]) => {
+                      const Icon = config.icon;
+                      return (
+                        <div key={key} className="flex items-center space-x-2 p-2 rounded border hover:border-accent">
+                          <RadioGroupItem value={key} id={key} />
+                          <Label htmlFor={key} className="flex items-center gap-2 cursor-pointer flex-1">
+                            <Icon className="h-4 w-4" />
+                            <span>{config.label} ({formatCurrency(settings[config.settingsKey])}/member)</span>
+                          </Label>
+                        </div>
+                      );
+                    })}
                   </RadioGroup>
                 </div>
 
@@ -304,7 +304,7 @@ export default function AdminEvents() {
                       <p className="font-medium">{event.title}</p>
                       <p className="text-xs text-muted-foreground capitalize flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {event.type} • {formatDate(event.event_date)}
+                        {getEmergencyTypeConfig(event.type).label} • {formatDate(event.event_date)}
                       </p>
                     </div>
                   </div>

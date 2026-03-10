@@ -8,14 +8,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/constants';
 import {
   AlertTriangle, ChevronRight, Shield, FileCheck, BarChart3,
-  Users, CheckCircle, XCircle, PlusCircle, Car, Heart
+  Users, CheckCircle, XCircle, PlusCircle, Car, Heart, UserX
 } from 'lucide-react';
+import { getEmergencyTypeLabel } from '@/lib/emergencyTypes';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 interface EventSummary {
   id: string;
   title: string;
-  type: 'funeral' | 'accident';
+  type: string;
   totalMembers: number;
   paidMembers: number;
   unpaidMembers: number;
@@ -72,7 +73,7 @@ export default function EmergencyAdminDashboard() {
         const evtCollected = eventDues.reduce((s, d) => s + Number(d.amount_paid), 0);
         const evtTarget = eventDues.reduce((s, d) => s + Number(d.amount_due), 0);
         return {
-          id: evt.id, title: evt.title, type: evt.type as 'funeral' | 'accident',
+          id: evt.id, title: evt.title, type: evt.type,
           totalMembers: eventDues.length, paidMembers: evtPaid, unpaidMembers: evtUnpaid,
           collected: evtCollected, target: evtTarget,
         };
@@ -102,6 +103,8 @@ export default function EmergencyAdminDashboard() {
 
   const funeralEvents = stats.events.filter(e => e.type === 'funeral');
   const accidentEvents = stats.events.filter(e => e.type === 'accident');
+  const lossOfMemberEvents = stats.events.filter(e => e.type === 'loss_of_member');
+  const lossOfBeneficiaryEvents = stats.events.filter(e => e.type === 'loss_of_beneficiary');
 
   return (
     <AppLayout requireAdmin>
@@ -188,6 +191,24 @@ export default function EmergencyAdminDashboard() {
               {accidentEvents.map(renderEventCard)}
             </div>
           )}
+          {lossOfMemberEvents.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <UserX className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-muted-foreground">Loss of Member Events ({lossOfMemberEvents.length})</h3>
+              </div>
+              {lossOfMemberEvents.map(renderEventCard)}
+            </div>
+          )}
+          {lossOfBeneficiaryEvents.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-info" />
+                <h3 className="text-sm font-semibold text-muted-foreground">Loss of Beneficiary Events ({lossOfBeneficiaryEvents.length})</h3>
+              </div>
+              {lossOfBeneficiaryEvents.map(renderEventCard)}
+            </div>
+          )}
         </div>
       )}
 
@@ -218,7 +239,7 @@ export default function EmergencyAdminDashboard() {
 
 function renderEventCard(evt: EventSummary) {
   const pct = evt.target > 0 ? Math.round((evt.collected / evt.target) * 100) : 0;
-  const detailHref = evt.type === 'funeral' ? '/admin/funeral-payments' : '/admin/accident-payments';
+  const detailHref = `/admin/${evt.type === 'funeral' ? 'funeral' : evt.type === 'accident' ? 'accident' : evt.type === 'loss_of_member' ? 'loss-of-member' : 'loss-of-beneficiary'}-payments`;
   return (
     <Link key={evt.id} to={detailHref} className="block">
       <Card className="animate-fade-in hover:shadow-card-hover transition-shadow">
