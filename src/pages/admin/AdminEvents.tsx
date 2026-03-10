@@ -44,7 +44,8 @@ export default function AdminEvents() {
   const [isCreating, setIsCreating] = useState(false);
 
   // Form state
-  const [eventType, setEventType] = useState<'funeral' | 'accident'>('funeral');
+  const [eventType, setEventType] = useState<EmergencyType>('funeral');
+  const { settings } = useContributionSettings();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
