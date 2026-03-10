@@ -16,7 +16,7 @@ import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 interface EventSummary {
   id: string;
   title: string;
-  type: 'funeral' | 'accident';
+  type: string;
   totalMembers: number;
   paidMembers: number;
   unpaidMembers: number;
