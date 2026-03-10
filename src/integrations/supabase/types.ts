@@ -83,6 +83,8 @@ export type Database = {
           id: string
           joining_fee_amount: number
           late_fine_amount: number
+          loss_of_beneficiary_amount: number
+          loss_of_member_amount: number
           personal_loan_monthly_cap: number
           petrol_loan_weekly_cap: number
           updated_at: string
@@ -96,6 +98,8 @@ export type Database = {
           id?: string
           joining_fee_amount?: number
           late_fine_amount?: number
+          loss_of_beneficiary_amount?: number
+          loss_of_member_amount?: number
           personal_loan_monthly_cap?: number
           petrol_loan_weekly_cap?: number
           updated_at?: string
@@ -109,6 +113,8 @@ export type Database = {
           id?: string
           joining_fee_amount?: number
           late_fine_amount?: number
+          loss_of_beneficiary_amount?: number
+          loss_of_member_amount?: number
           personal_loan_monthly_cap?: number
           petrol_loan_weekly_cap?: number
           updated_at?: string

@@ -1,0 +1,2 @@
+ALTER TABLE public.contribution_settings ADD COLUMN IF NOT EXISTS loss_of_member_amount numeric NOT NULL DEFAULT 500;
+ALTER TABLE public.contribution_settings ADD COLUMN IF NOT EXISTS loss_of_beneficiary_amount numeric NOT NULL DEFAULT 200;
