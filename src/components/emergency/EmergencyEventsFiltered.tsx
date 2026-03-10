@@ -49,11 +49,10 @@ export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEven
   const [amountPerMember, setAmountPerMember] = useState('');
   const [paymentWindow, setPaymentWindow] = useState('14');
 
-  const typeLabel = emergencyType === 'funeral' ? 'Funeral' : 'Accident';
-  const TypeIcon = emergencyType === 'funeral' ? Heart : Car;
-  const defaultAmount = emergencyType === 'funeral' 
-    ? settings.funeral_emergency_amount 
-    : settings.accident_emergency_amount;
+  const typeConfig = getEmergencyTypeConfig(emergencyType);
+  const typeLabel = typeConfig.label;
+  const TypeIcon = typeConfig.icon;
+  const defaultAmount = settings[typeConfig.settingsKey];
 
   useEffect(() => { fetchEvents(); }, []);
 

@@ -27,6 +27,8 @@ export const DEFAULT_CONTRIBUTION_SETTINGS: Omit<ContributionSettings, 'id' | 'u
   personal_loan_monthly_cap: 5000,
   funeral_emergency_amount: 200,
   accident_emergency_amount: 50,
+  loss_of_member_amount: 500,
+  loss_of_beneficiary_amount: 200,
 };
 
 const SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
