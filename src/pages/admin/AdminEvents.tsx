@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDate, FUNERAL_CONTRIBUTION, ACCIDENT_CONTRIBUTION } from '@/lib/constants';
+import { formatCurrency, formatDate } from '@/lib/constants';
+import { useContributionSettings } from '@/hooks/useContributionSettings';
+import { EMERGENCY_TYPES, EmergencyType, getEmergencyTypeConfig } from '@/lib/emergencyTypes';
 import { 
   Plus, 
   AlertTriangle, 
