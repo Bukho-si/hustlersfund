@@ -31,7 +31,7 @@ interface EmergencyEvent {
 }
 
 interface EmergencyEventsFilteredProps {
-  emergencyType: 'accident' | 'funeral';
+  emergencyType: EmergencyType;
 }
 
 export default function EmergencyEventsFiltered({ emergencyType }: EmergencyEventsFilteredProps) {
