@@ -304,7 +304,7 @@ export default function AdminEvents() {
                       <p className="font-medium">{event.title}</p>
                       <p className="text-xs text-muted-foreground capitalize flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {event.type} • {formatDate(event.event_date)}
+                        {getEmergencyTypeConfig(event.type).label} • {formatDate(event.event_date)}
                       </p>
                     </div>
                   </div>
