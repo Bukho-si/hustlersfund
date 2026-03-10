@@ -81,7 +81,8 @@ export default function AdminEvents() {
     setIsCreating(true);
 
     try {
-      const amountPerMember = eventType === 'funeral' ? FUNERAL_CONTRIBUTION : ACCIDENT_CONTRIBUTION;
+      const typeConfig = getEmergencyTypeConfig(eventType);
+      const amountPerMember = settings[typeConfig.settingsKey];
 
       // Create the event
       const { data: event, error: eventError } = await supabase
