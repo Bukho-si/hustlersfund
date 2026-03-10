@@ -171,11 +171,9 @@ export default function AdminEvents() {
   };
 
   const getEventIcon = (type: string) => {
-    return type === 'funeral' ? (
-      <Heart className="h-5 w-5 text-muted-foreground" />
-    ) : (
-      <Car className="h-5 w-5 text-warning" />
-    );
+    const config = getEmergencyTypeConfig(type);
+    const Icon = config.icon;
+    return <Icon className={`h-5 w-5 ${config.color}`} />;
   };
 
   return (
