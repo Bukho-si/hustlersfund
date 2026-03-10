@@ -14,8 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { useContributionSettings } from '@/hooks/useContributionSettings';
-import { Plus, Car, Heart, Loader2, Calendar, Clock } from 'lucide-react';
+import { Plus, Loader2, Calendar, Clock } from 'lucide-react';
 import { addDays, format } from 'date-fns';
+import { EmergencyType, getEmergencyTypeConfig } from '@/lib/emergencyTypes';
 
 interface EmergencyEvent {
   id: string;
