@@ -104,12 +104,18 @@ const App = () => (
             <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/admin/accident-events" element={<AdminAccidentEvents />} />
             <Route path="/admin/funeral-events" element={<AdminFuneralEvents />} />
+            <Route path="/admin/loss-of-member-events" element={<AdminLossOfMemberEvents />} />
+            <Route path="/admin/loss-of-beneficiary-events" element={<AdminLossOfBeneficiaryEvents />} />
             <Route path="/admin/emergency-payments" element={<AdminEmergencyPayments />} />
             <Route path="/admin/accident-payments" element={<AdminAccidentPayments />} />
             <Route path="/admin/funeral-payments" element={<AdminFuneralPayments />} />
+            <Route path="/admin/loss-of-member-payments" element={<AdminLossOfMemberPayments />} />
+            <Route path="/admin/loss-of-beneficiary-payments" element={<AdminLossOfBeneficiaryPayments />} />
             <Route path="/admin/emergency-reports" element={<AdminEmergencyReports />} />
             <Route path="/admin/accident-reports" element={<AdminAccidentReports />} />
             <Route path="/admin/funeral-reports" element={<AdminFuneralReports />} />
+            <Route path="/admin/loss-of-member-reports" element={<AdminLossOfMemberReports />} />
+            <Route path="/admin/loss-of-beneficiary-reports" element={<AdminLossOfBeneficiaryReports />} />
             <Route path="/admin/petrol-loan-reports" element={<AdminPetrolLoanReports />} />
             <Route path="/admin/personal-loan-reports" element={<AdminPersonalLoanReports />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
