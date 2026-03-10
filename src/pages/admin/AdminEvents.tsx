@@ -201,23 +201,21 @@ export default function AdminEvents() {
                   <Label className="text-sm font-medium mb-2 block">Event Type</Label>
                   <RadioGroup 
                     value={eventType} 
-                    onValueChange={(v) => setEventType(v as 'funeral' | 'accident')}
+                    onValueChange={(v) => setEventType(v as EmergencyType)}
                     className="space-y-2"
                   >
-                    <div className="flex items-center space-x-2 p-2 rounded border hover:border-accent">
-                      <RadioGroupItem value="funeral" id="funeral" />
-                      <Label htmlFor="funeral" className="flex items-center gap-2 cursor-pointer flex-1">
-                        <Heart className="h-4 w-4" />
-                        <span>Funeral ({formatCurrency(FUNERAL_CONTRIBUTION)}/member)</span>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2 rounded border hover:border-accent">
-                      <RadioGroupItem value="accident" id="accident" />
-                      <Label htmlFor="accident" className="flex items-center gap-2 cursor-pointer flex-1">
-                        <Car className="h-4 w-4" />
-                        <span>Accident ({formatCurrency(ACCIDENT_CONTRIBUTION)}/member)</span>
-                      </Label>
-                    </div>
+                    {Object.entries(EMERGENCY_TYPES).map(([key, config]) => {
+                      const Icon = config.icon;
+                      return (
+                        <div key={key} className="flex items-center space-x-2 p-2 rounded border hover:border-accent">
+                          <RadioGroupItem value={key} id={key} />
+                          <Label htmlFor={key} className="flex items-center gap-2 cursor-pointer flex-1">
+                            <Icon className="h-4 w-4" />
+                            <span>{config.label} ({formatCurrency(settings[config.settingsKey])}/member)</span>
+                          </Label>
+                        </div>
+                      );
+                    })}
                   </RadioGroup>
                 </div>
 
