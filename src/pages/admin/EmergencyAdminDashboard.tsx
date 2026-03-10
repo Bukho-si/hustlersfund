@@ -191,6 +191,24 @@ export default function EmergencyAdminDashboard() {
               {accidentEvents.map(renderEventCard)}
             </div>
           )}
+          {lossOfMemberEvents.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <UserX className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-muted-foreground">Loss of Member Events ({lossOfMemberEvents.length})</h3>
+              </div>
+              {lossOfMemberEvents.map(renderEventCard)}
+            </div>
+          )}
+          {lossOfBeneficiaryEvents.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-info" />
+                <h3 className="text-sm font-semibold text-muted-foreground">Loss of Beneficiary Events ({lossOfBeneficiaryEvents.length})</h3>
+              </div>
+              {lossOfBeneficiaryEvents.map(renderEventCard)}
+            </div>
+          )}
         </div>
       )}
 
