@@ -12,6 +12,8 @@ export interface ContributionSettings {
   personal_loan_monthly_cap: number;
   funeral_emergency_amount: number;
   accident_emergency_amount: number;
+  loss_of_member_amount: number;
+  loss_of_beneficiary_amount: number;
   updated_at: string;
 }
 
