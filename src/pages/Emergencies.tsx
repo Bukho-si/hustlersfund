@@ -7,7 +7,8 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { AlertTriangle, Heart, Car, Users, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, Heart, Car, Users, CheckCircle, Clock, UserX } from 'lucide-react';
+import { getEmergencyTypeConfig } from '@/lib/emergencyTypes';
 
 interface EmergencyEvent {
   id: string;
