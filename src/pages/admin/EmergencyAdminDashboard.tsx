@@ -73,7 +73,7 @@ export default function EmergencyAdminDashboard() {
         const evtCollected = eventDues.reduce((s, d) => s + Number(d.amount_paid), 0);
         const evtTarget = eventDues.reduce((s, d) => s + Number(d.amount_due), 0);
         return {
-          id: evt.id, title: evt.title, type: evt.type as 'funeral' | 'accident',
+          id: evt.id, title: evt.title, type: evt.type,
           totalMembers: eventDues.length, paidMembers: evtPaid, unpaidMembers: evtUnpaid,
           collected: evtCollected, target: evtTarget,
         };
