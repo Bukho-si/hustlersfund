@@ -73,6 +73,18 @@ const SETTING_FIELDS: SettingField[] = [
     description: 'Fixed amount per accident event',
     category: 'emergency',
   },
+  {
+    key: 'loss_of_member_amount',
+    label: 'Loss of Member Contribution',
+    description: 'Fixed amount when a member passes away (R500)',
+    category: 'emergency',
+  },
+  {
+    key: 'loss_of_beneficiary_amount',
+    label: 'Loss of Beneficiary Contribution',
+    description: 'Fixed amount when a member beneficiary passes away (R200)',
+    category: 'emergency',
+  },
 ];
 
 export default function AdminContributionSettings() {

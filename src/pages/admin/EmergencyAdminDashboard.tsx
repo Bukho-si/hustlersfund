@@ -239,7 +239,7 @@ export default function EmergencyAdminDashboard() {
 
 function renderEventCard(evt: EventSummary) {
   const pct = evt.target > 0 ? Math.round((evt.collected / evt.target) * 100) : 0;
-  const detailHref = evt.type === 'funeral' ? '/admin/funeral-payments' : '/admin/accident-payments';
+  const detailHref = `/admin/${evt.type === 'funeral' ? 'funeral' : evt.type === 'accident' ? 'accident' : evt.type === 'loss_of_member' ? 'loss-of-member' : 'loss-of-beneficiary'}-payments`;
   return (
     <Link key={evt.id} to={detailHref} className="block">
       <Card className="animate-fade-in hover:shadow-card-hover transition-shadow">
