@@ -164,7 +164,7 @@ export default function Emergencies() {
                       <div>
                         <p className="font-medium">{due.event.title}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {due.event.type} • {formatDate(due.event.event_date)}
+                          {getEmergencyTypeConfig(due.event.type).label} • {formatDate(due.event.event_date)}
                         </p>
                       </div>
                     </div>
