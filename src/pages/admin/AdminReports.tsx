@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,6 +28,8 @@ import {
 } from '@/hooks/useFinancialReports';
 
 export default function AdminReports() {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'overview';
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   
   const { data: summary, isLoading: summaryLoading, dataUpdatedAt: summaryUpdated } = useFinancialSummary();
@@ -74,7 +77,7 @@ export default function AdminReports() {
       </div>
 
       {/* Main Report Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList className="w-full">
           <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex-1">Weekly Subs</TabsTrigger>

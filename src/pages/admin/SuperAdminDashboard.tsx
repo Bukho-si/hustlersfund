@@ -203,7 +203,7 @@ export default function SuperAdminDashboard() {
               { to: '/admin/roles', icon: UserCog, label: 'Manage Roles', color: 'text-info' },
               { to: '/admin/verify', icon: FileCheck, label: 'Verify Payments', color: 'text-warning', badge: stats.pendingVerifications },
               { to: '/admin/loan-management', icon: Wallet, label: 'Loan Management', color: 'text-primary' },
-              { to: '/admin/reports', icon: BarChart3, label: 'View Reports', color: 'text-primary' },
+              { to: '/admin/reports?tab=subscriptions', icon: BarChart3, label: 'Weekly Subs Report', color: 'text-primary' },
               { to: '/admin/ledger', icon: Wallet, label: 'Financial Ledger', color: 'text-success' },
               { to: '/admin/contribution-settings', icon: Settings2, label: 'Contribution Settings', color: 'text-accent' },
               { to: '/admin/cycles', icon: RefreshCw, label: 'Manage Cycles', color: 'text-info' },
