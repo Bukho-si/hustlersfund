@@ -77,7 +77,7 @@ export default function AdminReports() {
       </div>
 
       {/* Main Report Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList className="w-full">
           <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex-1">Weekly Subs</TabsTrigger>
