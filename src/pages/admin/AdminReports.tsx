@@ -28,6 +28,8 @@ import {
 } from '@/hooks/useFinancialReports';
 
 export default function AdminReports() {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'overview';
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   
   const { data: summary, isLoading: summaryLoading, dataUpdatedAt: summaryUpdated } = useFinancialSummary();
