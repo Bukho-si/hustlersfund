@@ -227,7 +227,7 @@ export function usePersonalLoanBoard() {
   };
 
   const approveLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     setProcessingId(loanId);
     try {
       const loan = loans.find(l => l.id === loanId);
