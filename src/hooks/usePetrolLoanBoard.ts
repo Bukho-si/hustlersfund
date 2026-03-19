@@ -345,7 +345,8 @@ export function usePetrolLoanBoard() {
   };
 
   const rejectLoan = async (loanId: string, reason: string) => {
-    if (!user || !reason.trim()) {
+    if (!user || !loanId) return;
+    if (!reason.trim()) {
       toast({ title: 'Reason required', variant: 'destructive' });
       return;
     }
