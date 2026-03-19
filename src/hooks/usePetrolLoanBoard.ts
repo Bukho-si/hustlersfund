@@ -248,7 +248,7 @@ export function usePetrolLoanBoard() {
   };
 
   const lockLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     const loan = loans.find(l => l.id === loanId);
     if (!loan) return;
 
