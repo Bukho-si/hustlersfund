@@ -258,7 +258,8 @@ export function usePersonalLoanBoard() {
   };
 
   const rejectLoan = async (loanId: string, reason: string) => {
-    if (!user || !reason.trim()) { toast({ title: 'Reason required', variant: 'destructive' }); return; }
+    if (!user || !loanId) return;
+    if (!reason.trim()) { toast({ title: 'Reason required', variant: 'destructive' }); return; }
     setProcessingId(loanId);
     try {
       const { error } = await supabase.from('loans').update({
