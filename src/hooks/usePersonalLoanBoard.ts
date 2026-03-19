@@ -199,7 +199,7 @@ export function usePersonalLoanBoard() {
   };
 
   const lockLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     const loan = loans.find(l => l.id === loanId);
     if (!loan) return;
 
@@ -227,7 +227,7 @@ export function usePersonalLoanBoard() {
   };
 
   const approveLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     setProcessingId(loanId);
     try {
       const loan = loans.find(l => l.id === loanId);
@@ -258,7 +258,8 @@ export function usePersonalLoanBoard() {
   };
 
   const rejectLoan = async (loanId: string, reason: string) => {
-    if (!user || !reason.trim()) { toast({ title: 'Reason required', variant: 'destructive' }); return; }
+    if (!user || !loanId) return;
+    if (!reason.trim()) { toast({ title: 'Reason required', variant: 'destructive' }); return; }
     setProcessingId(loanId);
     try {
       const { error } = await supabase.from('loans').update({
@@ -277,7 +278,7 @@ export function usePersonalLoanBoard() {
   };
 
   const disburseLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     setProcessingId(loanId);
     try {
       const { error } = await supabase.from('loans').update({

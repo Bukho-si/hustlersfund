@@ -248,7 +248,7 @@ export function usePetrolLoanBoard() {
   };
 
   const lockLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     const loan = loans.find(l => l.id === loanId);
     if (!loan) return;
 
@@ -293,7 +293,7 @@ export function usePetrolLoanBoard() {
   };
 
   const approveLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     setProcessingId(loanId);
     try {
       const loan = loans.find(l => l.id === loanId);
@@ -345,7 +345,8 @@ export function usePetrolLoanBoard() {
   };
 
   const rejectLoan = async (loanId: string, reason: string) => {
-    if (!user || !reason.trim()) {
+    if (!user || !loanId) return;
+    if (!reason.trim()) {
       toast({ title: 'Reason required', variant: 'destructive' });
       return;
     }
@@ -375,7 +376,7 @@ export function usePetrolLoanBoard() {
   };
 
   const disburseLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     setProcessingId(loanId);
     try {
       const { error } = await supabase
