@@ -278,7 +278,7 @@ export function usePersonalLoanBoard() {
   };
 
   const disburseLoan = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !loanId) return;
     setProcessingId(loanId);
     try {
       const { error } = await supabase.from('loans').update({
