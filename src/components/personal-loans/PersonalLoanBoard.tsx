@@ -31,10 +31,10 @@ interface Props {
 
 export function PersonalLoanBoard({
   columns, userId, isAdmin, processingId,
-  onLock, onUnlock, onApprove, onReject, onDisburse,
+  onApprove, onReject, onDisburse,
   onRepaymentSuccess, refreshTrigger,
 }: Props) {
-  const pending = [...columns.requested, ...columns.underReview];
+  const pending = [...columns.requested];
   const active = [...columns.approved];
   const closed = [...columns.repaid, ...columns.rejected];
 
