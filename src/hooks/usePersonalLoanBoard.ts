@@ -91,7 +91,7 @@ export function usePersonalLoanBoard() {
       .from('loans')
       .select('*')
       .eq('type', 'personal')
-      .in('status', ['requested', 'under_review', 'approved', 'disbursed', 'pending', 'repaid', 'rejected'])
+      .in('status', ['requested', 'approved', 'disbursed', 'pending', 'repaid', 'rejected'])
       .order('requested_at', { ascending: true });
 
     if (error) { console.error('Error fetching personal loans:', error); return; }
