@@ -35,7 +35,6 @@ export function PersonalLoanCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isProcessing = processingId === loan.id;
-  const isLockedByOther = loan.locked_by && loan.locked_by !== userId && loan.locker_name;
   const exceedsLimit = Number(loan.amount) > loan.eligible_amount;
 
   const isOverdue = loan.due_date && new Date(loan.due_date) < new Date() && Number(loan.outstanding_balance) > 0;
