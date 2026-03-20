@@ -244,9 +244,7 @@ export function usePersonalLoanBoard() {
 
       const { error } = await supabase.from('loans').update({
         status: 'approved', approved_by: user.id, approved_at: new Date().toISOString(), locked_by: null, locked_at: null,
-      }).eq('id', loanId);
-
-      if (error) throw error;
+      }).eq('id', loanId).in('status', ['requested', 'pending']);
       await logActivity(loanId, 'loan_approved', 'Loan approved');
       toast({ title: 'Personal loan approved' });
       fetchLoans();
