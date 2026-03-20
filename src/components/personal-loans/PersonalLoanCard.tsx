@@ -19,8 +19,6 @@ interface Props {
   userId: string;
   processingId: string | null;
   isAdmin: boolean;
-  onLock: (id: string) => Promise<boolean | undefined>;
-  onUnlock: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: string) => void;
   onDisburse: (id: string) => void;
@@ -30,7 +28,7 @@ interface Props {
 
 export function PersonalLoanCard({
   loan, userId, processingId, isAdmin,
-  onLock, onUnlock, onApprove, onReject, onDisburse,
+  onApprove, onReject, onDisburse,
   onRepaymentSuccess, refreshTrigger,
 }: Props) {
   const [rejectReason, setRejectReason] = useState('');
