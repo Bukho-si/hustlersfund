@@ -184,13 +184,7 @@ export function PersonalLoanCard({
         )}
 
         {/* Actions */}
-        {loan.status === 'requested' && !isLockedByOther && isAdmin && (
-          <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => onLock(loan.id)} disabled={isProcessing}>
-            <Eye className="h-3 w-3 mr-1" /> Review Loan
-          </Button>
-        )}
-
-        {loan.status === 'under_review' && loan.locked_by === userId && isAdmin && (
+        {loan.status === 'requested' && isAdmin && (
           <div className="space-y-2">
             <div className="flex gap-2">
               <Dialog>
@@ -213,7 +207,6 @@ export function PersonalLoanCard({
                 {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><CheckCircle2 className="h-3 w-3 mr-1" /> Approve</>}
               </Button>
             </div>
-            <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground" onClick={() => onUnlock(loan.id)}>Release Lock</Button>
           </div>
         )}
 

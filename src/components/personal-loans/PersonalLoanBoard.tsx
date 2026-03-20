@@ -72,8 +72,6 @@ export function PersonalLoanBoard({
                   userId={userId}
                   processingId={processingId}
                   isAdmin={isAdmin}
-                  onLock={onLock}
-                  onUnlock={onUnlock}
                   onApprove={onApprove}
                   onReject={onReject}
                   onDisburse={onDisburse}
