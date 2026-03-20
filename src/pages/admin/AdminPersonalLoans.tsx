@@ -62,7 +62,7 @@ export default function AdminPersonalLoans() {
           <PersonalLoanBoard
             columns={columns} userId={user?.id || ''} processingId={processingId}
             isAdmin={true}
-            onLock={lockLoan} onUnlock={unlockLoan} onApprove={approveLoan}
+            onApprove={approveLoan}
             onReject={rejectLoan} onDisburse={disburseLoan}
             onRepaymentSuccess={handleRepaymentSuccess} refreshTrigger={refreshTrigger}
           />
