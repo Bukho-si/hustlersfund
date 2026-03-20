@@ -10,7 +10,7 @@ import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog'
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 import type { PersonalLoanWithProfile } from '@/hooks/usePersonalLoanBoard';
 import {
-  Lock, Eye, CheckCircle2, XCircle, Loader2,
+  CheckCircle2, XCircle, Loader2,
   ChevronDown, ChevronUp, AlertTriangle, Calendar, CheckCircle, History
 } from 'lucide-react';
 
