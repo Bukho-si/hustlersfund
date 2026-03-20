@@ -59,13 +59,6 @@ export function PersonalLoanCard({
           <StatusBadge status={loan.status} variant="loan" className="text-xs font-semibold px-3 py-1" />
         </div>
 
-        {/* Locked warning */}
-        {isLockedByOther && (
-          <div className="flex items-center gap-1.5 p-1.5 rounded bg-warning/10 border border-warning/20">
-            <Lock className="h-3 w-3 text-warning" />
-            <span className="text-[10px] text-warning font-medium">Reviewed by {loan.locker_name}</span>
-          </div>
-        )}
 
         {/* Admin-only: Financial Analysis */}
         {isAdmin && (
