@@ -15,7 +15,6 @@ interface Column {
 interface Props {
   columns: {
     requested: PersonalLoanWithProfile[];
-    underReview: PersonalLoanWithProfile[];
     approved: PersonalLoanWithProfile[];
     repaid: PersonalLoanWithProfile[];
     rejected: PersonalLoanWithProfile[];
@@ -23,8 +22,6 @@ interface Props {
   userId: string;
   isAdmin: boolean;
   processingId: string | null;
-  onLock: (id: string) => Promise<boolean | undefined>;
-  onUnlock: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: string) => void;
   onDisburse: (id: string) => void;
