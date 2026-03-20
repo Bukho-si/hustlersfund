@@ -10,7 +10,7 @@ import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog'
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 import type { PersonalLoanWithProfile } from '@/hooks/usePersonalLoanBoard';
 import {
-  Lock, Eye, CheckCircle2, XCircle, Loader2,
+  CheckCircle2, XCircle, Loader2,
   ChevronDown, ChevronUp, AlertTriangle, Calendar, CheckCircle, History
 } from 'lucide-react';
 
@@ -19,8 +19,6 @@ interface Props {
   userId: string;
   processingId: string | null;
   isAdmin: boolean;
-  onLock: (id: string) => Promise<boolean | undefined>;
-  onUnlock: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: string) => void;
   onDisburse: (id: string) => void;
@@ -30,14 +28,13 @@ interface Props {
 
 export function PersonalLoanCard({
   loan, userId, processingId, isAdmin,
-  onLock, onUnlock, onApprove, onReject, onDisburse,
+  onApprove, onReject, onDisburse,
   onRepaymentSuccess, refreshTrigger,
 }: Props) {
   const [rejectReason, setRejectReason] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isProcessing = processingId === loan.id;
-  const isLockedByOther = loan.locked_by && loan.locked_by !== userId && loan.locker_name;
   const exceedsLimit = Number(loan.amount) > loan.eligible_amount;
 
   const isOverdue = loan.due_date && new Date(loan.due_date) < new Date() && Number(loan.outstanding_balance) > 0;
@@ -62,13 +59,6 @@ export function PersonalLoanCard({
           <StatusBadge status={loan.status} variant="loan" className="text-xs font-semibold px-3 py-1" />
         </div>
 
-        {/* Locked warning */}
-        {isLockedByOther && (
-          <div className="flex items-center gap-1.5 p-1.5 rounded bg-warning/10 border border-warning/20">
-            <Lock className="h-3 w-3 text-warning" />
-            <span className="text-[10px] text-warning font-medium">Reviewed by {loan.locker_name}</span>
-          </div>
-        )}
 
         {/* Admin-only: Financial Analysis */}
         {isAdmin && (
@@ -184,13 +174,7 @@ export function PersonalLoanCard({
         )}
 
         {/* Actions */}
-        {loan.status === 'requested' && !isLockedByOther && isAdmin && (
-          <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => onLock(loan.id)} disabled={isProcessing}>
-            <Eye className="h-3 w-3 mr-1" /> Review Loan
-          </Button>
-        )}
-
-        {loan.status === 'under_review' && loan.locked_by === userId && isAdmin && (
+        {loan.status === 'requested' && isAdmin && (
           <div className="space-y-2">
             <div className="flex gap-2">
               <Dialog>
@@ -213,7 +197,6 @@ export function PersonalLoanCard({
                 {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><CheckCircle2 className="h-3 w-3 mr-1" /> Approve</>}
               </Button>
             </div>
-            <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground" onClick={() => onUnlock(loan.id)}>Release Lock</Button>
           </div>
         )}
 

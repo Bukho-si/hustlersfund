@@ -91,7 +91,7 @@ export function usePersonalLoanBoard() {
       .from('loans')
       .select('*')
       .eq('type', 'personal')
-      .in('status', ['requested', 'under_review', 'approved', 'disbursed', 'pending', 'repaid', 'rejected'])
+      .in('status', ['requested', 'approved', 'disbursed', 'pending', 'repaid', 'rejected'])
       .order('requested_at', { ascending: true });
 
     if (error) { console.error('Error fetching personal loans:', error); return; }
@@ -244,7 +244,7 @@ export function usePersonalLoanBoard() {
 
       const { error } = await supabase.from('loans').update({
         status: 'approved', approved_by: user.id, approved_at: new Date().toISOString(), locked_by: null, locked_at: null,
-      }).eq('id', loanId);
+      }).eq('id', loanId).in('status', ['requested', 'pending']);
 
       if (error) throw error;
       await logActivity(loanId, 'loan_approved', 'Loan approved');
@@ -296,13 +296,12 @@ export function usePersonalLoanBoard() {
   };
 
   const requested = loans.filter(l => l.status === 'requested');
-  const underReview = loans.filter(l => l.status === 'under_review');
   const approved = loans.filter(l => ['approved', 'disbursed'].includes(l.status) && Number(l.outstanding_balance) > 0);
   const repaid = loans.filter(l => l.status === 'repaid');
   const rejected = loans.filter(l => l.status === 'rejected');
 
   return {
-    loans, columns: { requested, underReview, approved, repaid, rejected },
+    loans, columns: { requested, approved, repaid, rejected },
     activities, metrics, isLoading, processingId,
     lockLoan, unlockLoan, approveLoan, rejectLoan, disburseLoan,
     isLockExpired, refreshLoans: fetchLoans, refreshAll: fetchAll,

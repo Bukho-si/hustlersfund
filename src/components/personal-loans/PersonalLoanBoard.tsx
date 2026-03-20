@@ -15,7 +15,6 @@ interface Column {
 interface Props {
   columns: {
     requested: PersonalLoanWithProfile[];
-    underReview: PersonalLoanWithProfile[];
     approved: PersonalLoanWithProfile[];
     repaid: PersonalLoanWithProfile[];
     rejected: PersonalLoanWithProfile[];
@@ -23,8 +22,6 @@ interface Props {
   userId: string;
   isAdmin: boolean;
   processingId: string | null;
-  onLock: (id: string) => Promise<boolean | undefined>;
-  onUnlock: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: string) => void;
   onDisburse: (id: string) => void;
@@ -34,10 +31,10 @@ interface Props {
 
 export function PersonalLoanBoard({
   columns, userId, isAdmin, processingId,
-  onLock, onUnlock, onApprove, onReject, onDisburse,
+  onApprove, onReject, onDisburse,
   onRepaymentSuccess, refreshTrigger,
 }: Props) {
-  const pending = [...columns.requested, ...columns.underReview];
+  const pending = [...columns.requested];
   const active = [...columns.approved];
   const closed = [...columns.repaid, ...columns.rejected];
 
@@ -75,8 +72,6 @@ export function PersonalLoanBoard({
                   userId={userId}
                   processingId={processingId}
                   isAdmin={isAdmin}
-                  onLock={onLock}
-                  onUnlock={onUnlock}
                   onApprove={onApprove}
                   onReject={onReject}
                   onDisburse={onDisburse}

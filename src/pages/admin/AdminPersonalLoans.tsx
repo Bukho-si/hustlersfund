@@ -39,7 +39,7 @@ export default function AdminPersonalLoans() {
     );
   }
 
-  const batchLoans = loans.filter(l => l.status === 'requested' || l.status === 'under_review');
+  const batchLoans = loans.filter(l => l.status === 'requested');
 
   return (
     <AppLayout requireAdmin>
@@ -62,7 +62,7 @@ export default function AdminPersonalLoans() {
           <PersonalLoanBoard
             columns={columns} userId={user?.id || ''} processingId={processingId}
             isAdmin={true}
-            onLock={lockLoan} onUnlock={unlockLoan} onApprove={approveLoan}
+            onApprove={approveLoan}
             onReject={rejectLoan} onDisburse={disburseLoan}
             onRepaymentSuccess={handleRepaymentSuccess} refreshTrigger={refreshTrigger}
           />
