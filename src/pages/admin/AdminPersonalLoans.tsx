@@ -39,7 +39,7 @@ export default function AdminPersonalLoans() {
     );
   }
 
-  const batchLoans = loans.filter(l => l.status === 'requested' || l.status === 'under_review');
+  const batchLoans = loans.filter(l => l.status === 'requested');
 
   return (
     <AppLayout requireAdmin>
