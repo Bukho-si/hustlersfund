@@ -385,15 +385,21 @@ export function usePersonalLoanBoard() {
     if (!user || !ensureLoanId(loanId, 'disburse loan')) return;
     setProcessingId(loanId);
     try {
-      await updateLoanById({
-        loanId,
-        actionLabel: 'disburse loan',
-        updates: {
+      console.log('[personal-loans] Disburse called — loanId:', loanId);
+
+      const { data, error } = await supabase
+        .from('loans')
+        .update({
           status: 'disbursed',
           disbursed_by: user.id,
           disbursed_at: new Date().toISOString(),
-        },
-      });
+        })
+        .eq('id', loanId)
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error('No loan row updated.');
 
       await logActivity(loanId, 'loan_disbursed', 'Loan disbursed to member');
       toast({ title: 'Loan marked as disbursed' });
