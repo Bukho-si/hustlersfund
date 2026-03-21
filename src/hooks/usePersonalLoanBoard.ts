@@ -49,6 +49,8 @@ export interface PersonalLoanMetrics {
   totalOutstanding: number;
 }
 
+type LoanWorkflowStatus = 'requested' | 'pending' | 'under_review' | 'approved' | 'disbursed' | 'repaid' | 'rejected';
+
 const LOCK_EXPIRY_MS = 3 * 60 * 1000;
 
 function isLockExpired(lockedAt: string | null): boolean {
@@ -218,7 +220,7 @@ export function usePersonalLoanBoard() {
     loanId: string;
     actionLabel: string;
     updates: Record<string, unknown>;
-    allowedStatuses?: string[];
+    allowedStatuses?: readonly LoanWorkflowStatus[];
     lockedBy?: string;
   }) => {
     console.log(`[personal-loans] ${actionLabel}`, { loanId });

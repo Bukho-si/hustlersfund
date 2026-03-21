@@ -48,6 +48,8 @@ export interface PetrolLoanMetrics {
   totalOutstanding: number;
 }
 
+type LoanWorkflowStatus = 'requested' | 'pending' | 'under_review' | 'approved' | 'disbursed' | 'repaid' | 'rejected';
+
 const LOCK_EXPIRY_MS = 3 * 60 * 1000; // 3 minutes
 
 function isLockExpired(lockedAt: string | null): boolean {
@@ -267,7 +269,7 @@ export function usePetrolLoanBoard() {
     loanId: string;
     actionLabel: string;
     updates: Record<string, unknown>;
-    allowedStatuses?: string[];
+    allowedStatuses?: readonly LoanWorkflowStatus[];
     lockedBy?: string;
   }) => {
     console.log(`[petrol-loans] ${actionLabel}`, { loanId });
