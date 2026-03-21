@@ -300,33 +300,39 @@ export function usePersonalLoanBoard() {
     setProcessingId(loanId);
     try {
       const loan = loans.find(l => l.id === loanId);
+      console.log('[personal-loans] Approve called — loanId:', loanId, 'loan object:', JSON.stringify(loan));
+
       if (!loan) {
-        throw new Error('Loan not found. Please refresh and try again.');
+        throw new Error('Loan not found in local state. Please refresh.');
       }
 
-      if (loan && Number(loan.amount) > loan.eligible_amount) {
+      if (Number(loan.amount) > loan.eligible_amount) {
         toast({ title: 'Exceeds limit', description: `Requested amount exceeds eligible limit of R${loan.eligible_amount.toFixed(2)}`, variant: 'destructive' });
         return;
       }
 
       const { data: fundData } = await supabase.from('personal_loan_fund').select('current_balance').limit(1).maybeSingle();
-      if (fundData && loan && Number(loan.amount) > Number(fundData.current_balance)) {
-        toast({ title: 'Insufficient fund balance', description: 'Insufficient personal loan fund balance to approve this loan.', variant: 'destructive' });
+      if (fundData && Number(loan.amount) > Number(fundData.current_balance)) {
+        toast({ title: 'Insufficient fund balance', variant: 'destructive' });
         return;
       }
 
-      await updateLoanById({
-        loanId,
-        actionLabel: 'approve loan',
-        updates: {
+      const { data, error } = await supabase
+        .from('loans')
+        .update({
           status: 'approved',
           approved_by: user.id,
           approved_at: new Date().toISOString(),
           locked_by: null,
           locked_at: null,
-        },
-        allowedStatuses: ['requested', 'pending'],
-      });
+        })
+        .eq('id', loanId)
+        .select('id')
+        .maybeSingle();
+
+      console.log('[personal-loans] Approve DB result:', { data, error });
+      if (error) throw error;
+      if (!data) throw new Error('No loan row updated — may already be processed.');
 
       await logActivity(loanId, 'loan_approved', 'Loan approved');
       toast({ title: 'Personal loan approved' });
