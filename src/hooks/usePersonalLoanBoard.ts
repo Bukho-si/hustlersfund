@@ -350,18 +350,25 @@ export function usePersonalLoanBoard() {
     if (!reason.trim()) { toast({ title: 'Reason required', variant: 'destructive' }); return; }
     setProcessingId(loanId);
     try {
-      await updateLoanById({
-        loanId,
-        actionLabel: 'reject loan',
-        updates: {
+      console.log('[personal-loans] Reject called — loanId:', loanId);
+
+      const { data, error } = await supabase
+        .from('loans')
+        .update({
           status: 'rejected',
           approved_by: user.id,
           approved_at: new Date().toISOString(),
           rejection_reason: reason.trim(),
           locked_by: null,
           locked_at: null,
-        },
-      });
+        })
+        .eq('id', loanId)
+        .select('id')
+        .maybeSingle();
+
+      console.log('[personal-loans] Reject DB result:', { data, error });
+      if (error) throw error;
+      if (!data) throw new Error('No loan row updated.');
 
       await logActivity(loanId, 'loan_rejected', `Rejected: ${reason.trim()}`);
       toast({ title: 'Personal loan rejected' });
