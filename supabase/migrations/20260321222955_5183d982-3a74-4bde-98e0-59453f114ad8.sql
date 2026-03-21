@@ -1,0 +1,1 @@
+UPDATE loans SET status = 'requested' WHERE status IN ('under_review', 'pending');
