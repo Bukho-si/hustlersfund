@@ -56,6 +56,42 @@ export default function AdminLoans() {
     fetchLoans();
   }, []);
 
+  const ensureLoanId = (loanId: string | null | undefined, actionLabel: string): loanId is string => {
+    if (typeof loanId !== 'string' || !loanId.trim()) {
+      console.error(`[admin-loans] ${actionLabel} aborted: missing loan id`, { loanId });
+      toast({
+        title: 'Loan action failed',
+        description: 'Missing loan id for this action.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const updateLoanById = async (loanId: string, actionLabel: string, updates: Record<string, unknown>) => {
+    console.log(`[admin-loans] ${actionLabel}`, { loanId });
+
+    const { data, error } = await supabase
+      .from('loans')
+      .update(updates)
+      .eq('id', loanId)
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      console.error(`[admin-loans] ${actionLabel} failed`, error);
+      throw error;
+    }
+
+    if (!data) {
+      const scopedError = new Error('No matching loan record was updated. Please refresh and try again.');
+      console.error(`[admin-loans] ${actionLabel} matched no rows`, { loanId });
+      throw scopedError;
+    }
+  };
+
   const fetchLoans = async () => {
     const { data, error } = await supabase
       .from('loans')
@@ -81,20 +117,15 @@ export default function AdminLoans() {
   };
 
   const handleApprove = async (loanId: string) => {
-    if (!user) return;
+    if (!user || !ensureLoanId(loanId, 'approve loan')) return;
     setProcessingId(loanId);
 
     try {
-      const { error } = await supabase
-        .from('loans')
-        .update({
-          status: 'approved',
-          approved_by: user.id,
-          approved_at: new Date().toISOString(),
-        })
-        .eq('id', loanId);
-
-      if (error) throw error;
+      await updateLoanById(loanId, 'approve loan', {
+        status: 'approved',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      });
 
       toast({
         title: 'Loan approved',
@@ -114,7 +145,7 @@ export default function AdminLoans() {
   };
 
   const handleReject = async (loanId: string) => {
-    if (!user || !rejectReason.trim()) {
+    if (!user || !ensureLoanId(loanId, 'reject loan') || !rejectReason.trim()) {
       toast({
         title: 'Reason required',
         description: 'Please provide a rejection reason',
@@ -126,17 +157,12 @@ export default function AdminLoans() {
     setProcessingId(loanId);
 
     try {
-      const { error } = await supabase
-        .from('loans')
-        .update({
-          status: 'rejected',
-          approved_by: user.id,
-          approved_at: new Date().toISOString(),
-          rejection_reason: rejectReason.trim(),
-        })
-        .eq('id', loanId);
-
-      if (error) throw error;
+      await updateLoanById(loanId, 'reject loan', {
+        status: 'rejected',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+        rejection_reason: rejectReason.trim(),
+      });
 
       toast({
         title: 'Loan rejected',

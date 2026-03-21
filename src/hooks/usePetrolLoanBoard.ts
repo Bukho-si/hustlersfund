@@ -247,8 +247,60 @@ export function usePetrolLoanBoard() {
     });
   };
 
+  const ensureLoanId = (loanId: string | null | undefined, actionLabel: string): loanId is string => {
+    if (typeof loanId !== 'string' || !loanId.trim()) {
+      console.error(`[petrol-loans] ${actionLabel} aborted: missing loan id`, { loanId });
+      toast({ title: 'Loan action failed', description: 'Missing loan id for this action.', variant: 'destructive' });
+      return false;
+    }
+
+    return true;
+  };
+
+  const updateLoanById = async ({
+    loanId,
+    actionLabel,
+    updates,
+    allowedStatuses,
+    lockedBy,
+  }: {
+    loanId: string;
+    actionLabel: string;
+    updates: Record<string, unknown>;
+    allowedStatuses?: string[];
+    lockedBy?: string;
+  }) => {
+    console.log(`[petrol-loans] ${actionLabel}`, { loanId });
+
+    let query = supabase
+      .from('loans')
+      .update(updates)
+      .eq('id', loanId);
+
+    if (allowedStatuses?.length) {
+      query = query.in('status', allowedStatuses);
+    }
+
+    if (lockedBy) {
+      query = query.eq('locked_by', lockedBy);
+    }
+
+    const { data, error } = await query.select('id').maybeSingle();
+
+    if (error) {
+      console.error(`[petrol-loans] ${actionLabel} failed`, error);
+      throw error;
+    }
+
+    if (!data) {
+      const scopedError = new Error('No matching loan record was updated. Please refresh and try again.');
+      console.error(`[petrol-loans] ${actionLabel} matched no rows`, { loanId, allowedStatuses, lockedBy });
+      throw scopedError;
+    }
+  };
+
   const lockLoan = async (loanId: string) => {
-    if (!user || !loanId) return;
+    if (!user || !ensureLoanId(loanId, 'lock loan')) return;
     const loan = loans.find(l => l.id === loanId);
     if (!loan) return;
 
@@ -262,41 +314,52 @@ export function usePetrolLoanBoard() {
       return false;
     }
 
-    const { error } = await supabase
-      .from('loans')
-      .update({
-        locked_by: user.id,
-        locked_at: new Date().toISOString(),
-        status: 'under_review',
-      })
-      .eq('id', loanId)
-      .in('status', ['requested', 'under_review']);
-
-    if (error) {
+    try {
+      await updateLoanById({
+        loanId,
+        actionLabel: 'lock loan',
+        updates: {
+          locked_by: user.id,
+          locked_at: new Date().toISOString(),
+          status: 'under_review',
+        },
+        allowedStatuses: ['requested', 'under_review'],
+      });
+    } catch (error: any) {
       toast({ title: 'Lock failed', description: error.message, variant: 'destructive' });
       return false;
     }
 
     await logActivity(loanId, 'loan_reviewed', `Loan taken for review`);
-    fetchLoans();
+    await Promise.all([fetchLoans(), fetchMetrics()]);
     return true;
   };
 
   const unlockLoan = async (loanId: string) => {
-    if (!user) return;
-    await supabase
-      .from('loans')
-      .update({ locked_by: null, locked_at: null, status: 'requested' })
-      .eq('id', loanId)
-      .eq('locked_by', user.id);
-    fetchLoans();
+    if (!user || !ensureLoanId(loanId, 'unlock loan')) return;
+
+    try {
+      await updateLoanById({
+        loanId,
+        actionLabel: 'unlock loan',
+        updates: { locked_by: null, locked_at: null, status: 'requested' },
+        lockedBy: user.id,
+      });
+      await Promise.all([fetchLoans(), fetchMetrics()]);
+    } catch (error: any) {
+      toast({ title: 'Unlock failed', description: error.message, variant: 'destructive' });
+    }
   };
 
   const approveLoan = async (loanId: string) => {
-    if (!user || !loanId) return;
+    if (!user || !ensureLoanId(loanId, 'approve loan')) return;
     setProcessingId(loanId);
     try {
       const loan = loans.find(l => l.id === loanId);
+      if (!loan) {
+        throw new Error('Loan not found. Please refresh and try again.');
+      }
+
       if (loan && Number(loan.amount) > loan.eligible_amount) {
         toast({
           title: 'Exceeds limit',
@@ -322,22 +385,23 @@ export function usePetrolLoanBoard() {
         return;
       }
 
-      const { error } = await supabase
-        .from('loans')
-        .update({
+      await updateLoanById({
+        loanId,
+        actionLabel: 'approve loan',
+        updates: {
           status: 'approved',
           approved_by: user.id,
           approved_at: new Date().toISOString(),
           locked_by: null,
           locked_at: null,
-        })
-        .eq('id', loanId);
+        },
+      });
 
-      if (error) throw error;
       await logActivity(loanId, 'loan_approved', `Loan approved`);
       toast({ title: 'Petrol loan approved' });
-      fetchLoans();
+      await Promise.all([fetchLoans(), fetchMetrics(), fetchActivities()]);
     } catch (e: any) {
+      console.error('[petrol-loans] Approval failed:', e);
       toast({ title: 'Approval failed', description: e.message, variant: 'destructive' });
     } finally {
       setProcessingId(null);
@@ -345,30 +409,31 @@ export function usePetrolLoanBoard() {
   };
 
   const rejectLoan = async (loanId: string, reason: string) => {
-    if (!user || !loanId) return;
+    if (!user || !ensureLoanId(loanId, 'reject loan')) return;
     if (!reason.trim()) {
       toast({ title: 'Reason required', variant: 'destructive' });
       return;
     }
     setProcessingId(loanId);
     try {
-      const { error } = await supabase
-        .from('loans')
-        .update({
+      await updateLoanById({
+        loanId,
+        actionLabel: 'reject loan',
+        updates: {
           status: 'rejected',
           approved_by: user.id,
           approved_at: new Date().toISOString(),
           rejection_reason: reason.trim(),
           locked_by: null,
           locked_at: null,
-        })
-        .eq('id', loanId);
+        },
+      });
 
-      if (error) throw error;
       await logActivity(loanId, 'loan_rejected', `Rejected: ${reason.trim()}`);
       toast({ title: 'Petrol loan rejected' });
-      fetchLoans();
+      await Promise.all([fetchLoans(), fetchMetrics(), fetchActivities()]);
     } catch (e: any) {
+      console.error('[petrol-loans] Rejection failed:', e);
       toast({ title: 'Rejection failed', description: e.message, variant: 'destructive' });
     } finally {
       setProcessingId(null);
@@ -376,23 +441,24 @@ export function usePetrolLoanBoard() {
   };
 
   const disburseLoan = async (loanId: string) => {
-    if (!user || !loanId) return;
+    if (!user || !ensureLoanId(loanId, 'disburse loan')) return;
     setProcessingId(loanId);
     try {
-      const { error } = await supabase
-        .from('loans')
-        .update({
+      await updateLoanById({
+        loanId,
+        actionLabel: 'disburse loan',
+        updates: {
           status: 'disbursed',
           disbursed_by: user.id,
           disbursed_at: new Date().toISOString(),
-        })
-        .eq('id', loanId);
+        },
+      });
 
-      if (error) throw error;
       await logActivity(loanId, 'loan_disbursed', `Loan disbursed to member`);
       toast({ title: 'Loan marked as disbursed' });
-      fetchLoans();
+      await Promise.all([fetchLoans(), fetchMetrics(), fetchActivities()]);
     } catch (e: any) {
+      console.error('[petrol-loans] Disbursement failed:', e);
       toast({ title: 'Disbursement failed', description: e.message, variant: 'destructive' });
     } finally {
       setProcessingId(null);
