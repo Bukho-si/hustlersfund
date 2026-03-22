@@ -42,7 +42,7 @@ SET search_path TO 'public'
 AS $$
 BEGIN
   IF NEW.type = 'personal' AND NEW.status = 'approved' AND (OLD.status IS DISTINCT FROM 'approved') THEN
-    UPDATE personal_loan_fund SET current_balance = current_balance - NEW.amount, last_updated = now();
+    UPDATE personal_loan_fund SET current_balance = current_balance - NEW.amount, last_updated = now() WHERE id IS NOT NULL;
   END IF;
   RETURN NEW;
 END;
@@ -64,7 +64,7 @@ DECLARE
 BEGIN
   SELECT type INTO v_loan_type FROM public.loans WHERE id = NEW.loan_id;
   IF v_loan_type = 'personal' THEN
-    UPDATE personal_loan_fund SET current_balance = current_balance + NEW.amount, last_updated = now();
+    UPDATE personal_loan_fund SET current_balance = current_balance + NEW.amount, last_updated = now() WHERE id IS NOT NULL;
   END IF;
   RETURN NEW;
 END;

@@ -42,7 +42,7 @@ AS $$
 BEGIN
   -- Deduct on petrol loan disbursement
   IF NEW.type = 'petrol' AND NEW.status = 'disbursed' AND (OLD.status IS DISTINCT FROM 'disbursed') THEN
-    UPDATE petrol_fund SET current_balance = current_balance - NEW.amount, last_updated = now();
+    UPDATE petrol_fund SET current_balance = current_balance - NEW.amount, last_updated = now() WHERE id IS NOT NULL;
   END IF;
   RETURN NEW;
 END;
@@ -65,7 +65,7 @@ DECLARE
 BEGIN
   SELECT type INTO v_loan_type FROM public.loans WHERE id = NEW.loan_id;
   IF v_loan_type = 'petrol' THEN
-    UPDATE petrol_fund SET current_balance = current_balance + NEW.amount, last_updated = now();
+    UPDATE petrol_fund SET current_balance = current_balance + NEW.amount, last_updated = now() WHERE id IS NOT NULL;
   END IF;
   RETURN NEW;
 END;
