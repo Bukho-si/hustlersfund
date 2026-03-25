@@ -749,9 +749,52 @@ export default function AdminMembers() {
     }
   };
 
+  const createMember = async () => {
+    if (!newMemberName.trim() || !newMemberEmail.trim() || !newMemberPassword.trim()) {
+      toast({ title: 'Missing fields', description: 'Name, email, and password are required.', variant: 'destructive' });
+      return;
+    }
+    if (newMemberPassword.length < 6) {
+      toast({ title: 'Weak password', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+      return;
+    }
+
+    setIsCreatingMember(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-member', {
+        body: {
+          email: newMemberEmail.trim(),
+          password: newMemberPassword,
+          full_name: newMemberName.trim(),
+          phone: newMemberPhone.trim() || null,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: 'Member created', description: `${newMemberName.trim()} has been added successfully.` });
+      setAddMemberOpen(false);
+      setNewMemberName('');
+      setNewMemberEmail('');
+      setNewMemberPassword('');
+      setNewMemberPhone('');
+      fetchMembers();
+    } catch (error: any) {
+      toast({ title: 'Failed to create member', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsCreatingMember(false);
+    }
+  };
+
   return (
     <AppLayout requireAdmin>
-      <PageHeader title="Members" subtitle="Manage stokvel members" showBack />
+      <PageHeader title="Members" subtitle="Manage stokvel members" showBack action={
+        <Button size="sm" onClick={() => setAddMemberOpen(true)} className="gap-1">
+          <UserPlus className="h-4 w-4" />
+          Add Member
+        </Button>
+      } />
 
       {/* Bulk Selection Toolbar */}
       {selectedMemberIds.size > 0 && (
