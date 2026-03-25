@@ -1363,6 +1363,48 @@ export default function AdminMembers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Member Dialog */}
+      <Dialog open={addMemberOpen} onOpenChange={(open) => {
+        setAddMemberOpen(open);
+        if (!open) { setNewMemberName(''); setNewMemberEmail(''); setNewMemberPassword(''); setNewMemberPhone(''); }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-accent" />
+              Add New Member
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-member-name">Full Name *</Label>
+              <Input id="new-member-name" placeholder="e.g. John Doe" value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-member-email">Email *</Label>
+              <Input id="new-member-email" type="email" placeholder="e.g. john@example.com" value={newMemberEmail} onChange={(e) => setNewMemberEmail(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-member-password">Password *</Label>
+              <PasswordInput id="new-member-password" placeholder="Min 6 characters" value={newMemberPassword} onChange={(e) => setNewMemberPassword(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-member-phone">Phone (optional)</Label>
+              <Input id="new-member-phone" placeholder="e.g. 0812345678" value={newMemberPhone} onChange={(e) => setNewMemberPhone(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </DialogClose>
+            <Button size="sm" onClick={createMember} disabled={isCreatingMember || !newMemberName.trim() || !newMemberEmail.trim() || !newMemberPassword.trim()}>
+              {isCreatingMember ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <UserPlus className="h-4 w-4 mr-1" />}
+              {isCreatingMember ? 'Creating...' : 'Create Member'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
