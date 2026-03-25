@@ -102,6 +102,7 @@ export default function AdminMembers() {
   const [newMemberPhone, setNewMemberPhone] = useState('');
   const [isCreatingMember, setIsCreatingMember] = useState(false);
 
+  useEffect(() => {
     fetchMembers();
   }, []);
 
