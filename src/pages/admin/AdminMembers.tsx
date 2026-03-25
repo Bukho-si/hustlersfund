@@ -14,7 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getJoiningFeeTotal, getWeeklySubscription, getPetrolLoanMax, getPersonalLoanMax } from '@/lib/constants';
-import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound, BellRing, MessageSquare } from 'lucide-react';
+import { Users, Phone, Car, Search, Shield, ShieldCheck, Eye, Loader2, X, CheckSquare, Download, Trash2, KeyRound, BellRing, MessageSquare, UserPlus } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   AlertDialog,
   AlertDialogAction,
