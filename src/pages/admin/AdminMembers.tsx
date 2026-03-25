@@ -93,8 +93,15 @@ export default function AdminMembers() {
   const [customMessage, setCustomMessage] = useState('');
   const [customTarget, setCustomTarget] = useState<'selected' | 'all_active'>('all_active');
   const [isSendingCustom, setIsSendingCustom] = useState(false);
+  
+  // Add member state
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberPassword, setNewMemberPassword] = useState('');
+  const [newMemberPhone, setNewMemberPhone] = useState('');
+  const [isCreatingMember, setIsCreatingMember] = useState(false);
 
-  useEffect(() => {
     fetchMembers();
   }, []);
 
