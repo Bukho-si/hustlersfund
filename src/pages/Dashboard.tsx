@@ -24,6 +24,7 @@ import {
   Calendar,
   RefreshCw,
   Info,
+  ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -60,7 +61,6 @@ export default function Dashboard() {
   const [isJoiningFeeOnlyWeek, setIsJoiningFeeOnlyWeek] = useState(false);
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
 
-  // Auto-refresh when deadline is reached
   useEffect(() => {
     if (!currentCycle?.deadline) return;
     const deadlineTime = new Date(currentCycle.deadline).getTime();
@@ -87,7 +87,6 @@ export default function Dashboard() {
     fetchDashboardData(currentCycle?.id);
   }, [user, currentCycle?.id]);
 
-  // Realtime subscriptions
   useEffect(() => {
     if (!user) return;
     const refreshData = () => fetchDashboardData(currentCycle?.id);
@@ -139,7 +138,6 @@ export default function Dashboard() {
         currentWeekPayment = payments?.[0] || null;
       }
 
-      // Emergency dues are tracked separately in the Emergency tab - NOT included in weekly
       const emergencyDuesCount = 0;
       const emergencyDuesTotal = 0;
 
@@ -178,8 +176,6 @@ export default function Dashboard() {
       }
     }
 
-    // Emergency dues are tracked separately in Emergency tab - NOT in weekly breakdown
-
     return { total, breakdown };
   };
 
@@ -192,19 +188,19 @@ export default function Dashboard() {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="mb-5">
-        <div className="flex items-center gap-3 mb-1">
-          <Avatar className="h-12 w-12 border-2 border-primary/20">
-            <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">{initials}</AvatarFallback>
+      <div className="mb-6 animate-fade-in">
+        <div className="flex items-center gap-3.5">
+          <Avatar className="h-13 w-13 border-2 border-accent/20 shadow-sm">
+            <AvatarFallback className="bg-accent/10 text-accent font-bold text-sm">{initials}</AvatarFallback>
           </Avatar>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-foreground">Hey, {firstName}! 👋</h1>
-              <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground tracking-tight">Hey, {firstName} 👋</h1>
+              <div className="flex items-center gap-1.5">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-8 w-8 rounded-xl"
                   onClick={() => {
                     if ('caches' in window) {
                       caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
@@ -212,24 +208,24 @@ export default function Dashboard() {
                     refetchCycle();
                     window.location.reload();
                   }}
-                  title="Hard refresh"
+                  title="Refresh"
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
                 {isAdmin && (
                   <Link to="/admin">
-                    <Button variant="outline" size="sm" className="gap-1">
-                      <Shield className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="gap-1.5 rounded-xl h-8 text-xs">
+                      <Shield className="h-3.5 w-3.5" />
                       Admin
                     </Button>
                   </Link>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-1">
               {data.profile && <StatusBadge status={data.profile.status} variant="member" />}
               {slots > 1 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 rounded-full">
                   <Users className="h-3 w-3 mr-0.5" />
                   {slots} slots
                 </Badge>
@@ -241,24 +237,27 @@ export default function Dashboard() {
 
       <InstallBanner />
 
-      {/* Payment Cycle + Weekly Subscription */}
+      {/* Payment Cycle Card */}
       {currentCycle && !isPaid && (
-        <Card className="mb-4 animate-fade-in border-accent/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-accent/20 flex items-center justify-center">
-                <Calendar className="h-4 w-4 text-accent" />
+        <Card className="mb-4 animate-fade-in-up border-accent/20">
+          <CardContent className="p-5">
+            {/* Cycle header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="fintech-icon-box bg-accent/10">
+                <Calendar className="h-5 w-5 text-accent" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-sm">Week {format(new Date(currentCycle.week_start_date), 'MMM d')} – {format(new Date(currentCycle.week_end_date), 'd')}</h3>
+                <h3 className="font-semibold text-sm">
+                  Week {format(new Date(currentCycle.week_start_date), 'MMM d')} – {format(new Date(currentCycle.week_end_date), 'd')}
+                </h3>
                 <p className="text-xs text-muted-foreground">Contribution cycle open</p>
               </div>
             </div>
 
             {/* Deadline */}
             {isDeadlinePassed ? (
-              <div className="bg-destructive/10 rounded-lg p-3 flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+              <div className="bg-destructive/8 border border-destructive/15 rounded-xl p-3.5 flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
                   <AlertTriangle className="h-4 w-4 text-destructive" />
                   <span className="text-sm font-medium text-destructive">Deadline passed</span>
                 </div>
@@ -268,8 +267,8 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-warning/10 rounded-lg p-3 flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+              <div className="bg-warning/8 border border-warning/15 rounded-xl p-3.5 flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
                   <Clock className="h-4 w-4 text-warning" />
                   <span className="text-sm font-medium">Payment deadline</span>
                 </div>
@@ -282,7 +281,7 @@ export default function Dashboard() {
 
             {/* Joining fee only week notice */}
             {isJoiningFeeOnlyWeek && (
-              <Alert className="mb-3 border-info/30 bg-info/10">
+              <Alert className="mb-4 border-info/20 bg-info/8 rounded-xl">
                 <Info className="h-4 w-4 text-info" />
                 <AlertDescription className="text-sm">
                   <strong>Joining Fees Only This Week</strong> — Weekly subscriptions start next week.
@@ -291,36 +290,37 @@ export default function Dashboard() {
             )}
 
             {/* Weekly breakdown */}
-            <div className="space-y-2">
+            <div className="space-y-2.5 mb-4">
               {weeklyDues.breakdown.map((item, index) => (
                 <div key={index} className="flex justify-between text-sm">
                   <div className="flex flex-col">
                     <span className="text-muted-foreground">{item.label}</span>
-                    {item.detail && <span className="text-xs text-muted-foreground/70">{item.detail}</span>}
+                    {item.detail && <span className="text-xs text-muted-foreground/60">{item.detail}</span>}
                   </div>
                   <span className="font-medium">{formatCurrency(item.amount)}</span>
                 </div>
               ))}
-              <div className="border-t pt-2 flex justify-between text-sm font-semibold">
-                <span>Total Due</span>
-                <span className="text-accent">{formatCurrency(weeklyDues.total)}</span>
+              <div className="border-t border-border/50 pt-3 flex justify-between items-center">
+                <span className="text-sm font-bold">Total Due</span>
+                <span className="text-lg font-bold text-accent">{formatCurrency(weeklyDues.total)}</span>
               </div>
             </div>
 
             {/* Payment status or submit button */}
             {data.currentWeekPayment ? (
-              <div className="mt-4 p-3 rounded-lg flex items-center justify-between bg-muted">
-                <div className="flex items-center gap-2">
+              <div className="p-3.5 rounded-xl flex items-center justify-between bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Payment submitted</span>
+                  <span className="text-sm font-medium">Payment submitted</span>
                 </div>
                 <StatusBadge status={data.currentWeekPayment.status} variant="payment" />
               </div>
             ) : (
-              <Link to="/payments/submit" className="block mt-4">
-                <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold h-12">
-                  <CreditCard className="h-5 w-5 mr-2" />
+              <Link to="/payments/submit" className="block">
+                <Button className="w-full fintech-btn-primary gap-2">
+                  <CreditCard className="h-5 w-5" />
                   Submit Payment
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             )}
@@ -330,15 +330,15 @@ export default function Dashboard() {
 
       {/* Paid confirmation */}
       {isPaid && (
-        <Card className="mb-4 animate-fade-in border-success/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
+        <Card className="mb-4 animate-fade-in border-success/20 bg-success/5">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3.5">
+              <div className="fintech-icon-box bg-success/10">
                 <CheckCircle2 className="h-5 w-5 text-success" />
               </div>
               <div>
-                <p className="font-semibold text-success">Week's Dues Paid</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="font-semibold text-success">Week's Dues Paid ✓</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {formatCurrency(data.currentWeekPayment!.total_amount)} verified
                 </p>
               </div>
@@ -350,9 +350,11 @@ export default function Dashboard() {
       {/* No active cycle */}
       {!currentCycle && !isLoading && (
         <Card className="animate-fade-in">
-          <CardContent className="p-6 text-center">
-            <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <p className="font-medium text-foreground">No active cycle</p>
+          <CardContent className="p-8 text-center">
+            <div className="fintech-icon-box bg-muted mx-auto mb-4">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="font-semibold text-foreground">No active cycle</p>
             <p className="text-sm text-muted-foreground mt-1">The next contribution cycle hasn't started yet.</p>
           </CardContent>
         </Card>

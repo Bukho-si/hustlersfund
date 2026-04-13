@@ -2,13 +2,12 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyWallet, useWalletTransactions, getWalletTransactionLabel, isWalletDebitTransaction } from '@/hooks/useWallet';
 import { formatCurrency, formatDateTime, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
-import { Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, Fuel, DollarSign, AlertTriangle, CheckCircle, PiggyBank, TrendingDown } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Fuel, DollarSign, AlertTriangle, CheckCircle, PiggyBank, TrendingDown, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -33,7 +32,6 @@ export default function MyWallet() {
       .then(({ data }) => setProfile(data));
   }, [user]);
 
-  // Fetch active loans with interest for accurate loan totals
   const { data: activeLoans } = useQuery({
     queryKey: ['my-active-loans', user?.id],
     queryFn: async () => {
@@ -70,7 +68,7 @@ export default function MyWallet() {
         <PageHeader title="My Wallet" subtitle="Your financial overview" />
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+            <Card key={i}><CardContent className="p-5"><Skeleton className="h-20 w-full rounded-xl" /></CardContent></Card>
           ))}
         </div>
       </AppLayout>
@@ -81,56 +79,57 @@ export default function MyWallet() {
     <AppLayout>
       <PageHeader title="My Wallet" subtitle="Your financial overview" />
 
-      {/* Section 1: Contributions */}
-      <Card className="mb-4 bg-primary text-primary-foreground">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="h-12 w-12 rounded-xl bg-primary-foreground/10 flex items-center justify-center">
-              <PiggyBank className="h-6 w-6" />
+      {/* Total Contributions - Hero Card */}
+      <Card className="mb-4 bg-primary text-primary-foreground animate-fade-in overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-accent/10 -translate-y-8 translate-x-8" />
+        <CardContent className="p-5 relative">
+          <div className="flex items-center gap-3.5 mb-1">
+            <div className="fintech-icon-box bg-primary-foreground/10">
+              <PiggyBank className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-primary-foreground/70 text-xs">Total Contributions</p>
-              <p className="text-2xl font-bold">{formatCurrency(totalContributions)}</p>
+              <p className="text-primary-foreground/60 text-xs font-medium">Total Contributions</p>
+              <p className="text-2xl font-bold tracking-tight">{formatCurrency(totalContributions)}</p>
             </div>
           </div>
-          <p className="text-primary-foreground/60 text-[11px] mt-2">Your member savings — not affected by loans</p>
+          <p className="text-primary-foreground/40 text-[11px] mt-2">Your member savings — not affected by loans</p>
         </CardContent>
       </Card>
 
       {/* Joining Fee Progress */}
-      <Card className="mb-4 animate-fade-in">
-        <CardContent className="p-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Joining Fee</span>
-            <span className="font-medium">{formatCurrency(joiningFeePaid)} / {formatCurrency(joiningFeeTotal)}</span>
+      <Card className="mb-4 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+        <CardContent className="p-5">
+          <div className="flex justify-between text-sm mb-2.5">
+            <span className="text-muted-foreground font-medium">Joining Fee</span>
+            <span className="font-semibold">{formatCurrency(joiningFeePaid)} / {formatCurrency(joiningFeeTotal)}</span>
           </div>
           <Progress value={joiningFeeProgress} className="h-2.5" />
           {joiningFeePaid >= joiningFeeTotal ? (
-            <p className="text-xs text-success mt-1.5 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Fully paid</p>
+            <p className="text-xs text-success mt-2 flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Fully paid</p>
           ) : (
-            <p className="text-xs text-muted-foreground mt-1.5">{formatCurrency(getJoiningFeeRemaining(slots, joiningFeePaid))} remaining</p>
+            <p className="text-xs text-muted-foreground mt-2">{formatCurrency(getJoiningFeeRemaining(slots, joiningFeePaid))} remaining</p>
           )}
         </CardContent>
       </Card>
 
-      {/* Section 2: Loans Owed */}
-      <Card className="mb-4 animate-fade-in">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+      {/* Loans Owed */}
+      <Card className="mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="fintech-icon-box-sm bg-destructive/10">
               <TrendingDown className="h-4 w-4 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Total Loans Owed</p>
+              <p className="text-xs text-muted-foreground font-medium">Total Loans Owed</p>
               <p className="text-lg font-bold">{totalLoansOwed > 0 ? formatCurrency(totalLoansOwed) : 'R0.00'}</p>
             </div>
           </div>
 
           {totalLoansOwed > 0 ? (
-            <div className="space-y-2">
-              <Separator />
+            <div className="space-y-2.5">
+              <Separator className="bg-border/50" />
               <div className="flex items-center justify-between py-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <Fuel className="h-4 w-4 text-warning" />
                   <span className="text-sm">Petrol Loan</span>
                 </div>
@@ -139,7 +138,7 @@ export default function MyWallet() {
                 </span>
               </div>
               <div className="flex items-center justify-between py-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <DollarSign className="h-4 w-4 text-info" />
                   <span className="text-sm">Personal Loan</span>
                 </div>
@@ -157,15 +156,15 @@ export default function MyWallet() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Emergency Contributions */}
-      <Card className="mb-4 animate-fade-in">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+      {/* Emergency Contributions */}
+      <Card className="mb-4 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3">
+            <div className="fintech-icon-box-sm bg-warning/10">
+              <AlertTriangle className="h-4 w-4 text-warning" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Emergency Contributions</p>
+              <p className="text-xs text-muted-foreground font-medium">Emergency Contributions</p>
               <p className="text-lg font-bold">{formatCurrency(wallet?.emergency_contributions_total || 0)}</p>
             </div>
           </div>
@@ -173,27 +172,29 @@ export default function MyWallet() {
       </Card>
 
       {/* Transaction History */}
-      <Card className="animate-fade-in">
-        <CardContent className="p-4">
-          <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-            Transaction History
-          </h3>
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+      <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <CardContent className="p-5">
+          <div className="fintech-section-header">
+            <div className="fintech-icon-box-sm bg-muted">
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-sm">Transaction History</h3>
+          </div>
+          <div className="space-y-0.5 max-h-[400px] overflow-y-auto">
             {txnLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex justify-between py-2.5">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-16" />
+                <div key={i} className="flex justify-between py-3">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-4 w-16 rounded" />
                 </div>
               ))
             ) : transactions && transactions.length > 0 ? (
               transactions.map((txn) => {
                 const isDebit = isWalletDebitTransaction(txn.transaction_type);
                 return (
-                  <div key={txn.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
+                  <div key={txn.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
                     <div className="flex items-center gap-3">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${isDebit ? 'bg-destructive/10' : 'bg-success/10'}`}>
+                      <div className={`fintech-icon-box-sm ${isDebit ? 'bg-destructive/8' : 'bg-success/8'}`}>
                         {isDebit ? (
                           <ArrowDownLeft className="h-3.5 w-3.5 text-destructive" />
                         ) : (

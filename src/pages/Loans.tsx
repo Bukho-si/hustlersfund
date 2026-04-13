@@ -75,7 +75,6 @@ export default function Loans() {
       setLoans((loansRes.data as any[]) || []);
     }
 
-    // Aggregate repayment totals per loan
     const totals: Record<string, number> = {};
     if (repaymentsRes.data) {
       for (const r of repaymentsRes.data) {
@@ -113,7 +112,7 @@ export default function Loans() {
         subtitle="Request and manage loans"
         action={
           <Link to="/loans/request">
-            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1">
+            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5 rounded-xl h-9">
               <Plus className="h-4 w-4" />
               Request
             </Button>
@@ -122,10 +121,11 @@ export default function Loans() {
       />
 
       {totalOutstanding > 0 && (
-        <Card className="mb-4 bg-primary text-primary-foreground">
-          <CardContent className="p-4">
-            <p className="text-primary-foreground/70 text-xs mb-1">Total Outstanding</p>
-            <p className="text-2xl font-bold">{formatCurrency(totalOutstanding)}</p>
+        <Card className="mb-4 bg-primary text-primary-foreground animate-fade-in overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-accent/10 -translate-y-6 translate-x-6" />
+          <CardContent className="p-5 relative">
+            <p className="text-primary-foreground/60 text-xs font-medium mb-1">Total Outstanding</p>
+            <p className="text-2xl font-bold tracking-tight">{formatCurrency(totalOutstanding)}</p>
           </CardContent>
         </Card>
       )}
@@ -135,18 +135,20 @@ export default function Loans() {
           <div className="space-y-3">
             {[1, 2].map((i) => (
               <Card key={i} className="animate-pulse">
-                <CardContent className="p-4"><div className="h-20 bg-muted rounded" /></CardContent>
+                <CardContent className="p-5"><div className="h-24 bg-muted rounded-xl" /></CardContent>
               </Card>
             ))}
           </div>
         ) : loans.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <div className="fintech-icon-box bg-muted mx-auto mb-4">
+                <Wallet className="h-5 w-5 text-muted-foreground" />
+              </div>
               <h3 className="font-semibold mb-2">No loan history</h3>
               <p className="text-sm text-muted-foreground mb-4">Need a petrol or personal loan? Request one here.</p>
               <Link to="/loans/request">
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Request Loan</Button>
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl">Request Loan</Button>
               </Link>
             </CardContent>
           </Card>
@@ -163,22 +165,24 @@ export default function Loans() {
             return (
               <Card
                 key={loan.id}
-                className={`animate-fade-in ${overdue ? 'border-destructive/50' : ''}`}
+                className={`animate-fade-in ${overdue ? 'border-destructive/30' : ''}`}
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-5">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getLoanIcon(loan.type)}
+                    <div className="flex items-center gap-2.5">
+                      <div className={`fintech-icon-box-sm ${loan.type === 'petrol' ? 'bg-warning/10' : 'bg-info/10'}`}>
+                        {getLoanIcon(loan.type)}
+                      </div>
                       <div>
-                        <p className="font-medium capitalize">{loan.type} Loan</p>
+                        <p className="font-semibold capitalize">{loan.type} Loan</p>
                         <p className="text-xs text-muted-foreground">{formatDate(loan.requested_at)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       {overdue && (
-                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0 rounded-full">
                           <AlertTriangle className="h-3 w-3 mr-0.5" />
                           Overdue
                         </Badge>
@@ -189,7 +193,7 @@ export default function Loans() {
 
                   {/* Overdue warning */}
                   {overdue && loan.due_date && (
-                    <div className="bg-destructive/10 rounded-lg p-2.5 flex items-center gap-2 mb-3">
+                    <div className="bg-destructive/8 border border-destructive/15 rounded-xl p-3 flex items-center gap-2.5 mb-3">
                       <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
                       <p className="text-xs text-destructive font-medium">
                         Overdue by {differenceInDays(new Date(), new Date(loan.due_date))} days. Please settle your balance.
@@ -198,7 +202,7 @@ export default function Loans() {
                   )}
 
                   {/* Financial details grid */}
-                  <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
+                  <div className="grid grid-cols-[1fr_auto] gap-y-2.5 text-sm">
                     <span className="text-muted-foreground">Loan Amount</span>
                     <span className="font-medium text-right">{formatCurrency(Number(loan.amount))}</span>
 
@@ -214,18 +218,17 @@ export default function Loans() {
 
                     {(isActive || loan.status === 'repaid') && (
                       <>
-                        <span className="text-muted-foreground pt-1 border-t col-span-2" />
+                        <span className="text-muted-foreground pt-1.5 border-t border-border/30 col-span-2" />
                         <span className="text-muted-foreground">Total Repaid</span>
                         <span className="font-medium text-success text-right">{formatCurrency(totalRepaid)}</span>
 
                         <span className="text-muted-foreground">Remaining Balance</span>
-                        <span className={`font-semibold text-right ${remainingBalance > 0 ? 'text-accent' : 'text-success'}`}>
+                        <span className={`font-bold text-right ${remainingBalance > 0 ? 'text-accent' : 'text-success'}`}>
                           {formatCurrency(remainingBalance)}
                         </span>
                       </>
                     )}
 
-                    {/* Repayment deadline */}
                     {loan.due_date && (isActive || loan.status === 'repaid') && (
                       <>
                         <span className="text-muted-foreground flex items-center gap-1">
@@ -241,23 +244,23 @@ export default function Loans() {
 
                   {/* Repayment progress */}
                   {(isActive || loan.status === 'repaid') && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Repayment Progress</span>
-                        <span className="font-medium">{Math.round(progress)}%</span>
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="text-muted-foreground font-medium">Repayment Progress</span>
+                        <span className="font-semibold">{Math.round(progress)}%</span>
                       </div>
-                      <Progress value={progress} className="h-2" />
+                      <Progress value={progress} className="h-2.5" />
                     </div>
                   )}
 
                   {loan.reason && (
-                    <p className="text-xs text-muted-foreground mt-2 italic">"{loan.reason}"</p>
+                    <p className="text-xs text-muted-foreground mt-3 italic">"{loan.reason}"</p>
                   )}
 
                   {/* Submit payment button */}
                   {isActive && remainingBalance > 0 && (
                     <Link to={`/payments/submit?type=loan_repayment&amount=${remainingBalance}&loanType=${loan.type}&interest=${loan.interest_amount || 0}&loanId=${loan.id}`}>
-                      <Button className="w-full mt-3 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" size="sm">
+                      <Button className="w-full mt-4 bg-accent text-accent-foreground hover:bg-accent/90 gap-2 rounded-xl h-11" size="sm">
                         <CreditCard className="h-4 w-4" />
                         Submit Payment ({formatCurrency(remainingBalance)})
                       </Button>
@@ -266,11 +269,11 @@ export default function Loans() {
 
                   {/* Repayment history toggle */}
                   {(isActive || loan.status === 'repaid') && (
-                    <div className="mt-3 pt-3 border-t">
+                    <div className="mt-3 pt-3 border-t border-border/30">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground p-0 h-auto w-full justify-start"
+                        className="text-muted-foreground p-0 h-auto w-full justify-start hover:text-foreground"
                         onClick={() => toggleExpanded(loan.id)}
                       >
                         {expandedLoanId === loan.id ? (
