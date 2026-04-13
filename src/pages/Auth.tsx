@@ -38,6 +38,7 @@ export default function Auth() {
   const { signIn, signUp, user, userRoles } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
