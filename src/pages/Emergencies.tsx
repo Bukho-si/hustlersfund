@@ -7,7 +7,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/constants';
-import { AlertTriangle, Heart, Car, Users, CheckCircle, Clock, UserX } from 'lucide-react';
+import { AlertTriangle, Users, CheckCircle, Clock } from 'lucide-react';
 import { getEmergencyTypeConfig } from '@/lib/emergencyTypes';
 
 interface EmergencyEvent {
@@ -111,13 +111,15 @@ export default function Emergencies() {
 
       {/* Outstanding Total */}
       {totalUnpaid > 0 && (
-        <Card className="mb-4 bg-warning/10 border-warning/20">
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card className="mb-4 bg-warning/8 border-warning/15 animate-fade-in">
+          <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Total Outstanding</p>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Total Outstanding</p>
               <p className="text-2xl font-bold text-warning">{formatCurrency(totalUnpaid)}</p>
             </div>
-            <AlertTriangle className="h-8 w-8 text-warning" />
+            <div className="fintech-icon-box bg-warning/15">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+            </div>
           </CardContent>
         </Card>
       )}
@@ -127,8 +129,8 @@ export default function Emergencies() {
           <div className="space-y-3">
             {[1, 2].map((i) => (
               <Card key={i} className="animate-pulse">
-                <CardContent className="p-4">
-                  <div className="h-20 bg-muted rounded" />
+                <CardContent className="p-5">
+                  <div className="h-24 bg-muted rounded-xl" />
                 </CardContent>
               </Card>
             ))}
@@ -136,7 +138,9 @@ export default function Emergencies() {
         ) : dues.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <div className="fintech-icon-box bg-muted mx-auto mb-4">
+                <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+              </div>
               <h3 className="font-semibold mb-2">No emergency events</h3>
               <p className="text-sm text-muted-foreground">
                 When emergency contributions are needed, they'll appear here.
@@ -150,6 +154,7 @@ export default function Emergencies() {
             const deadlinePassed = due.event.payment_deadline 
               ? new Date(due.event.payment_deadline) < new Date() 
               : false;
+            const config = getEmergencyTypeConfig(due.event.type);
 
             return (
               <Card 
@@ -157,14 +162,16 @@ export default function Emergencies() {
                 className="animate-fade-in"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getEventIcon(due.event.type)}
+                    <div className="flex items-center gap-2.5">
+                      <div className={`fintech-icon-box-sm ${config.color.includes('warning') ? 'bg-warning/10' : config.color.includes('destructive') ? 'bg-destructive/10' : 'bg-info/10'}`}>
+                        {getEventIcon(due.event.type)}
+                      </div>
                       <div>
-                        <p className="font-medium">{due.event.title}</p>
+                        <p className="font-semibold">{due.event.title}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {getEmergencyTypeConfig(due.event.type).label} • {formatDate(due.event.event_date)}
+                          {config.label} • {formatDate(due.event.event_date)}
                         </p>
                       </div>
                     </div>
@@ -177,15 +184,15 @@ export default function Emergencies() {
                     </p>
                   )}
 
-                  <div className="grid grid-cols-[1fr_auto] gap-y-2 text-sm">
+                  <div className="grid grid-cols-[1fr_auto] gap-y-2.5 text-sm">
                     <span className="text-muted-foreground">Amount due</span>
                     <span className="font-medium text-right">{formatCurrency(Number(due.amount_due))}</span>
                     <span className="text-success">Total paid</span>
-                    <span className="text-success text-right">{formatCurrency(Number(due.amount_paid))}</span>
+                    <span className="text-success font-medium text-right">{formatCurrency(Number(due.amount_paid))}</span>
                     {remaining > 0 && (
                       <>
-                        <span className="font-semibold pt-1">Remaining</span>
-                        <span className="font-semibold text-warning text-right pt-1">
+                        <span className="font-bold pt-1.5">Remaining</span>
+                        <span className="font-bold text-warning text-right pt-1.5">
                           {formatCurrency(remaining)}
                         </span>
                       </>
@@ -194,20 +201,20 @@ export default function Emergencies() {
 
                   {/* Payment Deadline */}
                   {due.event.payment_deadline && remaining > 0 && (
-                    <div className={`mt-3 p-2 rounded-lg flex items-center gap-2 text-xs ${deadlinePassed ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
-                      <Clock className="h-3 w-3" />
-                      <span>{deadlinePassed ? 'Deadline passed:' : 'Payment deadline:'} {formatDate(due.event.payment_deadline)}</span>
+                    <div className={`mt-3 p-3 rounded-xl flex items-center gap-2.5 text-xs border ${deadlinePassed ? 'bg-destructive/8 border-destructive/15 text-destructive' : 'bg-muted/50 border-border/50 text-muted-foreground'}`}>
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="font-medium">{deadlinePassed ? 'Deadline passed:' : 'Payment deadline:'} {formatDate(due.event.payment_deadline)}</span>
                     </div>
                   )}
 
-                  {/* Progress bar for active events */}
+                  {/* Progress bar */}
                   {due.event.status === 'active' && eventProgress[due.event_id] && (
-                    <div className="mt-3 pt-3 border-t">
+                    <div className="mt-3 pt-3 border-t border-border/30">
                       <div className="flex items-center justify-between text-xs mb-1.5">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Users className="h-3 w-3" /> Member Progress
                         </span>
-                        <span className="font-medium flex items-center gap-1">
+                        <span className="font-semibold flex items-center gap-1">
                           <CheckCircle className="h-3 w-3 text-success" />
                           {eventProgress[due.event_id].paidMembers} / {eventProgress[due.event_id].totalMembers} paid
                         </span>
@@ -216,7 +223,7 @@ export default function Emergencies() {
                         value={eventProgress[due.event_id].totalMembers > 0
                           ? (eventProgress[due.event_id].paidMembers / eventProgress[due.event_id].totalMembers) * 100
                           : 0}
-                        className="h-2"
+                        className="h-2.5"
                       />
                     </div>
                   )}

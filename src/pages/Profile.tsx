@@ -118,15 +118,16 @@ export default function Profile() {
 
       {/* Status Card */}
       {profile && (
-        <Card className="mb-4 bg-primary text-primary-foreground">
-          <CardContent className="p-4">
+        <Card className="mb-4 bg-primary text-primary-foreground animate-fade-in overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-accent/10 -translate-y-8 translate-x-8" />
+          <CardContent className="p-5 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-primary-foreground/70 text-xs mb-1">Member Status</p>
+                <p className="text-primary-foreground/60 text-xs font-medium mb-1.5">Member Status</p>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={profile.status} variant="member" />
                   {slots > 1 && (
-                    <Badge variant="outline" className="text-xs border-primary-foreground/30 text-primary-foreground">
+                    <Badge variant="outline" className="text-xs border-primary-foreground/20 text-primary-foreground rounded-full">
                       <Users className="h-3 w-3 mr-1" />
                       {slots} slots
                     </Badge>
@@ -134,8 +135,8 @@ export default function Profile() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-primary-foreground/70 text-xs mb-1">Member Since</p>
-                <p className="font-medium">{formatDate(profile.join_date)}</p>
+                <p className="text-primary-foreground/60 text-xs font-medium mb-1">Member Since</p>
+                <p className="font-semibold text-sm">{formatDate(profile.join_date)}</p>
               </div>
             </div>
           </CardContent>
@@ -144,15 +145,15 @@ export default function Profile() {
 
       {/* Wallet Quick View */}
       <Link to="/wallet" className="block mb-4">
-        <Card className="hover:shadow-card-hover transition-shadow animate-fade-in">
-          <CardContent className="p-4">
+        <Card className="hover:shadow-md transition-all duration-200 animate-fade-in border-border/50" style={{ animationDelay: '0.05s' }}>
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
+                <div className="fintech-icon-box bg-success/10">
                   <Wallet className="h-5 w-5 text-success" />
                 </div>
                 <div>
-                  <p className="font-medium">My Wallet</p>
+                  <p className="font-semibold text-sm">My Wallet</p>
                   <p className="text-xs text-muted-foreground">View balances & transactions</p>
                 </div>
               </div>
@@ -165,16 +166,16 @@ export default function Profile() {
         </Card>
       </Link>
 
-      {/* Membership & Joining Fee Card */}
+      {/* Membership & Joining Fee */}
       {profile && (
-        <Card className="mb-4">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <div className="h-10 w-10 rounded-full bg-info/10 flex items-center justify-center">
+        <Card className="mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <CardContent className="p-5 space-y-4">
+            <div className="fintech-section-header">
+              <div className="fintech-icon-box bg-info/10">
                 <CreditCard className="h-5 w-5 text-info" />
               </div>
               <div>
-                <p className="font-medium">Membership Details</p>
+                <p className="font-semibold text-sm">Membership Details</p>
                 <p className="text-xs text-muted-foreground">Slots and joining fee status</p>
               </div>
             </div>
@@ -182,26 +183,26 @@ export default function Profile() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Membership Slots</span>
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="rounded-full">
                   <Users className="h-3 w-3 mr-1" />
                   {slots} {slots === 1 ? 'slot' : 'slots'}
                 </Badge>
               </div>
 
               <div>
-                <div className="flex justify-between text-sm mb-1">
+                <div className="flex justify-between text-sm mb-1.5">
                   <span className="text-muted-foreground">Joining Fee Progress</span>
-                  <span className="font-medium">
+                  <span className="font-semibold">
                     {formatCurrency(joiningFeePaid)} of {formatCurrency(joiningFeeTotal)}
                   </span>
                 </div>
-                <Progress value={joiningFeeProgress} className="h-2" />
+                <Progress value={joiningFeeProgress} className="h-2.5" />
                 {joiningFeeRemaining > 0 ? (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     {formatCurrency(joiningFeeRemaining)} remaining
                   </p>
                 ) : (
-                  <p className="text-xs text-success mt-1">✓ Fully paid</p>
+                  <p className="text-xs text-success mt-1.5 font-medium">✓ Fully paid</p>
                 )}
               </div>
             </div>
@@ -211,70 +212,70 @@ export default function Profile() {
 
       {/* Profile Form */}
       <div className="space-y-4">
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
+        <Card className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
+          <CardContent className="p-5 space-y-4">
+            <div className="fintech-section-header">
+              <div className="fintech-icon-box bg-accent/10">
                 <User className="h-5 w-5 text-accent" />
               </div>
               <div>
-                <p className="font-medium">Personal Information</p>
+                <p className="font-semibold text-sm">Personal Information</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className="mt-1.5" />
+                <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground">Full Name</Label>
+                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className="mt-1.5 fintech-input" />
               </div>
               <div>
-                <Label htmlFor="phone" className="flex items-center gap-1">
+                <Label htmlFor="phone" className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                   <Phone className="h-3 w-3" />
                   Phone Number
                 </Label>
-                <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 082 123 4567" className="mt-1.5" />
+                <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 082 123 4567" className="mt-1.5 fintech-input" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <div className="h-10 w-10 rounded-full bg-warning/10 flex items-center justify-center">
+        <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <CardContent className="p-5 space-y-4">
+            <div className="fintech-section-header">
+              <div className="fintech-icon-box bg-warning/10">
                 <Car className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="font-medium">Driver Information</p>
+                <p className="font-semibold text-sm">Driver Information</p>
                 <p className="text-xs text-muted-foreground">Your Uber details</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-                <Input id="vehicleReg" value={vehicleReg} onChange={(e) => setVehicleReg(e.target.value)} placeholder="e.g. CA 123 456" className="mt-1.5" />
+                <Label htmlFor="vehicleReg" className="text-xs font-medium text-muted-foreground">Vehicle Registration</Label>
+                <Input id="vehicleReg" value={vehicleReg} onChange={(e) => setVehicleReg(e.target.value)} placeholder="e.g. CA 123 456" className="mt-1.5 fintech-input" />
               </div>
               <div>
-                <Label htmlFor="uberDriverId">Uber Driver ID</Label>
-                <Input id="uberDriverId" value={uberDriverId} onChange={(e) => setUberDriverId(e.target.value)} placeholder="Your Uber driver ID" className="mt-1.5" />
+                <Label htmlFor="uberDriverId" className="text-xs font-medium text-muted-foreground">Uber Driver ID</Label>
+                <Input id="uberDriverId" value={uberDriverId} onChange={(e) => setUberDriverId(e.target.value)} placeholder="Your Uber driver ID" className="mt-1.5 fintech-input" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Button onClick={handleSave} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold" disabled={isSaving}>
+        <Button onClick={handleSave} className="w-full fintech-btn-primary" disabled={isSaving}>
           {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Save className="h-5 w-5 mr-2" />Save Changes</>}
         </Button>
 
         <Link to="/install" className="block">
-          <Button variant="outline" className="w-full h-12">
+          <Button variant="outline" className="w-full fintech-btn-outline">
             <Download className="h-5 w-5 mr-2" />Install App
           </Button>
         </Link>
 
-        <Button variant="outline" onClick={handleSignOut} className="w-full h-12" disabled={isSigningOut}>
+        <Button variant="outline" onClick={handleSignOut} className="w-full fintech-btn-outline text-destructive hover:text-destructive" disabled={isSigningOut}>
           {isSigningOut ? <Loader2 className="h-5 w-5 animate-spin" /> : <><LogOut className="h-5 w-5 mr-2" />Sign Out</>}
         </Button>
       </div>
