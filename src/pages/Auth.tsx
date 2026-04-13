@@ -164,6 +164,31 @@ export default function Auth() {
     navigate('/dashboard');
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast({
+          title: 'Google Sign-In Failed',
+          description: result.error.message,
+          variant: 'destructive',
+        });
+      }
+      if (result.redirected) return;
+    } catch (err: any) {
+      toast({
+        title: 'Google Sign-In Failed',
+        description: err?.message || 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-primary flex flex-col">
       {/* Hero Section */}
