@@ -4,12 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hustlers Design System - Bold, Trustworthy, South African Energy */
+/* Hustlers Fund — Premium Fintech Design System */
 
 @layer base {
   :root {
-    /* Core brand colors - Deep navy + Gold accent */
-    --background: 220 20% 97%;
+    /* Background: soft neutral (#F8FAFC) */
+    --background: 210 40% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -18,37 +18,37 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary - Deep Navy Blue (Trust & Finance) */
+    /* Primary - Deep Navy Blue */
     --primary: 222 47% 15%;
     --primary-foreground: 45 100% 96%;
 
-    /* Secondary - Soft blue-gray */
-    --secondary: 220 14% 96%;
+    /* Secondary */
+    --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
 
-    /* Muted surfaces */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Accent - Vibrant Gold (Hustle Energy) */
+    /* Accent - Gold (#EAB308) */
     --accent: 45 93% 47%;
     --accent-foreground: 222 47% 11%;
 
-    /* Status colors */
+    /* Status */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    
+
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
-    
+
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 45 93% 47%;
 
     --radius: 0.75rem;
@@ -63,16 +63,11 @@
     --sidebar-border: 222 47% 20%;
     --sidebar-ring: 45 93% 47%;
 
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(222 47% 15%) 0%, hsl(222 47% 25%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(45 93% 47%) 0%, hsl(38 92% 50%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(222 47% 11%) 0%, hsl(222 47% 20%) 100%);
-    
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -2px hsl(222 47% 11% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.1);
-    --shadow-gold: 0 4px 14px -3px hsl(45 93% 47% / 0.4);
+    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+    --shadow-gold: 0 4px 14px -3px hsl(45 93% 47% / 0.3);
   }
 
   .dark {
@@ -121,7 +116,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 
@@ -129,17 +124,37 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Standardized spacing system */
-.space-inner { gap: 0.5rem; }    /* 8px */
-.space-card { gap: 1rem; }       /* 16px */
-.space-section { gap: 1.5rem; }  /* 24px */
-
-@layer base {
-  * {
-    @apply border-border;
+/* Fintech card styles */
+@layer components {
+  .fintech-card {
+    @apply bg-card rounded-2xl border border-border/50 shadow-sm transition-all duration-200;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  .fintech-card-hover {
+    @apply fintech-card hover:shadow-md hover:border-border;
+  }
+
+  .fintech-input {
+    @apply h-12 rounded-xl border-border bg-muted/50 focus:bg-card focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all;
+  }
+
+  .fintech-btn-primary {
+    @apply h-12 rounded-xl bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-all duration-200 shadow-sm hover:shadow-gold;
+  }
+
+  .fintech-btn-outline {
+    @apply h-12 rounded-xl border-border bg-card hover:bg-muted/50 font-medium transition-all duration-200;
+  }
+
+  .fintech-section-header {
+    @apply flex items-center gap-3 pb-3 mb-3 border-b border-border/50;
+  }
+
+  .fintech-icon-box {
+    @apply h-10 w-10 rounded-xl flex items-center justify-center shrink-0;
+  }
+
+  .fintech-icon-box-sm {
+    @apply h-8 w-8 rounded-lg flex items-center justify-center shrink-0;
   }
 }

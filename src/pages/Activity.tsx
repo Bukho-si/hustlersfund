@@ -25,9 +25,9 @@ const ICON_MAP = {
   loan_rejected: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
   loan_disbursed: { icon: ArrowDownLeft, color: 'text-info', bg: 'bg-info/10' },
   repayment: { icon: ArrowUpRight, color: 'text-success', bg: 'bg-success/10' },
-  contribution: { icon: CreditCard, color: 'text-primary', bg: 'bg-primary/10' },
+  contribution: { icon: CreditCard, color: 'text-accent', bg: 'bg-accent/10' },
   emergency: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10' },
-  notification: { icon: Bell, color: 'text-accent', bg: 'bg-accent/10' },
+  notification: { icon: Bell, color: 'text-info', bg: 'bg-info/10' },
   default: { icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted' },
 };
 
@@ -67,7 +67,6 @@ export default function Activity() {
 
       const activities: ActivityEvent[] = [];
 
-      // Map wallet transactions
       (walletRes.data || []).forEach(txn => {
         let iconType: ActivityEvent['icon'] = 'default';
         let title = '';
@@ -107,7 +106,6 @@ export default function Activity() {
         });
       });
 
-      // Map notifications
       (notifRes.data || []).forEach(n => {
         let iconType: ActivityEvent['icon'] = 'notification';
         if (n.type === 'loan_approved') iconType = 'loan_approved';
@@ -123,7 +121,6 @@ export default function Activity() {
         });
       });
 
-      // Map emergency events
       (emergencyRes.data || []).forEach(due => {
         const event = due.event as any;
         activities.push({
@@ -136,7 +133,6 @@ export default function Activity() {
         });
       });
 
-      // Sort by timestamp descending and deduplicate
       activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       setEvents(activities.slice(0, 50));
@@ -154,13 +150,15 @@ export default function Activity() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Card key={i}><CardContent className="p-4"><Skeleton className="h-14 w-full" /></CardContent></Card>
+            <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full rounded-xl" /></CardContent></Card>
           ))}
         </div>
       ) : events.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="fintech-icon-box bg-muted mx-auto mb-4">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+            </div>
             <h3 className="font-semibold mb-2">No activity yet</h3>
             <p className="text-sm text-muted-foreground">
               Your loan approvals, payments, and notifications will appear here.
@@ -168,34 +166,38 @@ export default function Activity() {
           </CardContent>
         </Card>
       ) : (
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border" />
+        <Card>
+          <CardContent className="p-5">
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-[19px] top-5 bottom-5 w-px bg-border/50" />
 
-          <div className="space-y-1">
-            {events.map((event, index) => {
-              const iconConfig = ICON_MAP[event.icon] || ICON_MAP.default;
-              const IconComp = iconConfig.icon;
+              <div className="space-y-0.5">
+                {events.map((event, index) => {
+                  const iconConfig = ICON_MAP[event.icon] || ICON_MAP.default;
+                  const IconComp = iconConfig.icon;
 
-              return (
-                <div
-                  key={event.id}
-                  className="relative flex items-start gap-3 pl-0 py-2 animate-fade-in"
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                >
-                  <div className={`relative z-10 h-10 w-10 rounded-full ${iconConfig.bg} flex items-center justify-center shrink-0`}>
-                    <IconComp className={`h-4 w-4 ${iconConfig.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-medium truncate">{event.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{event.description}</p>
-                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">{formatDateTime(event.timestamp)}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  return (
+                    <div
+                      key={event.id}
+                      className="relative flex items-start gap-3.5 py-3 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.03}s` }}
+                    >
+                      <div className={`relative z-10 fintech-icon-box ${iconConfig.bg} shrink-0`}>
+                        <IconComp className={`h-4 w-4 ${iconConfig.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0 pt-1">
+                        <p className="text-sm font-medium truncate">{event.title}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{event.description}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">{formatDateTime(event.timestamp)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </AppLayout>
   );

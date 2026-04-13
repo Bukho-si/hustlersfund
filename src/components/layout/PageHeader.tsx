@@ -21,15 +21,15 @@ export function PageHeader({ title, subtitle, showBack = false, action }: PageHe
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="h-8 w-8 shrink-0"
+            className="h-9 w-9 shrink-0 rounded-xl"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
         <div className="min-w-0">
-          <h1 className="text-xl font-bold text-foreground truncate">{title}</h1>
+          <h1 className="text-xl font-bold text-foreground truncate tracking-tight">{title}</h1>
           {subtitle && (
-            <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
+            <p className="text-sm text-muted-foreground truncate mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>
