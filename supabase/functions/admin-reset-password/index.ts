@@ -67,17 +67,13 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { data, error } = await adminClient.auth.admin.generateLink({
-      type: "recovery",
-      email: email,
-      options: {
-        redirectTo: redirectUrl || `${req.headers.get("origin")}/reset-password`,
-      },
+    const { error } = await adminClient.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl || `${req.headers.get("origin")}/reset-password`,
     });
 
     if (error) throw error;
 
-    console.log(`Password reset email triggered for: ${email}`);
+    console.log(`Password reset email sent for: ${email}`);
 
     return new Response(
       JSON.stringify({ success: true, message: `Password reset email sent to ${email}` }),
