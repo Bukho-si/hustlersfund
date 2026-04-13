@@ -22,7 +22,12 @@ export function AppLayout({ children, requireAuth = true, requireAdmin = false }
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-12 w-12 rounded-2xl bg-accent flex items-center justify-center animate-pulse">
+            <span className="text-accent-foreground font-extrabold text-xl">H</span>
+          </div>
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
@@ -40,17 +45,17 @@ export function AppLayout({ children, requireAuth = true, requireAdmin = false }
     const module = ROUTE_MODULE_MAP[location.pathname];
     if (module && !canAccessRoute(location.pathname)) {
       return (
-        <div className="min-h-screen bg-background pb-20">
-          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="min-h-screen bg-background pb-24">
+          <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border/50">
             <div className="w-full max-w-[720px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
               <AppBrandWidget />
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <ThemeToggle />
                 {user && <NotificationBell />}
               </div>
             </div>
           </header>
-          <main className="w-full max-w-[720px] mx-auto px-4 py-4">
+          <main className="w-full max-w-[720px] mx-auto px-4 py-6">
             <Card>
               <CardContent className="p-8 text-center">
                 <ShieldX className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -68,17 +73,17 @@ export function AppLayout({ children, requireAuth = true, requireAdmin = false }
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <div className="min-h-screen bg-background pb-24">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border/50">
         <div className="w-full max-w-[720px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <AppBrandWidget />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <ThemeToggle />
             {user && <NotificationBell />}
           </div>
         </div>
       </header>
-      <main className="w-full max-w-[720px] mx-auto px-4 py-4">
+      <main className="w-full max-w-[720px] mx-auto px-4 py-6">
         {children}
       </main>
       {user && <MobileNav />}

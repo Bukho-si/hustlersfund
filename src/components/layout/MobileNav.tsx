@@ -12,7 +12,7 @@ interface NavItem {
 }
 
 const memberNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
+  { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/wallet', label: 'Wallet', icon: Wallet },
   { href: '/loans', label: 'Loans', icon: DollarSign },
   { href: '/emergencies', label: 'Emergency', icon: AlertTriangle },
@@ -71,7 +71,6 @@ function getAdminNavItems(roles: AppRole[], dashRoute: string): NavItem[] {
     ];
   }
 
-  // Legacy emergency_admin
   if (roles.includes('emergency_admin')) {
     return [
       { href: dashRoute, label: 'Dashboard', icon: Home },
@@ -98,37 +97,48 @@ export function MobileNav() {
     navItems = memberNavItems;
   }
 
-  // For super admin with many items, use scrollable nav
   const isScrollable = navItems.length > 5;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-bottom">
-      <div className="w-full max-w-[720px] mx-auto">
-        <div className={cn(
-          "flex items-center h-16 px-3",
-          isScrollable ? "overflow-x-auto gap-1 justify-start" : "justify-between"
-        )}>
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            const Icon = item.icon;
-            
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  "flex flex-col items-center justify-center h-full gap-1 transition-colors",
-                  isScrollable ? "min-w-[4rem] px-1.5" : "flex-1",
-                  isActive 
-                    ? "text-accent" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Icon className={cn("h-5 w-5", isActive && "text-accent")} />
-                <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
-              </Link>
-            );
-          })}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
+      <div className="w-full max-w-[720px] mx-auto px-2">
+        <div className="bg-card rounded-t-2xl border border-b-0 border-border/50 shadow-nav">
+          <div className={cn(
+            "flex items-center h-[68px] px-2",
+            isScrollable ? "overflow-x-auto gap-0.5 justify-start" : "justify-between"
+          )}>
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href;
+              const Icon = item.icon;
+              
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    "flex flex-col items-center justify-center h-full gap-1 transition-all duration-200 rounded-xl",
+                    isScrollable ? "min-w-[4rem] px-1.5" : "flex-1",
+                    isActive 
+                      ? "text-accent" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-200",
+                    isActive && "bg-accent/10"
+                  )}>
+                    <Icon className={cn("h-5 w-5 transition-colors", isActive && "text-accent")} />
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-medium whitespace-nowrap transition-colors",
+                    isActive && "text-accent font-semibold"
+                  )}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
     </nav>

@@ -1,7 +1,10 @@
 export function AppBrandWidget() {
   return (
-    <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-card">
-      <span className="text-accent font-extrabold text-xl">H</span>
+    <div className="flex items-center gap-2.5">
+      <div className="h-9 w-9 rounded-xl bg-accent flex items-center justify-center shadow-sm">
+        <span className="text-accent-foreground font-extrabold text-lg">H</span>
+      </div>
+      <span className="text-sm font-bold text-foreground tracking-tight hidden sm:block">Hustlers Fund</span>
     </div>
   );
 }
