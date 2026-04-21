@@ -19,6 +19,7 @@ import Install from "./pages/Install";
 import ResetPassword from "./pages/ResetPassword";
 import MyWallet from "./pages/MyWallet";
 import Activity from "./pages/Activity";
+import Statement from "./pages/Statement";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/wallet" element={<MyWallet />} />
             <Route path="/activity" element={<Activity />} />
+            <Route path="/statement" element={<Statement />} />
             <Route path="/install" element={<Install />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             

@@ -968,6 +968,16 @@ export type Database = {
     Functions: {
       accrue_personal_loan_interest: { Args: never; Returns: Json }
       backfill_personal_loan_interest: { Args: never; Returns: Json }
+      get_member_statement: {
+        Args: { _user_id: string }
+        Returns: {
+          amount: number
+          balance: number
+          description: string
+          entry_date: string
+          entry_type: string
+        }[]
+      }
       has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
