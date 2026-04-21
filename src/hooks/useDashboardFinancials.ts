@@ -47,7 +47,7 @@ export function useDashboardFinancials() {
         // Contributions: verified payments only
         supabase.from('payments').select('total_amount').eq('status', 'verified'),
         // Loans: only real disbursed (incl. fully repaid)
-        supabase.from('loans').select('id, amount, outstanding_balance').in('status', VALID_LOAN_STATUSES as unknown as string[]),
+        supabase.from('loans').select('id, amount, outstanding_balance').in('status', VALID_LOAN_STATUSES),
         // Repayments: all rows; we'll filter by valid loan ids client-side
         supabase.from('loan_repayments').select('amount, loan_id'),
         // Interest tracker
