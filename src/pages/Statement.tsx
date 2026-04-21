@@ -5,10 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemberStatement, StatementEntryType } from '@/hooks/useMemberStatement';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Download, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { toast } from 'sonner';
 
 const TYPE_STYLES: Record<StatementEntryType, string> = {
   contribution: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300',
@@ -47,6 +51,12 @@ export default function Statement() {
 
   const { data: entries, isLoading, error } = useMemberStatement(selectedUserId);
 
+  const selectedMember = useMemo(
+    () => members.find((m) => m.user_id === selectedUserId),
+    [members, selectedUserId]
+  );
+  const memberName = selectedMember?.full_name || (selectedUserId === user?.id ? 'My Statement' : 'Member');
+
   const totals = useMemo(() => {
     const t = { contribution: 0, loan: 0, repayment: 0, interest: 0 };
     entries?.forEach((e) => {
@@ -57,6 +67,62 @@ export default function Statement() {
 
   const closingBalance = entries && entries.length > 0 ? entries[entries.length - 1].balance : 0;
 
+  const handleExportPdf = () => {
+    if (!entries || entries.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Hustlers Fund - Mini Statement', 14, 18);
+    doc.setFontSize(11);
+    doc.text(`Member: ${memberName}`, 14, 26);
+    doc.text(`Generated: ${new Date().toLocaleString('en-ZA')}`, 14, 32);
+
+    autoTable(doc, {
+      startY: 38,
+      head: [['Date', 'Type', 'Description', 'Amount', 'Balance']],
+      body: entries.map((e) => [
+        new Date(e.entry_date).toLocaleDateString('en-ZA'),
+        TYPE_LABEL[e.entry_type],
+        e.description || '',
+        `${e.amount >= 0 ? '+' : ''}${fmt(e.amount)}`,
+        fmt(e.balance),
+      ]),
+      foot: [['', '', 'Closing Balance', '', fmt(closingBalance)]],
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [234, 179, 8] },
+      footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: 'bold' },
+    });
+
+    doc.save(`statement-${memberName.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const handleExportCsv = () => {
+    if (!entries || entries.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+    const rows = [
+      ['Date', 'Type', 'Description', 'Amount', 'Balance'],
+      ...entries.map((e) => [
+        new Date(e.entry_date).toLocaleDateString('en-ZA'),
+        TYPE_LABEL[e.entry_type],
+        (e.description || '').replace(/"/g, '""'),
+        e.amount.toFixed(2),
+        e.balance.toFixed(2),
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `statement-${memberName.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <AppLayout>
       <div className="w-full max-w-[1024px] mx-auto px-4 py-6 space-y-4">
@@ -64,22 +130,43 @@ export default function Statement() {
 
         {isAdmin && (
           <Card>
-            <CardContent className="p-4">
-              <label className="text-sm font-medium mb-2 block">Select member</label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger className="w-full sm:w-80">
-                  <SelectValue placeholder="Choose a member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {members.map((m) => (
-                    <SelectItem key={m.user_id} value={m.user_id}>
-                      {m.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-end gap-3">
+              <div className="flex-1">
+                <label className="text-sm font-medium mb-2 block">Select member</label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger className="w-full sm:w-80">
+                    <SelectValue placeholder="Choose a member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.map((m) => (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        {m.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!entries?.length}>
+                  <FileText className="h-4 w-4 mr-1" /> PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={!entries?.length}>
+                  <Download className="h-4 w-4 mr-1" /> CSV
+                </Button>
+              </div>
             </CardContent>
           </Card>
+        )}
+
+        {!isAdmin && entries && entries.length > 0 && (
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPdf}>
+              <FileText className="h-4 w-4 mr-1" /> Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportCsv}>
+              <Download className="h-4 w-4 mr-1" /> CSV
+            </Button>
+          </div>
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
