@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings, Percent, Fuel, User, Clock, Banknote, Wallet, Calendar } from 'lucide-react';
+import { Loader2, Settings, Percent, Fuel, User, Clock, Banknote, Wallet, Calendar, Wrench } from 'lucide-react';
 
 interface LoanSettings {
   id: string;
@@ -27,6 +27,25 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState<LoanSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
+
+  const handleBackfillInterest = async () => {
+    if (!confirm('Recalculate personal loan interest from current outstanding balances? This updates the schedule but never lowers a balance.')) return;
+    setIsBackfilling(true);
+    try {
+      const { data, error } = await supabase.rpc('backfill_personal_loan_interest' as any);
+      if (error) throw error;
+      const r = data as { processed: number; updated: number; total_interest_backfilled: number };
+      toast({
+        title: 'Backfill complete',
+        description: `Processed ${r.processed} loans, updated ${r.updated}. Interest reconciled: R${Number(r.total_interest_backfilled).toFixed(2)}`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Backfill failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
   
   const [petrolRate, setPetrolRate] = useState('');
   const [personalRate, setPersonalRate] = useState('');
@@ -353,8 +372,31 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
 
+          {/* Maintenance Tools */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wrench className="h-5 w-5 text-warning" />
+                Maintenance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Reconcile the personal loan schedule with interest already included in loan outstanding balances. Safe to re-run; never lowers a balance.
+              </p>
+              <Button
+                onClick={handleBackfillInterest}
+                disabled={isBackfilling}
+                variant="outline"
+                className="w-full"
+              >
+                {isBackfilling ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Backfill Personal Loan Interest'}
+              </Button>
+            </CardContent>
+          </Card>
+
           <Button
-            onClick={handleSave} 
+            onClick={handleSave}
             disabled={isSaving}
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
           >
