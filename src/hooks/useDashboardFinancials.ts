@@ -41,7 +41,9 @@ export function useDashboardFinancials() {
   return useQuery({
     queryKey: ['dashboard-financials'],
     queryFn: async (): Promise<DashboardFinancials> => {
-      const VALID_LOAN_STATUSES: Array<'disbursed' | 'repaid'> = ['disbursed', 'repaid'];
+      // Personal loans go from 'approved' straight to outstanding (no 'disbursed' step).
+      // Petrol loans use 'disbursed'. 'repaid' = fully paid back. All three = real money out.
+      const VALID_LOAN_STATUSES: Array<'approved' | 'disbursed' | 'repaid'> = ['approved', 'disbursed', 'repaid'];
 
       const [paymentsRes, loansRes, repaymentsRes, scheduleRes] = await Promise.all([
         // Contributions: verified payments only
