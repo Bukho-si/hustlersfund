@@ -41,7 +41,7 @@ export function useDashboardFinancials() {
   return useQuery({
     queryKey: ['dashboard-financials'],
     queryFn: async (): Promise<DashboardFinancials> => {
-      const VALID_LOAN_STATUSES = ['disbursed', 'repaid'] as const;
+      const VALID_LOAN_STATUSES: Array<'disbursed' | 'repaid'> = ['disbursed', 'repaid'];
 
       const [paymentsRes, loansRes, repaymentsRes, scheduleRes] = await Promise.all([
         // Contributions: verified payments only
