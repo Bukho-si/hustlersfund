@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.backfill_personal_loan_interest() TO anon, authenticated, service_role;
