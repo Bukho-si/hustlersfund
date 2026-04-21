@@ -8,7 +8,8 @@ export interface StatementEntry {
   entry_type: StatementEntryType;
   description: string;
   amount: number;
-  balance: number;
+  savings_balance: number;
+  loan_balance: number;
 }
 
 export function useMemberStatement(userId?: string) {
@@ -25,7 +26,8 @@ export function useMemberStatement(userId?: string) {
         entry_type: r.entry_type,
         description: r.description,
         amount: Number(r.amount),
-        balance: Number(r.balance),
+        savings_balance: Number(r.savings_balance),
+        loan_balance: Number(r.loan_balance),
       }));
     },
     refetchInterval: 60000,

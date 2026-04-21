@@ -972,10 +972,11 @@ export type Database = {
         Args: { _user_id: string }
         Returns: {
           amount: number
-          balance: number
           description: string
           entry_date: string
           entry_type: string
+          loan_balance: number
+          savings_balance: number
         }[]
       }
       has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
