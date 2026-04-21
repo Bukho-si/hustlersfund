@@ -7,32 +7,50 @@ export interface DashboardFinancials {
   totalRepayments: number;
   interestEarned: number;
   outstandingLoans: number;
-  /** Validation: should equal outstandingLoans (Loans Issued - Repayments + Interest) */
+  /** Validation: Loans Issued - Repayments + Interest */
   expectedOutstanding: number;
+  /** True if expectedOutstanding ≈ outstandingLoans (within R1 tolerance) */
   isBalanced: boolean;
+  /** Difference (expected - actual). Non-zero indicates a reconciliation issue. */
+  reconciliationDelta: number;
 }
 
 /**
- * Strictly separated financial totals. NO category overlap.
+ * STRICTLY SEPARATED financial totals. NO category overlap.
  *
- * - Contributions: SUM(payments.base_amount + joining_fee + late_fine + cash_fee + emergency)
- *   WHERE status = 'verified'. NEVER includes loans or repayments.
- * - Loans Issued: SUM(loans.amount) — every loan ever issued.
- * - Repayments: SUM(loan_repayments.amount) — money paid back by members.
- * - Interest Earned: SUM(personal_loan_schedule.current_balance - original_amount)
- *   tracked separately, never hidden inside contributions.
- * - Outstanding Loans: SUM(loans.outstanding_balance).
+ * - Contributions: SUM(payments.total_amount) WHERE status = 'verified'
+ *   ONLY verified subs/fees. NEVER includes loans, repayments, or interest.
  *
- * Validation: Outstanding ≈ Loans Issued - Repayments + Interest
+ * - Loans Issued: SUM(loans.amount) WHERE status IN ('disbursed','repaid')
+ *   ONLY real disbursed money. EXCLUDES pending/approved/rejected/requested.
+ *
+ * - Repayments: SUM(loan_repayments.amount) for repayments tied to
+ *   loans with status IN ('disbursed','repaid').
+ *
+ * - Interest Earned: SUM(personal_loan_schedule.current_balance - original_amount).
+ *   Interest is applied once per calendar month by the DB function
+ *   `accrue_personal_loan_interest` (guarded by `last_interest_applied_month`),
+ *   so the delta on the schedule equals total interest applied.
+ *
+ * - Outstanding Loans: SUM(loans.outstanding_balance)
+ *   WHERE status IN ('disbursed','repaid').
+ *
+ * Reconciliation: Outstanding ≈ Loans Issued - Repayments + Interest
  */
 export function useDashboardFinancials() {
   return useQuery({
     queryKey: ['dashboard-financials'],
     queryFn: async (): Promise<DashboardFinancials> => {
+      const VALID_LOAN_STATUSES = ['disbursed', 'repaid'] as const;
+
       const [paymentsRes, loansRes, repaymentsRes, scheduleRes] = await Promise.all([
+        // Contributions: verified payments only
         supabase.from('payments').select('total_amount').eq('status', 'verified'),
-        supabase.from('loans').select('amount, outstanding_balance'),
-        supabase.from('loan_repayments').select('amount'),
+        // Loans: only real disbursed (incl. fully repaid)
+        supabase.from('loans').select('id, amount, outstanding_balance').in('status', VALID_LOAN_STATUSES as unknown as string[]),
+        // Repayments: all rows; we'll filter by valid loan ids client-side
+        supabase.from('loan_repayments').select('amount, loan_id'),
+        // Interest tracker
         supabase.from('personal_loan_schedule').select('current_balance, original_amount'),
       ]);
 
@@ -41,35 +59,50 @@ export function useDashboardFinancials() {
       if (repaymentsRes.error) throw repaymentsRes.error;
       if (scheduleRes.error) throw scheduleRes.error;
 
-      // Contributions — ONLY verified payments. No loans, no repayments.
+      const validLoans = loansRes.data ?? [];
+      const validLoanIds = new Set(validLoans.map((l) => l.id));
+
+      // Contributions — verified subs/fees only.
       const totalContributions = (paymentsRes.data ?? []).reduce(
         (s, p) => s + (Number(p.total_amount) || 0), 0,
       );
 
-      // Loans Issued — ALL loans ever created (full principal).
-      const loansIssued = (loansRes.data ?? []).reduce(
+      // Loans Issued — disbursed/repaid only.
+      const loansIssued = validLoans.reduce(
         (s, l) => s + (Number(l.amount) || 0), 0,
       );
 
-      // Outstanding — current unpaid balance across all loans.
-      const outstandingLoans = (loansRes.data ?? []).reduce(
+      // Outstanding — disbursed/repaid only.
+      const outstandingLoans = validLoans.reduce(
         (s, l) => s + (Number(l.outstanding_balance) || 0), 0,
       );
 
-      // Repayments — money paid back. Never mixed with contributions.
-      const totalRepayments = (repaymentsRes.data ?? []).reduce(
-        (s, r) => s + (Number(r.amount) || 0), 0,
-      );
+      // Repayments — only for valid loans.
+      const totalRepayments = (repaymentsRes.data ?? [])
+        .filter((r) => validLoanIds.has(r.loan_id))
+        .reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
-      // Interest Earned — tracked separately as growth in loan balance.
+      // Interest Earned — schedule balance growth above original.
       const interestEarned = (scheduleRes.data ?? []).reduce(
         (s, r) => s + Math.max(0, (Number(r.current_balance) || 0) - (Number(r.original_amount) || 0)),
         0,
       );
 
-      // Validation: Outstanding should equal Loans Issued - Repayments + Interest
+      // Reconciliation
       const expectedOutstanding = loansIssued - totalRepayments + interestEarned;
-      const isBalanced = Math.abs(expectedOutstanding - outstandingLoans) < 1;
+      const reconciliationDelta = expectedOutstanding - outstandingLoans;
+      const isBalanced = Math.abs(reconciliationDelta) < 1;
+
+      if (!isBalanced) {
+        console.warn('[Financials] Reconciliation mismatch', {
+          loansIssued,
+          totalRepayments,
+          interestEarned,
+          expectedOutstanding,
+          outstandingLoans,
+          delta: reconciliationDelta,
+        });
+      }
 
       return {
         totalContributions,
@@ -79,6 +112,7 @@ export function useDashboardFinancials() {
         outstandingLoans,
         expectedOutstanding,
         isBalanced,
+        reconciliationDelta,
       };
     },
   });
