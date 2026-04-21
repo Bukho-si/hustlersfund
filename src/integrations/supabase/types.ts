@@ -777,6 +777,56 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_loan_schedule: {
+        Row: {
+          created_at: string
+          current_balance: number
+          due_date: string
+          id: string
+          last_interest_applied_month: string | null
+          loan_id: string
+          member_user_id: string
+          months_late: number
+          original_amount: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_balance: number
+          due_date: string
+          id?: string
+          last_interest_applied_month?: string | null
+          loan_id: string
+          member_user_id: string
+          months_late?: number
+          original_amount: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_balance?: number
+          due_date?: string
+          id?: string
+          last_interest_applied_month?: string | null
+          loan_id?: string
+          member_user_id?: string
+          months_late?: number
+          original_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_loan_schedule_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       petrol_fund: {
         Row: {
           current_balance: number
@@ -916,6 +966,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accrue_personal_loan_interest: { Args: never; Returns: Json }
       has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
