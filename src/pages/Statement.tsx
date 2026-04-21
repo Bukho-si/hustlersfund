@@ -57,15 +57,10 @@ export default function Statement() {
   );
   const memberName = selectedMember?.full_name || (selectedUserId === user?.id ? 'My Statement' : 'Member');
 
-  const totals = useMemo(() => {
-    const t = { contribution: 0, loan: 0, repayment: 0, interest: 0 };
-    entries?.forEach((e) => {
-      t[e.entry_type] += Math.abs(e.amount);
-    });
-    return t;
-  }, [entries]);
-
-  const closingBalance = entries && entries.length > 0 ? entries[entries.length - 1].balance : 0;
+  const last = entries && entries.length > 0 ? entries[entries.length - 1] : null;
+  const savingsBalance = last?.savings_balance ?? 0;
+  const loanBalance = last?.loan_balance ?? 0;
+  const netPosition = savingsBalance - loanBalance;
 
   const handleExportPdf = () => {
     if (!entries || entries.length === 0) {
@@ -78,18 +73,24 @@ export default function Statement() {
     doc.setFontSize(11);
     doc.text(`Member: ${memberName}`, 14, 26);
     doc.text(`Generated: ${new Date().toLocaleString('en-ZA')}`, 14, 32);
+    doc.text(
+      `Savings: ${fmt(savingsBalance)}   Loan Owed: ${fmt(loanBalance)}   Net: ${fmt(netPosition)}`,
+      14,
+      38
+    );
 
     autoTable(doc, {
-      startY: 38,
-      head: [['Date', 'Type', 'Description', 'Amount', 'Balance']],
+      startY: 44,
+      head: [['Date', 'Type', 'Description', 'Amount', 'Savings', 'Loan Owed']],
       body: entries.map((e) => [
         new Date(e.entry_date).toLocaleDateString('en-ZA'),
         TYPE_LABEL[e.entry_type],
         e.description || '',
         `${e.amount >= 0 ? '+' : ''}${fmt(e.amount)}`,
-        fmt(e.balance),
+        fmt(e.savings_balance),
+        fmt(e.loan_balance),
       ]),
-      foot: [['', '', 'Closing Balance', '', fmt(closingBalance)]],
+      foot: [['', '', 'Closing', '', fmt(savingsBalance), fmt(loanBalance)]],
       styles: { fontSize: 9 },
       headStyles: { fillColor: [234, 179, 8] },
       footStyles: { fillColor: [241, 245, 249], textColor: 20, fontStyle: 'bold' },
@@ -104,13 +105,14 @@ export default function Statement() {
       return;
     }
     const rows = [
-      ['Date', 'Type', 'Description', 'Amount', 'Balance'],
+      ['Date', 'Type', 'Description', 'Amount', 'Savings Balance', 'Loan Balance'],
       ...entries.map((e) => [
         new Date(e.entry_date).toLocaleDateString('en-ZA'),
         TYPE_LABEL[e.entry_type],
         (e.description || '').replace(/"/g, '""'),
         e.amount.toFixed(2),
-        e.balance.toFixed(2),
+        e.savings_balance.toFixed(2),
+        e.loan_balance.toFixed(2),
       ]),
     ];
     const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
@@ -126,7 +128,7 @@ export default function Statement() {
   return (
     <AppLayout>
       <div className="w-full max-w-[1024px] mx-auto px-4 py-6 space-y-4">
-        <PageHeader title="Mini Statement" subtitle="Full financial activity with running balance" />
+        <PageHeader title="Mini Statement" subtitle="Savings and loan balances tracked separately" />
 
         {isAdmin && (
           <Card>
@@ -169,12 +171,25 @@ export default function Statement() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <SummaryTile label="Contributions" value={fmt(totals.contribution)} className="text-emerald-600" />
-          <SummaryTile label="Loans" value={fmt(totals.loan)} className="text-blue-600" />
-          <SummaryTile label="Repayments" value={fmt(totals.repayment)} className="text-rose-600" />
-          <SummaryTile label="Interest" value={fmt(totals.interest)} className="text-amber-600" />
-          <SummaryTile label="Balance" value={fmt(closingBalance)} className="text-foreground font-bold" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <SummaryTile
+            label="Total Savings"
+            sublabel="Contributions only"
+            value={fmt(savingsBalance)}
+            className="text-emerald-600"
+          />
+          <SummaryTile
+            label="Total Loan Owed"
+            sublabel="Loans + interest − repayments"
+            value={fmt(loanBalance)}
+            className="text-rose-600"
+          />
+          <SummaryTile
+            label="Net Position"
+            sublabel="Savings − Loan owed"
+            value={fmt(netPosition)}
+            className={netPosition >= 0 ? 'text-foreground' : 'text-rose-600'}
+          />
         </div>
 
         <Card>
@@ -199,7 +214,8 @@ export default function Statement() {
                     <TableHead>Type</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead className="text-right">Savings</TableHead>
+                    <TableHead className="text-right">Loan Owed</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -226,7 +242,12 @@ export default function Statement() {
                         {e.amount >= 0 ? '+' : ''}
                         {fmt(e.amount)}
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{fmt(e.balance)}</TableCell>
+                      <TableCell className="text-right font-semibold text-emerald-700">
+                        {fmt(e.savings_balance)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-rose-700">
+                        {fmt(e.loan_balance)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -239,12 +260,23 @@ export default function Statement() {
   );
 }
 
-function SummaryTile({ label, value, className }: { label: string; value: string; className?: string }) {
+function SummaryTile({
+  label,
+  sublabel,
+  value,
+  className,
+}: {
+  label: string;
+  sublabel?: string;
+  value: string;
+  className?: string;
+}) {
   return (
     <Card>
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         <div className="text-xs text-muted-foreground">{label}</div>
-        <div className={`text-lg font-semibold mt-1 ${className || ''}`}>{value}</div>
+        {sublabel && <div className="text-[10px] text-muted-foreground/70 mt-0.5">{sublabel}</div>}
+        <div className={`text-xl font-bold mt-2 ${className || ''}`}>{value}</div>
       </CardContent>
     </Card>
   );
