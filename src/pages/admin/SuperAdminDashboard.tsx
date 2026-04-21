@@ -9,12 +9,14 @@ import { format } from 'date-fns';
 import {
   Users, FileCheck, AlertTriangle, Wallet, ChevronRight,
   TrendingUp, Shield, BarChart3, Calendar, Clock,
-  Settings2, RefreshCw, UserPlus, UserCog
+  Settings2, RefreshCw, UserPlus, UserCog,
+  HandCoins, Banknote, Percent, PiggyBank,
 } from 'lucide-react';
 import { ContributionsChart } from '@/components/reports/ContributionsChart';
 import { LoanDistributionChart } from '@/components/reports/LoanDistributionChart';
 import { useWeeklyContributions, useLoanDistribution } from '@/hooks/useFinancialReports';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+import { useDashboardFinancials } from '@/hooks/useDashboardFinancials';
 
 interface Stats {
   activeMembers: number;
