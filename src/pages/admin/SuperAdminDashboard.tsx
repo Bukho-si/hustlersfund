@@ -9,12 +9,14 @@ import { format } from 'date-fns';
 import {
   Users, FileCheck, AlertTriangle, Wallet, ChevronRight,
   TrendingUp, Shield, BarChart3, Calendar, Clock,
-  Settings2, RefreshCw, UserPlus, UserCog
+  Settings2, RefreshCw, UserPlus, UserCog,
+  HandCoins, Banknote, Percent, PiggyBank,
 } from 'lucide-react';
 import { ContributionsChart } from '@/components/reports/ContributionsChart';
 import { LoanDistributionChart } from '@/components/reports/LoanDistributionChart';
 import { useWeeklyContributions, useLoanDistribution } from '@/hooks/useFinancialReports';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+import { useDashboardFinancials } from '@/hooks/useDashboardFinancials';
 
 interface Stats {
   activeMembers: number;
@@ -27,6 +29,7 @@ interface Stats {
 export default function SuperAdminDashboard() {
   const { data: contributionsData, isLoading: contribLoading } = useWeeklyContributions();
   const { data: loanDistData, isLoading: loanDistLoading } = useLoanDistribution();
+  const { data: financials } = useDashboardFinancials();
   const [stats, setStats] = useState<Stats>({
     activeMembers: 0,
     pendingVerifications: 0,
@@ -137,16 +140,26 @@ export default function SuperAdminDashboard() {
         </Card>
       )}
 
-      {/* Weekly Contributions Summary */}
-      <Card className="mb-4 animate-fade-in">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-muted-foreground">Total Verified Contributions</p>
-            <TrendingUp className="h-4 w-4 text-success" />
-          </div>
-          <p className="text-2xl font-bold">{formatCurrency(stats.weeklyContributions)}</p>
-        </CardContent>
-      </Card>
+      {/* Separated Financial Totals */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        {[
+          { label: 'Contributions', value: financials?.totalContributions ?? 0, icon: TrendingUp, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Loans Issued', value: financials?.loansIssued ?? 0, icon: HandCoins, color: 'text-info', bg: 'bg-info/10' },
+          { label: 'Repayments', value: financials?.totalRepayments ?? 0, icon: Banknote, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Interest Earned', value: financials?.interestEarned ?? 0, icon: Percent, color: 'text-warning', bg: 'bg-warning/10' },
+          { label: 'Outstanding Loans', value: financials?.outstandingLoans ?? 0, icon: PiggyBank, color: 'text-destructive', bg: 'bg-destructive/10' },
+        ].map((c, i) => (
+          <Card key={c.label} className="animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
+            <CardContent className="p-4">
+              <div className={`h-8 w-8 rounded-lg ${c.bg} flex items-center justify-center mb-2`}>
+                <c.icon className={`h-4 w-4 ${c.color}`} />
+              </div>
+              <p className="text-xs text-muted-foreground mb-0.5">{c.label}</p>
+              <p className="text-lg font-bold">{formatCurrency(c.value)}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 mb-4">
