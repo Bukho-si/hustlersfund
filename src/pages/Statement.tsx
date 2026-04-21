@@ -28,8 +28,8 @@ const TYPE_LABEL: Record<StatementEntryType, string> = {
   interest: 'Interest',
 };
 
-const fmt = (n: number) =>
-  `R${n.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmt = (n: number | null | undefined) =>
+  `R${(Number(n) || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function Statement() {
   const { user, isAdmin } = useAuth();
