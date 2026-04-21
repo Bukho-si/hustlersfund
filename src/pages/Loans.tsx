@@ -13,6 +13,8 @@ import { formatCurrency, formatDate } from '@/lib/constants';
 import { Plus, Wallet, Fuel, User, ChevronDown, ChevronUp, CreditCard, AlertTriangle, Calendar } from 'lucide-react';
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
 import { format, isPast, differenceInDays } from 'date-fns';
+import { usePersonalLoanSchedule } from '@/hooks/usePersonalLoanSchedule';
+import { PersonalLoanScheduleList } from '@/components/personal-loans/PersonalLoanScheduleList';
 
 interface Loan {
   id: string;
@@ -37,6 +39,7 @@ interface RepaymentTotal {
 
 export default function Loans() {
   const { user } = useAuth();
+  const { rows: scheduleRows } = usePersonalLoanSchedule(user?.id);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [repaymentTotals, setRepaymentTotals] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -119,6 +122,13 @@ export default function Loans() {
           </Link>
         }
       />
+
+      {scheduleRows.length > 0 && (
+        <div className="mb-5">
+          <h3 className="text-sm font-semibold mb-2 px-1">Personal Loan Schedule</h3>
+          <PersonalLoanScheduleList rows={scheduleRows} />
+        </div>
+      )}
 
       {totalOutstanding > 0 && (
         <Card className="mb-4 bg-primary text-primary-foreground animate-fade-in overflow-hidden relative">
