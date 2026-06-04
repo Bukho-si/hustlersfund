@@ -10,6 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/constants';
 import { Loader2, Percent } from 'lucide-react';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 interface Props {
   loanId: string;
@@ -29,7 +32,16 @@ export function AdjustInterestDialog({
   const [scheduleId, setScheduleId] = useState<string | null>(null);
   const [repaid, setRepaid] = useState(0);
   const [newInterest, setNewInterest] = useState<string>('');
+  const [cause, setCause] = useState('');
   const [reason, setReason] = useState('');
+
+  const PREDEFINED_CAUSES = [
+    'Late payment carry-over',
+    'System error correction',
+    'Manual reconciliation',
+    'Interest rate change',
+    'Other',
+  ];
 
   const principalRemaining = Math.max(principal - repaid, 0);
   const currentInterest = Math.max(currentOutstanding - principalRemaining, 0);
@@ -95,12 +107,14 @@ export function AdjustInterestDialog({
           previous_interest: currentInterest,
           new_interest: parsedInterest,
           new_outstanding: balance,
+          cause: cause || undefined,
           reason: reason.trim(),
         },
       });
 
       toast({ title: 'Interest updated', description: `New outstanding: ${formatCurrency(balance)}` });
       setOpen(false);
+      setCause('');
       setReason('');
       onSuccess();
     } catch (err: any) {
@@ -152,7 +166,21 @@ export function AdjustInterestDialog({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="reason">Reason</Label>
+            <Label htmlFor="cause">Cause (optional)</Label>
+            <Select value={cause} onValueChange={setCause}>
+              <SelectTrigger id="cause">
+                <SelectValue placeholder="Select a predefined cause…" />
+              </SelectTrigger>
+              <SelectContent>
+                {PREDEFINED_CAUSES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="reason">Reason <span className="text-destructive">*</span></Label>
             <Textarea
               id="reason"
               placeholder="Why is this adjustment needed?"
