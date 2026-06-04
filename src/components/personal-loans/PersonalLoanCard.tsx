@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog';
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
+import { AdjustInterestDialog } from '@/components/personal-loans/AdjustInterestDialog';
 import type { PersonalLoanWithProfile } from '@/hooks/usePersonalLoanBoard';
 import {
   CheckCircle2, XCircle, Loader2,
