@@ -32,7 +32,16 @@ export function AdjustInterestDialog({
   const [scheduleId, setScheduleId] = useState<string | null>(null);
   const [repaid, setRepaid] = useState(0);
   const [newInterest, setNewInterest] = useState<string>('');
+  const [cause, setCause] = useState('');
   const [reason, setReason] = useState('');
+
+  const PREDEFINED_CAUSES = [
+    'Late payment carry-over',
+    'System error correction',
+    'Manual reconciliation',
+    'Interest rate change',
+    'Other',
+  ];
 
   const principalRemaining = Math.max(principal - repaid, 0);
   const currentInterest = Math.max(currentOutstanding - principalRemaining, 0);
