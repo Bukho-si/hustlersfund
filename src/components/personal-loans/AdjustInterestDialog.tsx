@@ -114,6 +114,7 @@ export function AdjustInterestDialog({
 
       toast({ title: 'Interest updated', description: `New outstanding: ${formatCurrency(balance)}` });
       setOpen(false);
+      setCause('');
       setReason('');
       onSuccess();
     } catch (err: any) {
