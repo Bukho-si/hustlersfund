@@ -166,7 +166,21 @@ export function AdjustInterestDialog({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="reason">Reason</Label>
+            <Label htmlFor="cause">Cause (optional)</Label>
+            <Select value={cause} onValueChange={setCause}>
+              <SelectTrigger id="cause">
+                <SelectValue placeholder="Select a predefined cause…" />
+              </SelectTrigger>
+              <SelectContent>
+                {PREDEFINED_CAUSES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="reason">Reason <span className="text-destructive">*</span></Label>
             <Textarea
               id="reason"
               placeholder="Why is this adjustment needed?"
