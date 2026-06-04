@@ -107,6 +107,7 @@ export function AdjustInterestDialog({
           previous_interest: currentInterest,
           new_interest: parsedInterest,
           new_outstanding: balance,
+          cause: cause || undefined,
           reason: reason.trim(),
         },
       });
