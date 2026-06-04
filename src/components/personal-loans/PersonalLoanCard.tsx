@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { formatCurrency, formatDate } from '@/lib/constants';
 import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog';
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
+import { AdjustInterestDialog } from '@/components/personal-loans/AdjustInterestDialog';
 import type { PersonalLoanWithProfile } from '@/hooks/usePersonalLoanBoard';
 import {
   CheckCircle2, XCircle, Loader2,
@@ -204,6 +205,15 @@ export function PersonalLoanCard({
           <div className="space-y-2 pt-2 border-t">
             <div className="flex flex-col gap-2">
               <RecordRepaymentDialog loanId={loan.id} outstandingBalance={Number(loan.outstanding_balance)} memberName={loan.profile?.full_name || 'Unknown'} onSuccess={onRepaymentSuccess} userId={userId} interestAmount={loan.interest_amount} />
+              <AdjustInterestDialog
+                loanId={loan.id}
+                memberUserId={loan.member_user_id}
+                memberName={loan.profile?.full_name || 'Unknown'}
+                principal={Number(loan.amount)}
+                currentOutstanding={Number(loan.outstanding_balance)}
+                userId={userId}
+                onSuccess={onRepaymentSuccess}
+              />
               <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs" onClick={() => setIsExpanded(!isExpanded)}>
                 {isExpanded ? <><ChevronUp className="h-3 w-3 mr-1" /> Hide History</> : <><History className="h-3 w-3 mr-1" /> View History</>}
               </Button>
