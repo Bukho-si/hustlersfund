@@ -179,13 +179,16 @@ export default function PaymentSubmit() {
     setIsSubmitting(true);
 
     try {
-      // Upload proof file
-      const fileExt = proofFile.name.split('.').pop();
+      // Downscale large camera photos before upload — keeps memory use low on
+      // phones and avoids multi-MB objects in storage.
+      const uploadFile = await compressImageFile(proofFile);
+
+      const fileExt = uploadFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('payment-proofs')
-        .upload(fileName, proofFile);
+        .upload(fileName, uploadFile);
 
       if (uploadError) {
         throw uploadError;
