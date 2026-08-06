@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { getDashboardRoute } from '@/lib/roleRedirect';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +29,12 @@ const LOCKOUT_MS = 5 * 60 * 1000;
 
 export default function Auth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn, signUp, user, userRoles } = useAuth();
+
+  // Preserved return path (used by the OAuth consent flow). Same-origin only.
+  const rawNext = searchParams.get('next');
+  const nextPath = rawNext && /^\/(?!\/)/.test(rawNext) ? rawNext : null;
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +56,10 @@ export default function Auth() {
   const [showSignupConfirm, setShowSignupConfirm] = useState(false);
 
   if (user) {
+    if (nextPath) {
+      window.location.replace(nextPath);
+      return null;
+    }
     const dest = getDashboardRoute(userRoles);
     navigate(dest, { replace: true });
     return null;
@@ -93,6 +102,10 @@ export default function Auth() {
     setFailedAttempts(0);
     setLockoutUntil(null);
     toast({ title: 'Welcome back!', description: 'You have successfully logged in.' });
+    if (nextPath) {
+      window.location.replace(nextPath);
+      return;
+    }
     navigate(getDashboardRoute(userRoles));
   };
 
@@ -116,13 +129,17 @@ export default function Auth() {
       return;
     }
     toast({ title: 'Welcome to Hustlers!', description: 'Your account has been created. Please complete your profile.' });
+    if (nextPath) {
+      window.location.replace(nextPath);
+      return;
+    }
     navigate('/dashboard');
   };
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
+      const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: nextPath ? `${window.location.origin}${nextPath}` : window.location.origin });
       if (result.error) {
         toast({ title: 'Google Sign-In Failed', description: result.error.message, variant: 'destructive' });
       }
