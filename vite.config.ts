@@ -42,13 +42,22 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            // Never cache Storage objects (payment proofs can be multiple MB
+            // each and used to fill up device storage / trigger low-memory
+            // warnings). Always go straight to the network.
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
+            // Small JSON API responses only.
+            urlPattern: /^https:\/\/.*\.supabase\.co\/(rest|auth)\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-cache",
               expiration: {
-                maxEntries: 50,
+                maxEntries: 30,
                 maxAgeSeconds: 60 * 60, // 1 hour
+                purgeOnQuotaError: true,
               },
             },
           },
