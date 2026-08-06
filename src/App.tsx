@@ -20,6 +20,7 @@ import ResetPassword from "./pages/ResetPassword";
 import MyWallet from "./pages/MyWallet";
 import Activity from "./pages/Activity";
 import Statement from "./pages/Statement";
+import OAuthConsent from "./pages/OAuthConsent";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -76,6 +77,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/payments/submit" element={<PaymentSubmit />} />
