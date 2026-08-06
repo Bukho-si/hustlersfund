@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, getWeeklySubscription, getJoiningFeeRemaining, WEEKLY_SUBSCRIPTION, JOINING_FEE, CASH_ATM_FEE } from '@/lib/constants';
+import { compressImageFile } from '@/lib/imageCompression';
 import { Upload, Building2, Banknote, Loader2, CheckCircle2, Info } from 'lucide-react';
 
 // First week of stokvel operations - joining fees only
