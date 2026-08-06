@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, getWeeklySubscription, getJoiningFeeRemaining, WEEKLY_SUBSCRIPTION, JOINING_FEE, CASH_ATM_FEE } from '@/lib/constants';
+import { compressImageFile } from '@/lib/imageCompression';
 import { Upload, Building2, Banknote, Loader2, CheckCircle2, Info } from 'lucide-react';
 
 // First week of stokvel operations - joining fees only
@@ -178,13 +179,16 @@ export default function PaymentSubmit() {
     setIsSubmitting(true);
 
     try {
-      // Upload proof file
-      const fileExt = proofFile.name.split('.').pop();
+      // Downscale large camera photos before upload — keeps memory use low on
+      // phones and avoids multi-MB objects in storage.
+      const uploadFile = await compressImageFile(proofFile);
+
+      const fileExt = uploadFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('payment-proofs')
-        .upload(fileName, proofFile);
+        .upload(fileName, uploadFile);
 
       if (uploadError) {
         throw uploadError;
