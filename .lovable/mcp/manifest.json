@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://rlvixohowgykhqjaewzh.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "hustlers-fund",
+      "version": "0.1.0",
+      "title": "Hustlers Fund"
+    },
+    "tools": [
+      {
+        "name": "get_wallet_balances",
+        "title": "Get wallet balances",
+        "description": "Get the signed-in member's Hustlers Fund wallet: total savings/contributions, outstanding petrol and personal loan balances, emergency contributions and joining fee status.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_account_statement",
+        "title": "Get account statement",
+        "description": "Get the signed-in member's mini statement: a chronological ledger of contributions, loans, repayments and interest with running savings and loan balances.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of most recent entries to return. Defaults to 50."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_loan_history",
+        "title": "Get loan history",
+        "description": "List the signed-in member's petrol and personal loans with amount, interest, status, outstanding balance and due date.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "petrol",
+                "personal"
+              ],
+              "description": "Filter to one loan type. Omit to return both."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "requested",
+                "under_review",
+                "disbursed",
+                "repaid"
+              ],
+              "description": "Filter to a single loan status."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_payment_history",
+        "title": "Get payment history",
+        "description": "List the signed-in member's submitted weekly contributions and other payments, with amounts, method, verification status and the cycle they belong to.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "submitted",
+                "pending_verification",
+                "verified",
+                "rejected",
+                "withdrawn"
+              ],
+              "description": "Filter to a single payment status."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum payments to return. Defaults to 25."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_current_cycle",
+        "title": "Get current contribution cycle",
+        "description": "Get the open weekly contribution cycle (dates and deadline), the standard contribution amounts, and whether the signed-in member has already paid for it.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
