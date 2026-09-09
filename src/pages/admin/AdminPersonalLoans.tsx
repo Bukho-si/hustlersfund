@@ -52,6 +52,8 @@ export default function AdminPersonalLoans() {
 
       <PersonalLoanMetrics metrics={metrics} fundBalance={fund?.current_balance ?? 0} />
 
+      <AddPetrolToPersonalDialog onSuccess={handleRepaymentSuccess} />
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full mb-4">
           <TabsTrigger value="board" className="flex-1"><DollarSign className="h-3.5 w-3.5 mr-1" />Board</TabsTrigger>
