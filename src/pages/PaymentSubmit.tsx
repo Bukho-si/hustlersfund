@@ -24,6 +24,7 @@ export default function PaymentSubmit() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { settings } = useContributionSettings();
   
   const paymentType = searchParams.get('type');
   const loanAmount = parseFloat(searchParams.get('amount') || '0');
@@ -116,7 +117,7 @@ export default function PaymentSubmit() {
   };
 
   // Calculate totals
-  const cashFeeAmount = method === 'cash_atm' ? CASH_ATM_FEE : 0;
+  const cashFeeAmount = method === 'cash_atm' ? settings.cash_atm_fee_amount : 0;
 
   let baseAmount: number;
   let joiningFeeAmount: number;
@@ -132,8 +133,8 @@ export default function PaymentSubmit() {
     joiningFeeAmount = 0;
     totalAmount = selectedLoanAmount + cashFeeAmount;
   } else {
-    baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots);
-    joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal);
+    baseAmount = isJoiningFeeOnlyWeek ? 0 : getWeeklySubscription(membershipSlots, settings);
+    joiningFeeAmount = getJoiningFeeRemaining(membershipSlots, joiningFeePaidTotal, settings);
     totalAmount = baseAmount + joiningFeeAmount + cashFeeAmount;
   }
 
@@ -392,7 +393,7 @@ export default function PaymentSubmit() {
                       <div className="flex flex-col">
                         <span className="text-muted-foreground">Weekly subscription</span>
                         {membershipSlots > 1 && (
-                          <span className="text-xs text-muted-foreground/70">R{WEEKLY_SUBSCRIPTION} × {membershipSlots} slots</span>
+                          <span className="text-xs text-muted-foreground/70">R{settings.weekly_subscription_amount} × {membershipSlots} slots</span>
                         )}
                       </div>
                       <span>{formatCurrency(baseAmount)}</span>
@@ -403,7 +404,7 @@ export default function PaymentSubmit() {
                       <div className="flex flex-col">
                         <span>Joining fee {isJoiningFeeOnlyWeek ? '' : '(remaining)'}</span>
                         {membershipSlots > 1 && (
-                          <span className="text-xs text-accent/70">R{JOINING_FEE} × {membershipSlots} total</span>
+                          <span className="text-xs text-accent/70">R{settings.joining_fee_amount} × {membershipSlots} total</span>
                         )}
                       </div>
                       <span>{formatCurrency(joiningFeeAmount)}</span>
