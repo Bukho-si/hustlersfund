@@ -10,6 +10,7 @@ import { PersonalLoanBoard } from '@/components/personal-loans/PersonalLoanBoard
 import { PersonalLoanActivityFeed } from '@/components/personal-loans/PersonalLoanActivityFeed';
 import { PersonalBatchReview } from '@/components/personal-loans/PersonalBatchReview';
 import { PersonalFundLowBanner } from '@/components/personal-loans/PersonalFundBanner';
+import { AddPetrolToPersonalDialog } from '@/components/personal-loans/AddPetrolToPersonalDialog';
 import { Loader2, DollarSign, ListChecks, Activity } from 'lucide-react';
 
 export default function AdminPersonalLoans() {
@@ -50,6 +51,8 @@ export default function AdminPersonalLoans() {
       )}
 
       <PersonalLoanMetrics metrics={metrics} fundBalance={fund?.current_balance ?? 0} />
+
+      <AddPetrolToPersonalDialog onSuccess={handleRepaymentSuccess} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full mb-4">
