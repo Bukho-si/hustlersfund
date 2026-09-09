@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function MyWallet() {
   const { user } = useAuth();
+  const { settings } = useContributionSettings();
   const { data: wallet, isLoading: walletLoading } = useMyWallet(user?.id);
   const { data: transactions, isLoading: txnLoading } = useWalletTransactions({
     memberUserId: user?.id,
