@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/constants';
 import { RecordRepaymentDialog } from '@/components/loans/RecordRepaymentDialog';
 import { RepaymentHistory } from '@/components/loans/RepaymentHistory';
+import { MigrateToPersonalDialog } from '@/components/petrol-loans/MigrateToPersonalDialog';
+
 import type { PetrolLoanWithProfile } from '@/hooks/usePetrolLoanBoard';
 import {
   Fuel, Lock, Eye, CheckCircle2, XCircle, Loader2,
@@ -197,14 +199,25 @@ export function PetrolLoanCard({
         )}
 
         {loan.status === 'approved' && (
-          <Button
-            size="sm"
-            className="w-full text-xs bg-info text-info-foreground hover:bg-info/90"
-            onClick={() => onDisburse(loan.id)}
-            disabled={isProcessing}
-          >
-            {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Send className="h-3 w-3 mr-1" /> Mark Disbursed</>}
-          </Button>
+          <div className="space-y-2">
+            <Button
+              size="sm"
+              className="w-full text-xs bg-info text-info-foreground hover:bg-info/90"
+              onClick={() => onDisburse(loan.id)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Send className="h-3 w-3 mr-1" /> Mark Disbursed</>}
+            </Button>
+            {Number(loan.outstanding_balance) > 0 && (
+              <MigrateToPersonalDialog
+                loanId={loan.id}
+                memberUserId={loan.member_user_id}
+                memberName={loan.profile?.full_name || 'Unknown'}
+                outstanding={Number(loan.outstanding_balance)}
+                onSuccess={onRepaymentSuccess}
+              />
+            )}
+          </div>
         )}
 
         {loan.status === 'disbursed' && Number(loan.outstanding_balance) > 0 && (
@@ -227,9 +240,17 @@ export function PetrolLoanCard({
                 interestAmount={loan.interest_amount}
               />
             </div>
+            <MigrateToPersonalDialog
+              loanId={loan.id}
+              memberUserId={loan.member_user_id}
+              memberName={loan.profile?.full_name || 'Unknown'}
+              outstanding={Number(loan.outstanding_balance)}
+              onSuccess={onRepaymentSuccess}
+            />
             {isExpanded && <RepaymentHistory loanId={loan.id} refreshTrigger={refreshTrigger} />}
           </div>
         )}
+
       </CardContent>
     </Card>
   );
