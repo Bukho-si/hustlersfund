@@ -32,6 +32,7 @@ interface MemberProfile {
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { settings } = useContributionSettings();
   
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,9 +109,9 @@ export default function Profile() {
   }
 
   const slots = profile?.membership_slots || 1;
-  const joiningFeeTotal = getJoiningFeeTotal(slots);
+  const joiningFeeTotal = getJoiningFeeTotal(slots, settings);
   const joiningFeePaid = profile?.joining_fee_paid_total || 0;
-  const joiningFeeRemaining = getJoiningFeeRemaining(slots, joiningFeePaid);
+  const joiningFeeRemaining = getJoiningFeeRemaining(slots, joiningFeePaid, settings);
   const joiningFeeProgress = (joiningFeePaid / joiningFeeTotal) * 100;
 
   return (

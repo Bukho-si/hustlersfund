@@ -58,7 +58,7 @@ export default function MyWallet() {
   const totalLoansOwed = petrolLoanTotal + personalLoanTotal;
 
   const slots = profile?.membership_slots || 1;
-  const joiningFeeTotal = getJoiningFeeTotal(slots);
+  const joiningFeeTotal = getJoiningFeeTotal(slots, settings);
   const joiningFeePaid = wallet?.joining_fee_balance || profile?.joining_fee_paid_total || 0;
   const joiningFeeProgress = joiningFeeTotal > 0 ? Math.min((joiningFeePaid / joiningFeeTotal) * 100, 100) : 0;
 
@@ -109,7 +109,7 @@ export default function MyWallet() {
           {joiningFeePaid >= joiningFeeTotal ? (
             <p className="text-xs text-success mt-2 flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Fully paid</p>
           ) : (
-            <p className="text-xs text-muted-foreground mt-2">{formatCurrency(getJoiningFeeRemaining(slots, joiningFeePaid))} remaining</p>
+            <p className="text-xs text-muted-foreground mt-2">{formatCurrency(getJoiningFeeRemaining(slots, joiningFeePaid, settings))} remaining</p>
           )}
         </CardContent>
       </Card>

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { getPersonalLoanMax } from '@/lib/constants';
+import { fetchContributionSettings, getPersonalLoanMax } from '@/hooks/useContributionSettings';
 
 export interface PersonalLoanWithProfile {
   id: string;
