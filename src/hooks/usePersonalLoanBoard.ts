@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { getPersonalLoanMax } from '@/lib/constants';
+import { fetchContributionSettings, getPersonalLoanMax } from '@/hooks/useContributionSettings';
 
 export interface PersonalLoanWithProfile {
   id: string;
@@ -98,6 +98,8 @@ export function usePersonalLoanBoard() {
 
     if (error) { console.error('Error fetching personal loans:', error); return; }
 
+    const contributionSettings = await fetchContributionSettings();
+
     const enriched = await Promise.all(
       (data || []).map(async (loan) => {
         const { data: profile } = await supabase
@@ -107,7 +109,7 @@ export function usePersonalLoanBoard() {
           .maybeSingle();
 
         const slots = profile?.membership_slots || 1;
-        const personalLoanLimit = getPersonalLoanMax(slots);
+        const personalLoanLimit = getPersonalLoanMax(slots, contributionSettings);
 
         const { data: existingLoans } = await supabase
           .from('loans')

@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyWallet, useWalletTransactions, getWalletTransactionLabel, isWalletDebitTransaction } from '@/hooks/useWallet';
-import { formatCurrency, formatDateTime, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
+import { formatCurrency, formatDateTime } from '@/lib/constants';
+import { useContributionSettings, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/hooks/useContributionSettings';
 import { ArrowUpRight, ArrowDownLeft, Fuel, DollarSign, AlertTriangle, CheckCircle, PiggyBank, TrendingDown, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function MyWallet() {
   const { user } = useAuth();
+  const { settings } = useContributionSettings();
   const { data: wallet, isLoading: walletLoading } = useMyWallet(user?.id);
   const { data: transactions, isLoading: txnLoading } = useWalletTransactions({
     memberUserId: user?.id,
@@ -56,7 +58,7 @@ export default function MyWallet() {
   const totalLoansOwed = petrolLoanTotal + personalLoanTotal;
 
   const slots = profile?.membership_slots || 1;
-  const joiningFeeTotal = getJoiningFeeTotal(slots);
+  const joiningFeeTotal = getJoiningFeeTotal(slots, settings);
   const joiningFeePaid = wallet?.joining_fee_balance || profile?.joining_fee_paid_total || 0;
   const joiningFeeProgress = joiningFeeTotal > 0 ? Math.min((joiningFeePaid / joiningFeeTotal) * 100, 100) : 0;
 
@@ -107,7 +109,7 @@ export default function MyWallet() {
           {joiningFeePaid >= joiningFeeTotal ? (
             <p className="text-xs text-success mt-2 flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Fully paid</p>
           ) : (
-            <p className="text-xs text-muted-foreground mt-2">{formatCurrency(getJoiningFeeRemaining(slots, joiningFeePaid))} remaining</p>
+            <p className="text-xs text-muted-foreground mt-2">{formatCurrency(getJoiningFeeRemaining(slots, joiningFeePaid, settings))} remaining</p>
           )}
         </CardContent>
       </Card>

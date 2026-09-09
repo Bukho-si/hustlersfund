@@ -33,6 +33,26 @@ export const DEFAULT_CONTRIBUTION_SETTINGS: Omit<ContributionSettings, 'id' | 'u
 
 const SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
 
+/** Imperative fetch for use outside React Query (falls back to defaults). */
+export async function fetchContributionSettings(): Promise<ContributionSettings> {
+  const fallback: ContributionSettings = {
+    id: SETTINGS_ID,
+    ...DEFAULT_CONTRIBUTION_SETTINGS,
+    updated_at: new Date().toISOString(),
+  };
+  try {
+    const { data, error } = await supabase
+      .from('contribution_settings')
+      .select('*')
+      .eq('id', SETTINGS_ID)
+      .maybeSingle();
+    if (error || !data) return fallback;
+    return data as ContributionSettings;
+  } catch {
+    return fallback;
+  }
+}
+
 export function useContributionSettings() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['contribution-settings'],
