@@ -116,6 +116,8 @@ export function usePetrolLoanBoard() {
       return;
     }
 
+    const contributionSettings = await fetchContributionSettings();
+
     const enriched = await Promise.all(
       (data || []).map(async (loan) => {
         // Get profile with slots
@@ -126,7 +128,7 @@ export function usePetrolLoanBoard() {
           .maybeSingle();
 
         const slots = profile?.membership_slots || 1;
-        const petrolLoanLimit = getPetrolLoanMax(slots);
+        const petrolLoanLimit = getPetrolLoanMax(slots, contributionSettings);
 
         // Get existing outstanding petrol loans (excluding this one)
         const { data: existingLoans } = await supabase
