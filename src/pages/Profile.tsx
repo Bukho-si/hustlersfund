@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useMyWallet } from '@/hooks/useWallet';
-import { formatDate, formatCurrency, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/lib/constants';
+import { formatDate, formatCurrency } from '@/lib/constants';
+import { useContributionSettings, getJoiningFeeTotal, getJoiningFeeRemaining } from '@/hooks/useContributionSettings';
 import { User, Car, Phone, LogOut, Loader2, Save, Users, CreditCard, Download, Wallet, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

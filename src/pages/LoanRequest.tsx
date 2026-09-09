@@ -11,7 +11,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, getPetrolLoanMax, getPersonalLoanMax, PETROL_LOAN_MAX, PERSONAL_LOAN_MAX } from '@/lib/constants';
+import { formatCurrency } from '@/lib/constants';
+import { useContributionSettings, getPetrolLoanMax, getPersonalLoanMax } from '@/hooks/useContributionSettings';
 import { Fuel, User, Loader2, AlertCircle, Users, Clock } from 'lucide-react';
 import { InterestCalculator } from '@/components/loans/InterestCalculator';
 import { useLoanSettings } from '@/hooks/useLoanSettings';
@@ -23,6 +24,7 @@ export default function LoanRequest() {
   const { toast } = useToast();
   
   const { getInterestRate, isLoading: settingsLoading } = useLoanSettings();
+  const { settings: contributionSettings } = useContributionSettings();
   const { window: requestWindow, isWithinWindow } = usePetrolRequestWindow();
   
   const [type, setType] = useState<'petrol' | 'personal'>('petrol');
@@ -56,8 +58,8 @@ export default function LoanRequest() {
     setIsLoadingProfile(false);
   };
 
-  const maxPetrolLoan = getPetrolLoanMax(membershipSlots);
-  const maxPersonalLoan = getPersonalLoanMax(membershipSlots);
+  const maxPetrolLoan = getPetrolLoanMax(membershipSlots, contributionSettings);
+  const maxPersonalLoan = getPersonalLoanMax(membershipSlots, contributionSettings);
   const maxAmount = type === 'petrol' ? maxPetrolLoan : maxPersonalLoan;
   const interestRate = getInterestRate(type);
   const amountNum = parseFloat(amount) || 0;
@@ -197,11 +199,11 @@ export default function LoanRequest() {
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div>
                   <span className="block font-medium text-foreground">Petrol:</span>
-                  R{PETROL_LOAN_MAX} × {membershipSlots} = {formatCurrency(maxPetrolLoan)}
+                  R{contributionSettings.petrol_loan_weekly_cap} × {membershipSlots} = {formatCurrency(maxPetrolLoan)}
                 </div>
                 <div>
                   <span className="block font-medium text-foreground">Personal:</span>
-                  R{PERSONAL_LOAN_MAX} × {membershipSlots} = {formatCurrency(maxPersonalLoan)}
+                  R{contributionSettings.personal_loan_monthly_cap} × {membershipSlots} = {formatCurrency(maxPersonalLoan)}
                 </div>
               </div>
             </CardContent>
