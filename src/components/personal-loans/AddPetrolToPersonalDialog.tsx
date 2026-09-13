@@ -76,34 +76,15 @@ export function AddPetrolToPersonalDialog({ onSuccess }: Props) {
 
     setLoading(true);
     try {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('loans')
-        .insert({
-          member_user_id: memberId,
-          type: 'personal',
-          amount: amountNum,
-          reason: note.trim() || 'Petrol loan captured manually onto personal loan',
-          status: 'approved',
-          approved_by: user.id,
-          approved_at: now,
-          outstanding_balance: total,
-          interest_rate_percent: rateNum,
-          interest_amount: interest,
-          total_repayable: total,
-          repayment_period: 'MONTHLY',
-        })
-        .select('id')
-        .maybeSingle();
+      const details = `Petrol loan of ${formatCurrency(amountNum)} added manually as a personal loan (${formatCurrency(total)} owing).${note.trim() ? ` Note: ${note.trim()}` : ''}`;
+      const { error } = await supabase.rpc('add_manual_petrol_to_personal', {
+        _member_user_id: memberId,
+        _amount: amountNum,
+        _rate: rateNum,
+        _note: details,
+      });
 
       if (error) throw error;
-
-      await supabase.from('personal_loan_activity').insert({
-        loan_id: data?.id ?? null,
-        actor_user_id: user.id,
-        action: 'manual_petrol_capture',
-        details: `Petrol loan of ${formatCurrency(amountNum)} added manually as a personal loan (${formatCurrency(total)} owing).${note.trim() ? ` Note: ${note.trim()}` : ''}`,
-      });
 
       toast({
         title: 'Added to personal loans',
