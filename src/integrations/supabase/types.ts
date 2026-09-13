@@ -967,6 +967,15 @@ export type Database = {
     }
     Functions: {
       accrue_personal_loan_interest: { Args: never; Returns: Json }
+      add_manual_petrol_to_personal: {
+        Args: {
+          _amount: number
+          _member_user_id: string
+          _note?: string
+          _rate?: number
+        }
+        Returns: Json
+      }
       backfill_personal_loan_interest: { Args: never; Returns: Json }
       get_member_statement: {
         Args: { _user_id: string }
