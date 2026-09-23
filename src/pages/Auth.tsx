@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { lovable } from '@/integrations/lovable/index';
+import brandLogo from '@/assets/hustlers-icon.png';
+
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
