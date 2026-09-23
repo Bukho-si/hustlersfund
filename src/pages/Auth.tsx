@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { lovable } from '@/integrations/lovable/index';
+import brandLogo from '@/assets/hustlers-icon.png';
+
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -164,9 +166,14 @@ export default function Auth() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="pt-8 pb-4 px-8 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4" style={{ backgroundColor: '#EAB308' }}>
-              <span className="text-2xl">🚕</span>
-            </div>
+            <img
+              src={brandLogo}
+              alt="Hustlers Fund logo"
+              width={1024}
+              height={1024}
+              className="inline-block w-14 h-14 rounded-2xl mb-4 shadow-sm object-cover"
+            />
+
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Hustlers Fund</h1>
             <p className="text-sm text-gray-500 mt-1">Save together. Grow together.</p>
           </div>
