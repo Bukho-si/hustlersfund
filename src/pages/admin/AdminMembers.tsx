@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { csvRow } from '@/lib/csv';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -594,7 +595,7 @@ export default function AdminMembers() {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        ...rows.map(row => csvRow(row))
       ].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

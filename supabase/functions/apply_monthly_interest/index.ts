@@ -35,8 +35,8 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Allow scheduled cron calls (anon/service_role JWT). For user JWTs, require admin role.
-    const isScheduled = role === 'anon' || role === 'service_role';
+    // Scheduled accrual runs inside the database via pg_cron. Only service_role or admin users may call this.
+    const isScheduled = role === 'service_role';
     if (!isScheduled) {
       const userId = claims?.sub;
       if (!userId) {

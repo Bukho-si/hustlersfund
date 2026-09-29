@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { csvRow } from '@/lib/csv';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -122,10 +123,10 @@ export function LoansReport({ loanTypeFilter }: LoansReportProps = {}) {
     const rows = [
       ['Member', 'Type', 'Amount', 'Interest Rate', 'Interest Amount', 'Total Repayable', 'Repaid', 'Outstanding', 'Status', 'Repayment Period', 'Requested'],
       ...filtered.map(l => [
-        `"${l.memberName}"`, l.type, l.amount, `${l.interestRate}%`, l.interestAmount, l.totalRepayable, l.totalRepaid, l.outstandingBalance, l.status, l.repaymentPeriod || '', formatDateTime(l.requestedAt),
+        l.memberName, l.type, l.amount, `${l.interestRate}%`, l.interestAmount, l.totalRepayable, l.totalRepaid, l.outstandingBalance, l.status, l.repaymentPeriod || '', formatDateTime(l.requestedAt),
       ]),
     ];
-    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([rows.map(r => csvRow(r)).join('\n')], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, `loans-report-${getDateSuffix()}.csv`);
     toast.success('Loans exported as CSV');
   }, [filtered]);

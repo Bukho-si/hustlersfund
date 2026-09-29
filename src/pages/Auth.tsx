@@ -36,7 +36,7 @@ export default function Auth() {
 
   // Preserved return path (used by the OAuth consent flow). Same-origin only.
   const rawNext = searchParams.get('next');
-  const nextPath = rawNext && /^\/(?!\/)/.test(rawNext) ? rawNext : null;
+  const nextPath = rawNext && /^\/(?![\/\\])[A-Za-z0-9\-._~!$&'()*+,;=:@%\/?#]*$/.test(rawNext) ? rawNext : null;
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
