@@ -59,16 +59,24 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { email, redirectUrl } = await req.json();
-    if (!email) {
+    const { email } = await req.json();
+    if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "Email is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const ALLOWED_ORIGINS = [
+      "https://hustlersfund.dabubk.com",
+      "https://hustlersfund.lovable.app",
+      "https://id-preview--64141f1a-7ff1-48e0-9cef-9d447d59a4c9.lovable.app",
+    ];
+    const origin = req.headers.get("origin") || "";
+    const base = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
     const { error } = await adminClient.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl || `${req.headers.get("origin")}/reset-password`,
+      redirectTo: `${base}/reset-password`,
     });
 
     if (error) throw error;
