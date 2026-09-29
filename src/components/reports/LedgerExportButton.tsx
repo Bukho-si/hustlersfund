@@ -33,12 +33,12 @@ export function LedgerExportButton({ entries }: LedgerExportButtonProps) {
       ['Date', 'Member', 'Type', 'Amount', 'Description'],
       ...entries.map(e => [
         formatDateTime(e.created_at),
-        `"${e.memberName || ''}"`,
+        e.memberName || '',
         getTransactionLabel(e.transaction_type),
         e.amount,
-        `"${e.description || ''}"`,
+        e.description || '',
       ]),
-    ].map(r => r.join(',')).join('\n');
+    ].map(r => csvRow(r)).join('\n');
 
     const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, `financial-ledger-${getDateSuffix()}.csv`);

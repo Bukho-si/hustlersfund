@@ -100,7 +100,7 @@ export function ExportButton({
     const csvContent = [
       ['Member', 'Slots', 'Joining Fee Paid', 'Total Contributions', 'Outstanding Loans', 'Emergency Dues', 'Net Position'],
       ...memberBalances.map(b => [
-        `"${b.fullName}"`,
+        b.fullName,
         b.membershipSlots,
         b.joiningFeePaidTotal,
         b.totalContributions,
@@ -108,7 +108,7 @@ export function ExportButton({
         b.emergencyDues,
         b.netPosition,
       ])
-    ].map(row => row.join(',')).join('\n');
+    ].map(row => csvRow(row)).join('\n');
 
     downloadCSV(`member-balances-${getDateSuffix()}.csv`, csvContent);
     toast.success('Member balances exported as CSV');
