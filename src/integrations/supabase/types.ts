@@ -997,6 +997,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_member_or_admin: { Args: { _user_id: string }; Returns: boolean }
       migrate_petrol_loan_to_personal: {
         Args: { _petrol_loan_id: string; _reason?: string }
         Returns: Json
